@@ -16,6 +16,22 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## API endpoint configuration
+
+This MVP can call a future C# .NET backend, but it falls back to mock data if the endpoint is missing or unavailable.
+
+1. Copy `.env.example` to `.env.local`
+2. Set `NEXT_PUBLIC_API_BASE_URL` to your backend base URL, for example:
+
+```bash
+NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api
+```
+
+Current frontend expectations:
+
+- `GET /dashboard?userId=<uuid>` returns dashboard payload
+- `POST /analysis/compare` accepts `{ cvText, jobText, method }`
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
