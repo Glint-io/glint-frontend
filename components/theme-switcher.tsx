@@ -1,6 +1,6 @@
 "use client";
 
-import { toggleTheme } from "../lib/theme";
+import { toggleTheme } from "../app/lib/theme";
 
 export function ThemeSwitcher() {
     return (

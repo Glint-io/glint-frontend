@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ScoreTrendChart } from "../components/score-trend-chart";
+import { ScoreTrendChart } from "../../components/score-trend-chart";
 import { getUserDashboardData } from "../lib/data-source";
 import { getDashboardStats } from "../lib/mock-data";
 

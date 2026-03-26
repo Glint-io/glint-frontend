@@ -1,45 +1,108 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-/* ─── Raw palette ─────────────────────────────────────────── */
+@custom-variant dark (&:is(.dark *));
+
+/* ─── Light mode ──────────────────────────────────────────── */
 :root {
-  --color-amber:   #E8A736;
-  --color-dark:    #2A1E0F;
-  --color-cream:   #FAEFD9;
+  /* Your palette — raw values, no var() references */
+  --background:           #FAEFD9;
+  --background-subtle:    #F3E2BF;
+  --foreground:           #2A1E0F;
+  --foreground-muted:     #6B4F2A;
+  --primary:              #E8A736;
+  --primary-hover:        #D4921E;
+  --primary-fg:           #2A1E0F;
+  --border:               #D9C9A3;
+  --ring:                 #E8A736;
+
+  /* shadcn semantic tokens — wired to your palette */
+  --card:                 #F3E2BF;
+  --card-foreground:      #2A1E0F;
+  --popover:              #FAEFD9;
+  --popover-foreground:   #2A1E0F;
+  --primary-foreground:   #2A1E0F;
+  --secondary:            #F3E2BF;
+  --secondary-foreground: #2A1E0F;
+  --muted:                #F3E2BF;
+  --muted-foreground:     #6B4F2A;
+  --accent:               #E8A736;
+  --accent-foreground:    #2A1E0F;
+  --destructive:          oklch(0.577 0.245 27.325);
+  --input:                #D9C9A3;
+  --radius:               0.625rem;
+
+  /* Sidebar */
+  --sidebar:                    #F3E2BF;
+  --sidebar-foreground:         #2A1E0F;
+  --sidebar-primary:            #E8A736;
+  --sidebar-primary-foreground: #2A1E0F;
+  --sidebar-accent:             #F3E2BF;
+  --sidebar-accent-foreground:  #2A1E0F;
+  --sidebar-border:             #D9C9A3;
+  --sidebar-ring:               #E8A736;
+
+  /* Charts */
+  --chart-1: #E8A736;
+  --chart-2: #D4921E;
+  --chart-3: #6B4F2A;
+  --chart-4: #3A2A18;
+  --chart-5: #2A1E0F;
 }
 
-/* ─── Semantic tokens (light mode defaults) ───────────────── */
-:root {
-  --background:        #FAEFD9;   /* cream */
-  --background-subtle: #F3E2BF;   /* slightly deeper cream for cards/sections */
-  --foreground:        #2A1E0F;   /* dark brown */
-  --foreground-muted:  #6B4F2A;   /* mid-brown for secondary text */
-  --primary:           #E8A736;   /* amber */
-  --primary-hover:     #D4921E;   /* darker amber on hover */
-  --primary-fg:        #2A1E0F;   /* text ON primary buttons */
-  --border:            #D9C9A3;   /* warm light border */
-  --ring:              #E8A736;   /* focus ring */
-}
-
-/* ─── Dark mode overrides ─────────────────────────────────── */
+/* ─── Dark mode ───────────────────────────────────────────── */
 .dark {
-  --background:        #2A1E0F;   /* dark brown */
-  --background-subtle: #3A2A18;   /* slightly lighter for cards */
-  --foreground:        #FAEFD9;   /* cream */
-  --foreground-muted:  #C4A87A;   /* warm muted text */
-  --primary:           #E8A736;   /* amber stays the same */
-  --primary-hover:     #F0B94A;   /* lighter amber on hover in dark */
-  --primary-fg:        #2A1E0F;
-  --border:            #4A3520;   /* dark warm border */
-  --ring:              #E8A736;
+  --background:           #2A1E0F;
+  --background-subtle:    #3A2A18;
+  --foreground:           #FAEFD9;
+  --foreground-muted:     #C4A87A;
+  --primary:              #E8A736;
+  --primary-hover:        #F0B94A;
+  --primary-fg:           #2A1E0F;
+  --border:               #4A3520;
+  --ring:                 #E8A736;
+
+  /* shadcn semantic tokens */
+  --card:                 #3A2A18;
+  --card-foreground:      #FAEFD9;
+  --popover:              #3A2A18;
+  --popover-foreground:   #FAEFD9;
+  --primary-foreground:   #2A1E0F;
+  --secondary:            #3A2A18;
+  --secondary-foreground: #FAEFD9;
+  --muted:                #3A2A18;
+  --muted-foreground:     #C4A87A;
+  --accent:               #E8A736;
+  --accent-foreground:    #2A1E0F;
+  --destructive:          oklch(0.704 0.191 22.216);
+  --input:                #4A3520;
+
+  /* Sidebar */
+  --sidebar:                    #3A2A18;
+  --sidebar-foreground:         #FAEFD9;
+  --sidebar-primary:            #E8A736;
+  --sidebar-primary-foreground: #2A1E0F;
+  --sidebar-accent:             #4A3520;
+  --sidebar-accent-foreground:  #FAEFD9;
+  --sidebar-border:             #4A3520;
+  --sidebar-ring:               #E8A736;
+
+  /* Charts */
+  --chart-1: #E8A736;
+  --chart-2: #F0B94A;
+  --chart-3: #C4A87A;
+  --chart-4: #6B4F2A;
+  --chart-5: #3A2A18;
 }
 
 /* ─── Tailwind theme wiring ───────────────────────────────── */
 @theme inline {
-  /* Fonts */
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans:    var(--font-geist-sans);
+  --font-mono:    var(--font-geist-mono);
+  --font-heading: var(--font-mono);
 
-  /* Map semantic tokens → Tailwind utility classes */
+  /* Custom tokens */
   --color-background:        var(--background);
   --color-background-subtle: var(--background-subtle);
   --color-foreground:        var(--foreground);
@@ -50,15 +113,57 @@
   --color-border:            var(--border);
   --color-ring:              var(--ring);
 
-  /* Expose raw palette too, for one-offs */
-  --color-amber: var(--color-amber);
-  --color-dark:  var(--color-dark);
-  --color-cream: var(--color-cream);
+  /* Raw palette as named colors */
+  --color-amber: #E8A736;
+  --color-dark:  #2A1E0F;
+  --color-cream: #FAEFD9;
+
+  /* shadcn tokens */
+  --color-card:                       var(--card);
+  --color-card-foreground:            var(--card-foreground);
+  --color-popover:                    var(--popover);
+  --color-popover-foreground:         var(--popover-foreground);
+  --color-primary-foreground:         var(--primary-foreground);
+  --color-secondary:                  var(--secondary);
+  --color-secondary-foreground:       var(--secondary-foreground);
+  --color-muted:                      var(--muted);
+  --color-muted-foreground:           var(--muted-foreground);
+  --color-accent:                     var(--accent);
+  --color-accent-foreground:          var(--accent-foreground);
+  --color-destructive:                var(--destructive);
+  --color-input:                      var(--input);
+  --color-sidebar:                    var(--sidebar);
+  --color-sidebar-foreground:         var(--sidebar-foreground);
+  --color-sidebar-primary:            var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent:             var(--sidebar-accent);
+  --color-sidebar-accent-foreground:  var(--sidebar-accent-foreground);
+  --color-sidebar-border:             var(--sidebar-border);
+  --color-sidebar-ring:               var(--sidebar-ring);
+  --color-chart-1:                    var(--chart-1);
+  --color-chart-2:                    var(--chart-2);
+  --color-chart-3:                    var(--chart-3);
+  --color-chart-4:                    var(--chart-4);
+  --color-chart-5:                    var(--chart-5);
+  --radius-sm:  calc(var(--radius) * 0.6);
+  --radius-md:  calc(var(--radius) * 0.8);
+  --radius-lg:  var(--radius);
+  --radius-xl:  calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 }
 
 /* ─── Base styles ─────────────────────────────────────────── */
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), Georgia, serif;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans), Georgia, serif;
+  }
+  html {
+    @apply font-mono;
+  }
 }

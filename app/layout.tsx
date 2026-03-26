@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
-import { ThemeSwitcher } from "./components/theme-switcher";
+import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
+import CardNav from "../components/CardNav";
+import { ThemeSwitcher } from "../components/theme-switcher";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+import ScrollHeader from "@/components/ScrollHeader";
+
+const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,6 +28,36 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const navItems = [
+    {
+      label: "Account",
+      bgColor: "#2A1E0F",
+      textColor: "#FAEFD9",
+      links: [
+        { label: "Login", href: "/auth/login", ariaLabel: "Go to login" },
+        { label: "User", href: "/user", ariaLabel: "Go to user dashboard" },
+      ],
+    },
+    {
+      label: "Analysis",
+      bgColor: "#3A2A18",
+      textColor: "#FAEFD9",
+      links: [
+        { label: "Run analysis", href: "/analysis", ariaLabel: "Run analysis" },
+        { label: "About", href: "/#about", ariaLabel: "Go to about section" },
+      ],
+    },
+    {
+      label: "Contact",
+      bgColor: "#E8A736",
+      textColor: "#2A1E0F",
+      links: [
+        { label: "Landing contact", href: "/#contact", ariaLabel: "Go to contact section" },
+        { label: "Contact page", href: "/contact", ariaLabel: "Go to contact page" },
+      ],
+    },
+  ];
+
   const themeInitScript = `
     (() => {
       try {
@@ -39,36 +73,24 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-mono", jetbrainsMono.variable)}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
       <body className="relative min-h-full flex flex-col bg-background text-foreground">
-        <header className="border-b border-border bg-background-subtle">
-          <nav className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
-            <Link href="/" className="text-lg font-semibold tracking-tight">
-              Glint MVP
-            </Link>
-            <ul className="flex flex-wrap items-center gap-4 text-sm font-medium text-foreground-muted">
-              <li>
-                <Link href="/auth/login" className="hover:text-foreground">
-                  Login
-                </Link>
-              </li>
-              <li>
-                <Link href="/analysis" className="hover:text-foreground">
-                  Analysis
-                </Link>
-              </li>
-              <li>
-                <Link href="/user" className="hover:text-foreground">
-                  User
-                </Link>
-              </li>
-            </ul>
-          </nav>
-        </header>
+        <ScrollHeader className="border-b border-border bg-background-subtle">
+          <CardNav
+            logo="/next.svg"
+            logoAlt="Glint logo"
+            items={navItems}
+            baseColor="#FAEFD9"
+            menuColor="#2A1E0F"
+            buttonBgColor="#2A1E0F"
+            buttonTextColor="#FAEFD9"
+            ease="power3.out"
+          />
+        </ScrollHeader>
         <main className="mx-auto flex w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
           {children}
         </main>
