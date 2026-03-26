@@ -52,18 +52,8 @@ export default function RootLayout({
             </Link>
             <ul className="flex flex-wrap items-center gap-4 text-sm font-medium text-foreground-muted">
               <li>
-                <Link href="/" className="hover:text-foreground">
-                  Home
-                </Link>
-              </li>
-              <li>
                 <Link href="/auth/login" className="hover:text-foreground">
                   Login
-                </Link>
-              </li>
-              <li>
-                <Link href="/user" className="hover:text-foreground">
-                  User
                 </Link>
               </li>
               <li>
@@ -72,13 +62,8 @@ export default function RootLayout({
                 </Link>
               </li>
               <li>
-                <Link href="/about" className="hover:text-foreground">
-                  About
-                </Link>
-              </li>
-              <li>
-                <Link href="/contact" className="hover:text-foreground">
-                  Contact
+                <Link href="/user" className="hover:text-foreground">
+                  User
                 </Link>
               </li>
             </ul>

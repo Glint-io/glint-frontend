@@ -50,6 +50,31 @@ export default function Home() {
           </p>
         </div>
       </section>
+
+      <section id="about" className="rounded-2xl border border-border bg-background-subtle p-8 shadow-sm">
+        <h2 className="text-3xl font-semibold tracking-tight text-foreground">About</h2>
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-foreground-muted">
+          Glint builds lightweight tools that help candidates understand how well
+          their profile aligns with role requirements. This MVP focuses on the
+          core loop: upload CV, run analysis, and follow score development over
+          time.
+        </p>
+      </section>
+
+      <section id="contact" className="rounded-2xl border border-border bg-background-subtle p-8 shadow-sm">
+        <h2 className="text-3xl font-semibold tracking-tight text-foreground">Contact</h2>
+        <p className="mt-4 max-w-3xl text-sm leading-7 text-foreground-muted">
+          Basic contact flow is available in the MVP contact form.
+        </p>
+        <div className="mt-6">
+          <Link
+            href="/contact"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-fg hover:bg-primary-hover"
+          >
+            Open Contact Form
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }
