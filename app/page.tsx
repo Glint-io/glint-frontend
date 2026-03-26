@@ -3,27 +3,27 @@ import Link from "next/link";
 export default function Home() {
   return (
     <div className="flex w-full flex-1 flex-col gap-10">
-      <section className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+      <section className="rounded-2xl border border-border bg-background-subtle p-8 shadow-sm">
+        <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-foreground-muted">
           Glint Frontend MVP
         </p>
-        <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-slate-950">
+        <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-foreground">
           Analyze CV fit against job ads and follow score trends over time.
         </h1>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-slate-700">
+        <p className="mt-4 max-w-2xl text-base leading-7 text-foreground-muted">
           This MVP includes the main flow: login, user dashboard with CV upload,
           previous analyses, and a page to compare CV text with a job ad.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <Link
             href="/auth/login"
-            className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-fg hover:bg-primary-hover"
           >
             Go to Login
           </Link>
           <Link
             href="/user"
-            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 hover:bg-slate-100"
+            className="rounded-md border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-background-subtle"
           >
             Open User Page
           </Link>
@@ -31,21 +31,21 @@ export default function Home() {
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 className="text-lg font-semibold text-slate-900">Login</h2>
-          <p className="mt-2 text-sm text-slate-700">
+        <div className="rounded-xl border border-border bg-background-subtle p-5">
+          <h2 className="text-lg font-semibold text-foreground">Login</h2>
+          <p className="mt-2 text-sm text-foreground-muted">
             Simple sign-in form for the MVP journey.
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 className="text-lg font-semibold text-slate-900">Analysis</h2>
-          <p className="mt-2 text-sm text-slate-700">
+        <div className="rounded-xl border border-border bg-background-subtle p-5">
+          <h2 className="text-lg font-semibold text-foreground">Analysis</h2>
+          <p className="mt-2 text-sm text-foreground-muted">
             Quick score using overlap between CV keywords and job ad keywords.
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 className="text-lg font-semibold text-slate-900">Dashboard</h2>
-          <p className="mt-2 text-sm text-slate-700">
+        <div className="rounded-xl border border-border bg-background-subtle p-5">
+          <h2 className="text-lg font-semibold text-foreground">Dashboard</h2>
+          <p className="mt-2 text-sm text-foreground-muted">
             Trend chart and statistics built from historical analyses.
           </p>
         </div>

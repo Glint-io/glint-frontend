@@ -33,31 +33,31 @@ export default function AnalysisPage() {
     }
 
     return (
-        <div className="w-full rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <h1 className="text-3xl font-semibold tracking-tight text-slate-950">Analys sida</h1>
-            <p className="mt-2 text-sm text-slate-600">
+        <div className="w-full rounded-2xl border border-border bg-background-subtle p-6 shadow-sm">
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground">Analys sida</h1>
+            <p className="mt-2 text-sm text-foreground-muted">
                 Compare CV text with a job ad using a simple keyword match model.
             </p>
 
             <div className="mt-6 grid gap-4 lg:grid-cols-2">
                 <label className="block">
-                    <span className="mb-2 block text-sm font-medium text-slate-700">CV Text</span>
+                    <span className="mb-2 block text-sm font-medium text-foreground-muted">CV Text</span>
                     <textarea
                         value={cvText}
                         onChange={(event) => setCvText(event.target.value)}
                         rows={12}
-                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-slate-400 focus:outline-none"
+                        className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
                         placeholder="Paste CV content here..."
                     />
                 </label>
 
                 <label className="block">
-                    <span className="mb-2 block text-sm font-medium text-slate-700">Job Ad Text</span>
+                    <span className="mb-2 block text-sm font-medium text-foreground-muted">Job Ad Text</span>
                     <textarea
                         value={jobText}
                         onChange={(event) => setJobText(event.target.value)}
                         rows={12}
-                        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:border-slate-400 focus:outline-none"
+                        className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
                         placeholder="Paste job ad content here..."
                     />
                 </label>
@@ -65,7 +65,7 @@ export default function AnalysisPage() {
 
             <button
                 onClick={handleRunAnalysis}
-                className="mt-4 rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+                className="mt-4 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-fg hover:bg-primary-hover"
                 type="button"
                 disabled={loading}
             >
@@ -73,26 +73,26 @@ export default function AnalysisPage() {
             </button>
 
             {submitted ? (
-                <section className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <h2 className="text-lg font-semibold text-slate-950">Result</h2>
-                    <p className="mt-2 text-sm text-slate-700">
+                <section className="mt-6 rounded-xl border border-border bg-background p-4">
+                    <h2 className="text-lg font-semibold text-foreground">Result</h2>
+                    <p className="mt-2 text-sm text-foreground-muted">
                         Match score: <strong>{result.score}%</strong>
                     </p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-1 text-xs text-foreground-muted">
                         Source: {result.source === "api" ? "Backend API" : "Mock fallback"}
                     </p>
-                    <p className="mt-1 text-sm text-slate-700">{result.feedback}</p>
+                    <p className="mt-1 text-sm text-foreground-muted">{result.feedback}</p>
 
                     <div className="mt-4 grid gap-4 md:grid-cols-2">
                         <div>
-                            <p className="text-sm font-medium text-slate-800">Matched keywords</p>
-                            <p className="mt-1 text-sm text-slate-700">
+                            <p className="text-sm font-medium text-foreground">Matched keywords</p>
+                            <p className="mt-1 text-sm text-foreground-muted">
                                 {result.overlap.slice(0, 20).join(", ") || "No overlap yet"}
                             </p>
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-slate-800">Missing keywords</p>
-                            <p className="mt-1 text-sm text-slate-700">
+                            <p className="text-sm font-medium text-foreground">Missing keywords</p>
+                            <p className="mt-1 text-sm text-foreground-muted">
                                 {result.missing.slice(0, 20).join(", ") || "No missing keywords"}
                             </p>
                         </div>

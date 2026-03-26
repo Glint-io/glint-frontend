@@ -5,7 +5,7 @@ type ScoreTrendChartProps = {
 export function ScoreTrendChart({ points }: ScoreTrendChartProps) {
     if (points.length === 0) {
         return (
-            <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
+            <div className="rounded-lg border border-dashed border-border bg-background p-6 text-sm text-foreground-muted">
                 No data available yet.
             </div>
         );
@@ -29,33 +29,33 @@ export function ScoreTrendChart({ points }: ScoreTrendChartProps) {
     const path = points.map((point, index) => `${toX(index)},${toY(point)}`).join(" ");
 
     return (
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <p className="mb-3 text-sm font-medium text-slate-700">Score trend</p>
+        <div className="rounded-xl border border-border bg-background-subtle p-4">
+            <p className="mb-3 text-sm font-medium text-foreground-muted">Score trend</p>
             <svg
                 viewBox={`0 0 ${width} ${height}`}
                 className="h-52 w-full overflow-visible"
                 role="img"
                 aria-label="User score trend"
             >
-                <rect x="0" y="0" width={width} height={height} fill="#ffffff" />
+                <rect x="0" y="0" width={width} height={height} fill="var(--background)" />
                 <line
                     x1={padding}
                     y1={height - padding}
                     x2={width - padding}
                     y2={height - padding}
-                    stroke="#cbd5e1"
+                    stroke="var(--border)"
                 />
                 <line
                     x1={padding}
                     y1={padding}
                     x2={padding}
                     y2={height - padding}
-                    stroke="#cbd5e1"
+                    stroke="var(--border)"
                 />
 
                 <polyline
                     fill="none"
-                    stroke="#0f172a"
+                    stroke="var(--primary)"
                     strokeWidth="3"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -64,13 +64,13 @@ export function ScoreTrendChart({ points }: ScoreTrendChartProps) {
 
                 {points.map((point, index) => (
                     <g key={`${index}-${point}`}>
-                        <circle cx={toX(index)} cy={toY(point)} r="4" fill="#0f172a" />
+                        <circle cx={toX(index)} cy={toY(point)} r="4" fill="var(--primary)" />
                         <text
                             x={toX(index)}
                             y={toY(point) - 10}
                             textAnchor="middle"
                             fontSize="11"
-                            fill="#334155"
+                            fill="var(--foreground-muted)"
                         >
                             {point}
                         </text>
