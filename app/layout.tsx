@@ -30,12 +30,13 @@ export default function RootLayout({
 }>) {
   const navItems = [
     {
-      label: "Account",
+      label: "Landing",
       bgColor: "#2A1E0F",
       textColor: "#FAEFD9",
       links: [
-        { label: "Login", href: "/auth/login", ariaLabel: "Go to login" },
-        { label: "User", href: "/user", ariaLabel: "Go to user dashboard" },
+        { label: "Start", href: "/", ariaLabel: "Go to homepage" },
+        { label: "About", href: "/#about", ariaLabel: "Go to about section" },
+        { label: "Contact", href: "/#contact", ariaLabel: "Go to contact section" },
       ],
     },
     {
@@ -44,16 +45,19 @@ export default function RootLayout({
       textColor: "#FAEFD9",
       links: [
         { label: "Run analysis", href: "/analysis", ariaLabel: "Run analysis" },
-        { label: "About", href: "/#about", ariaLabel: "Go to about section" },
       ],
     },
     {
-      label: "Contact",
+      label: "Account",
       bgColor: "#E8A736",
       textColor: "#2A1E0F",
       links: [
-        { label: "Landing contact", href: "/#contact", ariaLabel: "Go to contact section" },
-        { label: "Contact page", href: "/contact", ariaLabel: "Go to contact page" },
+        /*  */
+        { label: "Login", href: "/auth/login", ariaLabel: "Go to login page" },
+        { label: "Register", href: "/auth/register", ariaLabel: "Go to registration page" },
+        { label: "Profile", href: "/user", ariaLabel: "Go to user profile" },
+        /*  */
+        { label: "Logout", href: "/auth/logout", ariaLabel: "Logout from account" },
       ],
     },
   ];

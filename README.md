@@ -21,14 +21,15 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 This MVP can call a future C# .NET backend, but it falls back to mock data if the endpoint is missing or unavailable.
 
 1. Copy `.env.example` to `.env.local`
-2. Set `NEXT_PUBLIC_API_BASE_URL` to your backend base URL, for example:
+2. Set `NEXT_PUBLIC_API_BASE_URL` to your backend host URL, for example:
 
 ```bash
-NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api
+NEXT_PUBLIC_API_BASE_URL=https://localhost:7248
 ```
 
 Current frontend expectations:
 
+- `POST /auth/login` accepts `{ email, password }`
 - `GET /dashboard?userId=<uuid>` returns dashboard payload
 - `POST /analysis/compare` accepts `{ cvText, jobText, method }`
 
