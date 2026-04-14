@@ -37,7 +37,7 @@ export default function ScrollHeader({
       {/* ← transform lives here, never sticky */}
       <header
         className={cn(
-          "relative h-[90px] md:h-[110px]",
+          "relative h-[50px] md:h-[76px]",
           "transition-transform duration-300 ease-in-out",
           visible ? "translate-y-0" : "-translate-y-full",
           className
