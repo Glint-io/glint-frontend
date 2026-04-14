@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useRef, useState, KeyboardEvent, ClipboardEvent } from "react";
+import { setAuth } from "@/app/lib/auth";
 
 // ─── API config ────────────────────────────────────────────────────────────────
 const base =
@@ -11,6 +12,8 @@ const base =
 const ep = {
   register: `${base}/auth/register`,
   verifyEmail: `${base}/auth/verify-email`,
+  resend: `${base}/auth/resend-verification`,
+  login: `${base}/auth/login`,
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -22,7 +25,10 @@ function extractMessage(payload: unknown): string | null {
   return p.message ?? p.error ?? p.title ?? p.detail ?? null;
 }
 
-async function apiPost(url: string, body: object): Promise<{ ok: boolean; message: string | null; status: number }> {
+async function apiPost(
+  url: string,
+  body: object
+): Promise<{ ok: boolean; message: string | null; status: number; data: unknown }> {
   try {
     const res = await fetch(url, {
       method: "POST",
@@ -30,11 +36,11 @@ async function apiPost(url: string, body: object): Promise<{ ok: boolean; messag
       body: JSON.stringify(body),
     });
     const text = await res.text();
-    let payload: unknown = null;
-    try { payload = text ? JSON.parse(text) : null; } catch { payload = text || null; }
-    return { ok: res.ok, message: extractMessage(payload), status: res.status };
+    let data: unknown = null;
+    try { data = text ? JSON.parse(text) : null; } catch { data = text || null; }
+    return { ok: res.ok, message: extractMessage(data), status: res.status, data };
   } catch {
-    return { ok: false, message: "Could not reach the server. Is the backend running?", status: 0 };
+    return { ok: false, message: "Could not reach the server. Is the backend running?", status: 0, data: null };
   }
 }
 
@@ -59,9 +65,7 @@ function OtpInput({
   }
 
   function handleKeyDown(idx: number, e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Backspace" && !value[idx] && idx > 0) {
-      refs.current[idx - 1]?.focus();
-    }
+    if (e.key === "Backspace" && !value[idx] && idx > 0) refs.current[idx - 1]?.focus();
     if (e.key === "ArrowLeft" && idx > 0) refs.current[idx - 1]?.focus();
     if (e.key === "ArrowRight" && idx < 5) refs.current[idx + 1]?.focus();
   }
@@ -72,8 +76,7 @@ function OtpInput({
     const next = [...value];
     digits.forEach((d, i) => { next[i] = d; });
     onChange(next);
-    const focusIdx = Math.min(digits.length, 5);
-    refs.current[focusIdx]?.focus();
+    refs.current[Math.min(digits.length, 5)]?.focus();
   }
 
   return (
@@ -100,20 +103,31 @@ function OtpInput({
 // ─── OTP Modal ─────────────────────────────────────────────────────────────────
 function OtpModal({
   email,
+  password,
   onSuccess,
   onClose,
 }: {
   email: string;
-  onSuccess: () => void;
+  password: string;
+  onSuccess: (accessToken: string, refreshToken: string, payload: unknown) => void;
   onClose: () => void;
 }) {
   const [digits, setDigits] = useState(Array(6).fill(""));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [resendMsg, setResendMsg] = useState<string | null>(null);
 
   const code = digits.join("");
+
+  async function loginAfterVerify() {
+    const result = await apiPost(ep.login, { email, password });
+    if (!result.ok) return null;
+    const d = result.data as Record<string, unknown>;
+    const accessToken = String(d.accessToken ?? d.token ?? d.jwt ?? "");
+    const refreshToken = String(d.refreshToken ?? "");
+    return { accessToken, refreshToken, payload: d };
+  }
 
   async function handleVerify(e: FormEvent) {
     e.preventDefault();
@@ -121,46 +135,50 @@ function OtpModal({
     setError(null);
     setIsSubmitting(true);
 
-    const result = await apiPost(ep.verifyEmail, { code });
+    const verifyResult = await apiPost(ep.verifyEmail, { code });
 
-    if (result.ok) {
-      onSuccess();
+    if (verifyResult.ok) {
+      const auth = await loginAfterVerify();
+      if (auth) {
+        onSuccess(auth.accessToken, auth.refreshToken, auth.payload);
+      } else {
+        onSuccess("", "", null);
+      }
     } else {
       setError(
-        result.message ??
-          (result.status === 400
-            ? "Invalid or expired code. Request a new one below."
-            : `Verification failed (${result.status}).`)
+        verifyResult.message ??
+        (verifyResult.status === 400 || verifyResult.status === 410
+          ? "Invalid or expired code. Request a new one below."
+          : `Verification failed (${verifyResult.status}).`)
       );
     }
+
     setIsSubmitting(false);
   }
 
   async function handleResend() {
     setIsResending(true);
     setError(null);
-    setSuccess(null);
-    // Re-hitting register with same email triggers a new code on most backends.
-    // Adjust to a dedicated /auth/resend-verification if you add that endpoint.
-    const result = await apiPost(ep.register, { email, password: "__resend__" });
-    // The backend will likely reject the password but still re-send the code if
-    // the user already exists but is unverified — adjust to your actual endpoint.
-    if (result.ok || result.status === 409) {
-      setSuccess("A new code has been sent to " + email);
+    setResendMsg(null);
+
+    const result = await apiPost(ep.resend, { email });
+
+    if (result.ok) {
+      setResendMsg(`A new code has been sent to ${email}.`);
+      setDigits(Array(6).fill(""));
     } else {
       setError(result.message ?? "Could not resend the code. Try again later.");
     }
+
     setIsResending(false);
   }
 
   return (
-    // Backdrop
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="relative mx-4 w-full max-w-sm rounded-2xl border border-border bg-background p-8 shadow-xl">
-        {/* Close */}
         <button
           onClick={onClose}
           className="absolute right-4 top-4 rounded-md p-1 text-foreground-muted hover:text-foreground"
@@ -185,9 +203,9 @@ function OtpModal({
               {error}
             </p>
           )}
-          {success && (
+          {resendMsg && (
             <p className="rounded-md border border-green-500/30 bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-300">
-              {success}
+              {resendMsg}
             </p>
           )}
 
@@ -212,7 +230,7 @@ function OtpModal({
         </p>
 
         <p className="mt-2 text-center text-xs text-foreground-muted">
-          You can also click the button in the email to verify directly.
+          You can also click the link in the email to verify directly.
         </p>
       </div>
     </div>
@@ -233,14 +251,8 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(null);
 
-    if (password !== confirmPassword) {
-      setError("Passwords don't match.");
-      return;
-    }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
+    if (password !== confirmPassword) { setError("Passwords don't match."); return; }
+    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
 
     setIsSubmitting(true);
     const result = await apiPost(ep.register, { email, password });
@@ -253,15 +265,23 @@ export default function RegisterPage() {
 
     setError(
       result.message ??
-        (result.status === 409
-          ? "An account with this email already exists."
-          : `Registration failed (${result.status}).`)
+      (result.status === 409
+        ? "An account with this email already exists."
+        : `Registration failed (${result.status}).`)
     );
   }
 
-  function handleVerified() {
+  function handleVerified(accessToken: string, refreshToken: string, payload: unknown) {
     setShowOtp(false);
-    router.push("/auth/login?registered=1");
+
+    if (accessToken) {
+      // Use setAuth so the nav updates immediately in the same tab
+      setAuth({ accessToken, refreshToken, payload });
+      router.push("/user");
+      router.refresh();
+    } else {
+      router.push("/auth/login?verified=1");
+    }
   }
 
   return (
@@ -269,6 +289,7 @@ export default function RegisterPage() {
       {showOtp && (
         <OtpModal
           email={email}
+          password={password}
           onSuccess={handleVerified}
           onClose={() => setShowOtp(false)}
         />
@@ -286,12 +307,8 @@ export default function RegisterPage() {
               Email
             </label>
             <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              id="email" name="email" type="email" required
+              value={email} onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
               placeholder="you@example.com"
@@ -303,12 +320,8 @@ export default function RegisterPage() {
               Password
             </label>
             <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              id="password" name="password" type="password" required
+              value={password} onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
               placeholder="••••••••"
@@ -320,18 +333,13 @@ export default function RegisterPage() {
               Confirm password
             </label>
             <input
-              id="confirmPassword"
-              name="confirmPassword"
-              type="password"
-              required
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              id="confirmPassword" name="confirmPassword" type="password" required
+              value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
               autoComplete="new-password"
-              className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 ${
-                confirmPassword && confirmPassword !== password
-                  ? "border-red-400 focus:border-red-400"
-                  : "border-border focus:border-primary"
-              }`}
+              className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 ${confirmPassword && confirmPassword !== password
+                ? "border-red-400 focus:border-red-400"
+                : "border-border focus:border-primary"
+                }`}
               placeholder="••••••••"
             />
             {confirmPassword && confirmPassword !== password && (

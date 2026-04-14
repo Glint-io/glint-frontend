@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
+import { setAuth } from "@/app/lib/auth";
 
 const base =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "https://localhost:7248";
@@ -79,10 +80,8 @@ function LoginInner() {
       }
 
       const { accessToken, refreshToken } = extractTokens(payload);
-      localStorage.setItem(
-        "glint.auth",
-        JSON.stringify({ accessToken, refreshToken, payload, loggedInAt: new Date().toISOString() })
-      );
+      // Use setAuth so the nav (and any other listeners) updates immediately
+      setAuth({ accessToken, refreshToken, payload });
 
       router.push("/user");
       router.refresh();
@@ -156,8 +155,6 @@ function LoginInner() {
           Register
         </Link>
       </p>
-
-      <p className="mt-2 text-xs text-foreground-muted">Endpoint: {loginEndpoint}</p>
     </div>
   );
 }

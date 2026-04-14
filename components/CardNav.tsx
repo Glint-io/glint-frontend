@@ -5,12 +5,13 @@ import { GoArrowUpRight } from 'react-icons/go';
 import GlintAnimation from './GlintAnimation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { clearAuth } from '@/app/lib/auth';
 
 type CardNavLink = { label: string; href: string; ariaLabel: string };
 export type CardNavItem = {
   label: string;
-  bgColor?: string;   // now optional — falls back to theme token
-  textColor?: string; // now optional — falls back to theme token
+  bgColor?: string;
+  textColor?: string;
   links: CardNavLink[];
 };
 
@@ -60,8 +61,12 @@ const CardNav: React.FC<CardNavProps> = ({
   const handleNavLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (href !== '/auth/logout') return closeMenu(() => router.push(href));
     e.preventDefault();
-    if (window.confirm('Are you sure you want to log out?'))
-      closeMenu(() => router.push('/auth/login'));
+    if (window.confirm('Are you sure you want to log out?')) {
+      closeMenu(() => {
+        clearAuth();              // wipe tokens + fire glint:auth-change
+        router.push('/auth/login');
+      });
+    }
   };
 
   const calculateHeight = () => {

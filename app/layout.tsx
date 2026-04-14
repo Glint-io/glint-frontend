@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
-import CardNav from "../components/CardNav";
+import AuthAwareNav from "../components/AuthAwareNav";
 import { ThemeSwitcher } from "../components/theme-switcher";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -28,40 +28,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const navItems = [
-    {
-      label: "Landing",
-      bgColor: "#2A1E0F",
-      textColor: "#FAEFD9",
-      links: [
-        { label: "Start", href: "/", ariaLabel: "Go to homepage" },
-        { label: "About", href: "/#about", ariaLabel: "Go to about section" },
-        { label: "Contact", href: "/#contact", ariaLabel: "Go to contact section" },
-      ],
-    },
-    {
-      label: "Analysis",
-      bgColor: "#3A2A18",
-      textColor: "#FAEFD9",
-      links: [
-        { label: "Run analysis", href: "/analysis", ariaLabel: "Run analysis" },
-      ],
-    },
-    {
-      label: "Account",
-      bgColor: "#E8A736",
-      textColor: "#2A1E0F",
-      links: [
-        /*  */
-        { label: "Login", href: "/auth/login", ariaLabel: "Go to login page" },
-        { label: "Register", href: "/auth/register", ariaLabel: "Go to registration page" },
-        { label: "Profile", href: "/user", ariaLabel: "Go to user profile" },
-        /*  */
-        { label: "Logout", href: "/auth/logout", ariaLabel: "Logout from account" },
-      ],
-    },
-  ];
-
   const themeInitScript = `
     (() => {
       try {
@@ -84,10 +50,9 @@ export default function RootLayout({
       </head>
       <body className="relative min-h-full flex flex-col bg-background text-foreground">
         <ScrollHeader className="border-b border-border bg-background-subtle">
-          <CardNav
+          <AuthAwareNav
             logo="/next.svg"
             logoAlt="Glint logo"
-            items={navItems}
             baseColor="#FAEFD9"
             menuColor="#2A1E0F"
             buttonBgColor="#2A1E0F"

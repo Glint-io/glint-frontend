@@ -33,8 +33,28 @@ export function getAccessToken(): string | null {
   return getStoredAuth()?.accessToken ?? null;
 }
 
+/**
+ * Persist auth tokens and notify all listeners in this tab.
+ * Always use this instead of writing to localStorage directly.
+ */
+export function setAuth(data: {
+  accessToken: string | null;
+  refreshToken: string | null;
+  payload: unknown;
+}): void {
+  if (typeof window === "undefined") return;
+  const stored: StoredAuth = { ...data, loggedInAt: new Date().toISOString() };
+  localStorage.setItem(AUTH_KEY, JSON.stringify(stored));
+  window.dispatchEvent(new Event("glint:auth-change"));
+}
+
+/**
+ * Remove auth tokens and notify all listeners in this tab.
+ */
 export function clearAuth(): void {
-  if (typeof window !== "undefined") localStorage.removeItem(AUTH_KEY);
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(AUTH_KEY);
+  window.dispatchEvent(new Event("glint:auth-change"));
 }
 
 // ─── Token refresh ────────────────────────────────────────────────────────────
@@ -53,10 +73,7 @@ async function doRefresh(refreshToken: string): Promise<string | null> {
     const accessToken = String(data.accessToken ?? data.token ?? "");
     const newRefresh = typeof data.refreshToken === "string" ? data.refreshToken : refreshToken;
     const stored = getStoredAuth();
-    localStorage.setItem(
-      AUTH_KEY,
-      JSON.stringify({ ...stored, accessToken, refreshToken: newRefresh })
-    );
+    setAuth({ accessToken, refreshToken: newRefresh, payload: stored?.payload ?? null });
     return accessToken;
   } catch {
     clearAuth();
