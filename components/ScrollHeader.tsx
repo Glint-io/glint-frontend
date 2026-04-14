@@ -32,9 +32,7 @@ export default function ScrollHeader({
   }, []);
 
   return (
-    // ← sticky lives here, no transform ever touches this div
     <div className="sticky top-0 z-50">
-      {/* ← transform lives here, never sticky */}
       <header
         className={cn(
           "relative h-[50px] md:h-[76px]",
