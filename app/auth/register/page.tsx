@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useRef, useState, KeyboardEvent, ClipboardEvent } from "react";
 import { setAuth } from "@/app/lib/auth";
+import { Button } from "@/components/ui/button";
 
 // ─── API config ────────────────────────────────────────────────────────────────
 const base =
@@ -179,15 +180,16 @@ function OtpModal({
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div className="relative mx-4 w-full max-w-sm rounded-2xl border border-border bg-background p-8 shadow-xl">
-        <button
+        <Button
+          variant="ghost"
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-md p-1 text-foreground-muted hover:text-foreground"
+          className="absolute right-4 top-4 h-auto p-1"
           aria-label="Close"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M2 2l12 12M14 2L2 14" />
           </svg>
-        </button>
+        </Button>
 
         <h2 className="text-xl font-semibold text-foreground">Verify your email</h2>
         <p className="mt-2 text-sm text-foreground-muted">
@@ -209,24 +211,25 @@ function OtpModal({
             </p>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={isSubmitting || code.length < 6}
-            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-fg hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-70"
+            className="w-full"
           >
             {isSubmitting ? "Verifying…" : "Confirm email"}
-          </button>
+          </Button>
         </form>
 
         <p className="mt-4 text-center text-xs text-foreground-muted">
           Didn&apos;t receive it?{" "}
-          <button
+          <Button
+            variant="link"
             onClick={handleResend}
             disabled={isResending}
-            className="font-medium text-foreground underline disabled:opacity-50"
+            className="h-auto p-0 text-xs"
           >
             {isResending ? "Sending…" : "Resend code"}
-          </button>
+          </Button>
         </p>
 
         <p className="mt-2 text-center text-xs text-foreground-muted">
@@ -353,13 +356,13 @@ export default function RegisterPage() {
             </p>
           )}
 
-          <button
+          <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-fg hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-70"
+            className="w-full"
           >
             {isSubmitting ? "Creating account…" : "Create account"}
-          </button>
+          </Button>
         </form>
 
         <p className="mt-4 text-sm text-foreground-muted">

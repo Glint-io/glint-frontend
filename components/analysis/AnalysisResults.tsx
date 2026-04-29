@@ -1,6 +1,7 @@
 import { ScoreRing } from "./ScoreRing";
 import { SectionLabel } from "@/components/analysis/SectionLabel";
 import { AnalysisMethod, AnalysisResult } from "@/types/analysis";
+import { Button } from "@/components/ui/button";
 
 const METHODS: {
   id: AnalysisMethod;
@@ -8,20 +9,20 @@ const METHODS: {
   label: string;
   desc: string;
 }[] = [
-  { id: "ai", icon: "✦", label: "AI Analysis", desc: "Semantic understanding" },
-  {
-    id: "keyword",
-    icon: "⌖",
-    label: "Keyword Match",
-    desc: "Keyword and term overlap",
-  },
-  {
-    id: "rules",
-    icon: "⚙",
-    label: "Rule-Based",
-    desc: "Industry standard criteria",
-  },
-];
+    { id: "ai", icon: "✦", label: "AI Analysis", desc: "Semantic understanding" },
+    {
+      id: "keyword",
+      icon: "⌖",
+      label: "Keyword Match",
+      desc: "Keyword and term overlap",
+    },
+    {
+      id: "rules",
+      icon: "⚙",
+      label: "Rule-Based",
+      desc: "Industry standard criteria",
+    },
+  ];
 
 interface Props {
   result: AnalysisResult | null;
@@ -60,18 +61,15 @@ export const AnalysisResults = ({
           {/* Method tabs */}
           <div className="grid grid-cols-3 gap-1 rounded-xl border border-border bg-background-subtle p-1">
             {METHODS.map((m) => (
-              <button
+              <Button
                 key={m.id}
+                variant={method === m.id ? "default" : "ghost"}
                 onClick={() => setMethod(m.id)}
-                className={`flex flex-col items-center gap-1 rounded-lg py-2.5 font-mono text-[10px] uppercase transition-all ${
-                  method === m.id
-                    ? "bg-background border border-border text-primary shadow-sm"
-                    : "text-foreground-muted"
-                }`}
+                className="flex flex-col items-center gap-1 rounded-lg text-[10px] uppercase"
               >
                 <span className="text-sm">{m.icon}</span>
                 {m.label}
-              </button>
+              </Button>
             ))}
           </div>
 

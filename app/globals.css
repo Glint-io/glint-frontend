@@ -6,7 +6,6 @@
 
 /* ─── Light mode ──────────────────────────────────────────── */
 :root {
-  /* Your palette — raw values, no var() references */
   --background: #FAFAF8;
   --background-subtle: #F0EDE7;
   --foreground: #1C1917;
@@ -17,7 +16,6 @@
   --border: #D6D0C8;
   --ring: #D97706;
 
-  /* shadcn semantic tokens — wired to your palette */
   --card: #F0EDE7;
   --card-foreground: #1C1917;
   --popover: #FAFAF8;
@@ -33,7 +31,6 @@
   --input: #D6D0C8;
   --radius: 0.625rem;
 
-  /* Sidebar */
   --sidebar: #F0EDE7;
   --sidebar-foreground: #1C1917;
   --sidebar-primary: #D97706;
@@ -43,12 +40,17 @@
   --sidebar-border: #D6D0C8;
   --sidebar-ring: #D97706;
 
-  /* Charts */
   --chart-1: #D97706;
   --chart-2: #B45309;
   --chart-3: #78716C;
   --chart-4: #D6D0C8;
   --chart-5: #1C1917;
+
+  /* NEW: refined shadow system */
+  --shadow-sm: 0 1px 2px 0 rgb(28 25 23 / 0.06);
+  --shadow-md: 0 4px 12px -2px rgb(28 25 23 / 0.10), 0 1px 3px -1px rgb(28 25 23 / 0.06);
+  --shadow-lg: 0 12px 32px -4px rgb(28 25 23 / 0.14), 0 4px 8px -2px rgb(28 25 23 / 0.08);
+  --shadow-glow: 0 0 0 1px var(--primary), 0 0 16px -2px color-mix(in srgb, var(--primary) 40%, transparent);
 }
 
 /* ─── Dark mode ───────────────────────────────────────────── */
@@ -63,7 +65,6 @@
   --border: #44403C;
   --ring: #F59E0B;
 
-  /* shadcn semantic tokens */
   --card: #292524;
   --card-foreground: #FAFAF8;
   --popover: #1C1917;
@@ -78,7 +79,6 @@
   --destructive: oklch(0.704 0.191 22.216);
   --input: #44403C;
 
-  /* Sidebar */
   --sidebar: #1C1917;
   --sidebar-foreground: #FAFAF8;
   --sidebar-primary: #F59E0B;
@@ -88,12 +88,16 @@
   --sidebar-border: #44403C;
   --sidebar-ring: #F59E0B;
 
-  /* Charts */
   --chart-1: #F59E0B;
   --chart-2: #FBBF24;
   --chart-3: #A8A29E;
   --chart-4: #44403C;
   --chart-5: #FAFAF8;
+
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+  --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.35), 0 1px 3px -1px rgb(0 0 0 / 0.2);
+  --shadow-lg: 0 12px 32px -4px rgb(0 0 0 / 0.5), 0 4px 8px -2px rgb(0 0 0 / 0.3);
+  --shadow-glow: 0 0 0 1px var(--primary), 0 0 20px -2px color-mix(in srgb, var(--primary) 35%, transparent);
 }
 
 /* ─── Tailwind theme wiring ───────────────────────────────── */
@@ -102,7 +106,6 @@
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-mono);
 
-  /* Custom tokens */
   --color-background: var(--background);
   --color-background-subtle: var(--background-subtle);
   --color-foreground: var(--foreground);
@@ -113,12 +116,10 @@
   --color-border: var(--border);
   --color-ring: var(--ring);
 
-  /* Raw palette as named colors */
   --color-amber: #D97706;
   --color-dark: #1C1917;
   --color-cream: #FAFAF8;
 
-  /* shadcn tokens */
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
@@ -167,9 +168,58 @@
 
   html {
     @apply font-mono;
+    /* Smooth scrolling for anchor links */
+    scroll-behavior: smooth;
+    /* Better text rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ── Custom scrollbar ─────────────────────────────────── */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--background);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--foreground-muted);
+  }
+
+  /* ── Selection color ─────────────────────────────────── */
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 25%, transparent);
+    color: var(--foreground);
+  }
+
+  /* ── Focus refinement ────────────────────────────────── */
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* ── Refined input base ───────────────────────────────── */
+  input, textarea, select {
+    font-family: var(--font-mono), monospace;
+    font-size: 0.875rem;
+  }
+
+  /* ── Heading defaults (monospace) ────────────────────── */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-mono), monospace;
+    font-feature-settings: "kern" 1, "liga" 0;
+    letter-spacing: -0.02em;
   }
 }
 
+/* ─── Glint brand classes ─────────────────────────────────── */
 .glint-text {
   color: var(--foreground);
 }
@@ -178,27 +228,90 @@
   filter: drop-shadow(0 0 6px var(--primary)) drop-shadow(0 0 12px var(--primary));
 }
 
-/* ─── GlintAnimation additions ────────────────────────────────────────────────
-   Paste these rules into your existing globals.css.
-   The existing .glint-text and .glint-star rules can stay as-is.
-   ──────────────────────────────────────────────────────────────────────────── */
-
-/*
- * FIX: SVG scale animations default transform-origin to the SVG's 0,0 corner,
- * which makes the star drift/jump when anime scales it.
- * transform-box: fill-box scopes the origin to the element's own bounding box,
- * so transform-origin: center correctly pivots around the star's own centre.
- */
 .glint-star-draw {
   transform-box: fill-box;
   transform-origin: center;
 }
 
+/* ─── Utility: dot grid background ───────────────────────── */
+.bg-dot-grid {
+  background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ─── Utility: amber glow on focus ───────────────────────── */
+.focus-glow:focus-visible {
+  box-shadow: var(--shadow-glow);
+  outline: none;
+}
+
+/* ─── Refined button base ─────────────────────────────────── */
+button {
+  font-family: var(--font-mono), monospace;
+  letter-spacing: 0;
+}
+
+/* ─── Grain overlay (apply to a ::before pseudo or a child div) ─── */
 /*
- * Existing rule — kept for reference, no changes needed.
- * The glow now actually fires because .glint-star is applied to the path in the TSX.
- *
- * .glint-star {
- *   filter: drop-shadow(0 0 6px var(--primary)) drop-shadow(0 0 12px var(--primary));
- * }
- */
+   Usage: add class "grain" to any container, then add a
+   `before:content-[''] before:glint-grain before:absolute before:inset-0 before:pointer-events-none`
+   child to get the grain effect. Or use .glint-grain directly on a pseudo-element.
+*/
+.glint-grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+  border-radius: inherit;
+}
+
+/* ─── Page-level grain (body overlay) ────────────────────── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.018;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* ─── Refined card / section borders ─────────────────────── */
+/*
+  Instead of the generic equal-weight borders, add a subtle
+  inset highlight at the top of cards for a "lifted" feel in light mode.
+*/
+.card-lifted {
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in srgb, #fff 60%, transparent),
+    var(--shadow-sm);
+}
+.dark .card-lifted {
+  box-shadow:
+    inset 0 1px 0 0 color-mix(in srgb, #fff 8%, transparent),
+    var(--shadow-sm);
+}
+
+/* ─── Monospace label utility ─────────────────────────────── */
+.label-mono {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.625rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--foreground-muted);
+}
+
+/* ─── Amber divider line ──────────────────────────────────── */
+.divider-amber {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    var(--primary),
+    color-mix(in srgb, var(--primary) 0%, transparent)
+  );
+  border: none;
+}

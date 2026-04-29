@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 
 const base =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "https://localhost:7248";
@@ -230,13 +231,13 @@ function VerifyEmailInner() {
           <OtpInput value={digits} onChange={setDigits} disabled={isSubmitting} />
         </div>
 
-        <button
+        <Button
           type="submit"
           disabled={isSubmitting || code.length < 6}
-          className="w-full rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-fg hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-70"
+          className="w-full"
         >
           {isSubmitting ? "Verifying…" : "Verify email"}
-        </button>
+        </Button>
       </form>
 
       <p className="text-sm text-foreground-muted">

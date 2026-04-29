@@ -1,4 +1,5 @@
 import { SectionLabel } from "@/components/analysis/SectionLabel";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   file: File | null;
@@ -69,13 +70,13 @@ export const AnalysisInputs = ({
         />
       </div>
 
-      <button
+      <Button
         onClick={onRun}
         disabled={loading || !jobLabel}
-        className="w-full rounded-lg bg-primary px-6 py-4 font-mono text-sm font-semibold text-primary-fg uppercase hover:bg-primary-hover disabled:opacity-30 transition-all"
+        className="w-full"
       >
         {loading ? "Analyzing..." : "Run Analysis →"}
-      </button>
+      </Button>
     </div>
   </div>
 );

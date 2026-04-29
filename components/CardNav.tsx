@@ -1,5 +1,5 @@
 "use client";
-import React, { useLayoutEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useRef, useState, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { GoArrowUpRight } from 'react-icons/go';
 import GlintAnimation from './GlintAnimation';
@@ -38,9 +38,16 @@ const CardNav: React.FC<CardNavProps> = ({
   const router = useRouter();
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const navRef = useRef<HTMLDivElement | null>(null);
   const cardsRef = useRef<HTMLDivElement[]>([]);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
+
+  // Prevent hydration issues by only rendering interactive content after mount
+  useEffect(() => {
+    // When mounted on client, now we can show the UI
+    setIsMounted(true);
+  }, []);
 
   const closeMenu = (onClosed?: () => void) => {
     const tl = tlRef.current;
@@ -59,7 +66,11 @@ const CardNav: React.FC<CardNavProps> = ({
   };
 
   const handleNavLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (href !== '/auth/logout') return closeMenu(() => router.push(href));
+    if (href !== '/auth/logout') {
+      closeMenu(() => router.push(href));
+      return;
+    }
+
     e.preventDefault();
     if (window.confirm('Are you sure you want to log out?')) {
       closeMenu(() => {
@@ -107,12 +118,15 @@ const CardNav: React.FC<CardNavProps> = ({
   };
 
   useLayoutEffect(() => {
+    if (!isMounted) return;
     const tl = createTimeline();
     tlRef.current = tl;
     return () => { tl?.kill(); tlRef.current = null; };
-  }, [ease, items]);
+  }, [ease, items, isMounted]);
 
   useLayoutEffect(() => {
+    if (!isMounted) return;
+
     const handleResize = () => {
       if (!tlRef.current) return;
       if (isExpanded) {
@@ -128,9 +142,10 @@ const CardNav: React.FC<CardNavProps> = ({
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [isExpanded]);
+  }, [isExpanded, isMounted]);
 
   const toggleMenu = () => {
+    if (!isMounted) return;
     const tl = tlRef.current;
     if (!tl) return;
     if (!isExpanded) { setIsHamburgerOpen(true); setIsExpanded(true); tl.play(0); }
@@ -173,8 +188,8 @@ const CardNav: React.FC<CardNavProps> = ({
           </Link>
 
           {/* CTA */}
-          <button
-            type="button"
+          <Link
+            href="/analysis"
             className="card-nav-cta-button hidden md:inline-flex border-0 rounded-[var(--radius-md)] px-4 items-center h-[calc(100%-10px)] font-medium cursor-pointer transition-opacity duration-200 hover:opacity-85"
             style={{
               backgroundColor: buttonBgColor ?? 'var(--primary)',
@@ -182,7 +197,7 @@ const CardNav: React.FC<CardNavProps> = ({
             }}
           >
             Get Started
-          </button>
+          </Link>
         </div>
 
         {/* ── Cards ── */}
@@ -192,7 +207,7 @@ const CardNav: React.FC<CardNavProps> = ({
             md:flex-row md:items-end md:gap-[8px]`}
           aria-hidden={!isExpanded}
         >
-          {(items ?? []).slice(0, 3).map((item, idx) => (
+          {isMounted && (items ?? []).slice(0, 3).map((item, idx) => (
             <div
               key={`${item.label}-${idx}`}
               ref={setCardRef(idx)}
@@ -208,7 +223,7 @@ const CardNav: React.FC<CardNavProps> = ({
               <div className="nav-card-links mt-auto flex flex-col gap-[2px]">
                 {item.links?.map((lnk, i) => (
                   <Link
-                    key={`${lnk.label}-${i}`}
+                    key={`${lnk.href}-${i}`}
                     href={lnk.href}
                     aria-label={lnk.ariaLabel}
                     className="nav-card-link inline-flex items-center gap-[6px] no-underline cursor-pointer transition-opacity duration-200 hover:opacity-60 text-[15px] md:text-[16px]"
