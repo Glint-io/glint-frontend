@@ -1,7 +1,15 @@
 import { SectionLabel } from "@/components/analysis/SectionLabel";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { authedGet } from "@/lib/auth";
+
+type Resume = {
+  resumeId: string;
+  fileName: string;
+  uploadedAt: string;
+  sizeBytes?: number;
+};
 
 interface Props {
   file: File | null;
@@ -15,27 +23,7 @@ interface Props {
   onRun: () => void;
 }
 
-// Placeholder data for uploaded CVs
-const UPLOADED_CVS = [
-  {
-    id: 1,
-    name: "Senior_Engineer_Resume.pdf",
-    uploadedAt: "2 weeks ago",
-    size: "245 KB",
-  },
-  {
-    id: 2,
-    name: "Product_Manager_CV.pdf",
-    uploadedAt: "1 month ago",
-    size: "189 KB",
-  },
-  {
-    id: 3,
-    name: "Full_Stack_Resume.pdf",
-    uploadedAt: "3 weeks ago",
-    size: "267 KB",
-  },
-];
+
 
 export const AnalysisInputs = ({
   file,
@@ -49,8 +37,58 @@ export const AnalysisInputs = ({
   onRun,
 }: Props) => {
   const { isLoggedIn } = useAuth();
-  const [selectedCVId, setSelectedCVId] = useState<number | null>(null);
+  const [selectedCVId, setSelectedCVId] = useState<string | null>(null);
   const [showUploadOption, setShowUploadOption] = useState(false);
+  const [resumes, setResumes] = useState<Resume[]>([]);
+  const [resumesLoading, setResumesLoading] = useState(false);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      const fetchResumes = async () => {
+        setResumesLoading(true);
+        try {
+          const data = await authedGet<Resume[]>("/user/resume");
+          setResumes(data || []);
+        } catch (err) {
+          console.error("Failed to fetch resumes:", err);
+          setResumes([]);
+        } finally {
+          setResumesLoading(false);
+        }
+      };
+      fetchResumes();
+    }
+  }, [isLoggedIn]);
+
+  async function handleViewResume(resumeId: string) {
+    const base =
+      process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ??
+      "https://localhost:7248";
+
+    try {
+      const auth = localStorage.getItem("glint.auth");
+      const token = auth ? JSON.parse(auth).accessToken : "";
+
+      const res = await fetch(`${base}/user/resume/${resumeId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) return;
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.target = "_blank";
+      anchor.rel = "noopener noreferrer";
+      anchor.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      console.error("Failed to view resume:", err);
+    }
+  }
 
   // Show loading state while auth status is being determined
   if (isLoggedIn === null) {
@@ -64,7 +102,7 @@ export const AnalysisInputs = ({
     );
   }
 
-  const selectedCV = UPLOADED_CVS.find((cv) => cv.id === selectedCVId);
+  const selectedCV = resumes.find((cv) => cv.resumeId === selectedCVId);
 
   return (
     <div className="flex flex-col gap-5 h-full">
@@ -78,25 +116,71 @@ export const AnalysisInputs = ({
             </label>
             {!showUploadOption ? (
               <div className="flex flex-col gap-2">
-                <div className="grid gap-2">
-                  {UPLOADED_CVS.map((cv) => (
-                    <button
-                      key={cv.id}
-                      onClick={() => setSelectedCVId(cv.id)}
-                      className={`flex flex-col gap-1 rounded-lg border-2 px-4 py-3 text-left transition-colors ${selectedCVId === cv.id
-                        ? "border-primary bg-background-subtle"
-                        : "border-border hover:border-foreground-muted"
-                        }`}
-                    >
-                      <span className="font-mono text-sm font-medium">
-                        {cv.name}
-                      </span>
-                      <span className="font-mono text-xs text-foreground-muted">
-                        {cv.uploadedAt} · {cv.size}
-                      </span>
-                    </button>
-                  ))}
-                </div>
+                {resumesLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <span className="font-mono text-xs text-foreground-muted">Loading resumes...</span>
+                  </div>
+                ) : resumes.length > 0 ? (
+                  <div className="grid gap-2">
+                    {resumes.map((cv) => (
+                      <div
+                        key={cv.resumeId}
+                        className={`flex items-center gap-2 rounded-lg border-2 px-4 py-3 transition-colors ${selectedCVId === cv.resumeId
+                            ? "border-primary bg-background-subtle"
+                            : "border-border hover:border-foreground-muted"
+                          }`}
+                      >
+                        <button
+                          onClick={() => setSelectedCVId(cv.resumeId)}
+                          className="flex-1 text-left"
+                        >
+                          <span className="font-mono text-sm font-medium">
+                            {cv.fileName}
+                          </span>
+                          <span className="font-mono text-xs text-foreground-muted block">
+                            {new Date(cv.uploadedAt).toLocaleDateString(undefined, {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
+                            {cv.sizeBytes != null &&
+                              ` · ${(cv.sizeBytes / 1024).toFixed(0)} KB`}
+                          </span>
+                        </button>
+                        <button
+                          onClick={() => handleViewResume(cv.resumeId)}
+                          className="p-2 text-foreground-muted hover:text-foreground transition-colors"
+                          title="View resume"
+                        >
+                          <svg
+                            className="h-4 w-4"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M2.25 12s3.75-7.5 9.75-7.5 9.75 7.5 9.75 7.5-3.75 7.5-9.75 7.5S2.25 12 2.25 12z"
+                            />
+                            <circle
+                              cx="12"
+                              cy="12"
+                              r="3"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center py-8">
+                    <span className="font-mono text-xs text-foreground-muted">No resumes saved yet. Upload one below.</span>
+                  </div>
+                )}
                 <button
                   onClick={() => setShowUploadOption(true)}
                   className="font-mono text-xs text-primary hover:underline text-left py-2"
