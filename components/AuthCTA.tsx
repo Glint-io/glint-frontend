@@ -1,65 +1,42 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { getStoredAuth } from "@/lib/auth";
+import { useAuth } from "@/components/AuthProvider";
 
 export default function AuthCTA({ className = "" }: { className?: string }) {
-  const [loggedIn, setLoggedIn] = useState<boolean>(false);
-  const [isMounted, setIsMounted] = useState<boolean>(false);
+    const { isLoggedIn } = useAuth();
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsMounted(true);
-    //TODO: find a better way to avoid hydration mismatch than rendering nothing on the server, which causes CLS and hurts SEO
+    // Show a placeholder to avoid hydration mismatch until we know the auth state
+    if (isLoggedIn === null) {
+        return (
+            <div
+                className={"inline-flex h-10 items-center rounded-lg border border-border bg-background px-5 font-mono text-sm font-medium text-foreground opacity-0 " + className}
+            >
+                Loading...
+            </div>
+        );
+    }
 
-    const check = () => {
-      const auth = getStoredAuth();
-      setLoggedIn(Boolean(auth?.accessToken));
-    };
+    if (isLoggedIn) {
+        return (
+            <Link
+                href="/user"
+                className={"inline-flex h-10 items-center rounded-lg px-5 font-mono text-sm font-medium transition-opacity hover:opacity-85 " + className}
+            >
+                Your account
+            </Link>
+        );
+    }
 
-    check();
-    const handler = () => check();
-    window.addEventListener("glint:auth-change", handler);
-    return () => window.removeEventListener("glint:auth-change", handler);
-  }, []);
-
-  // Avoid flashing the unauthenticated CTA during first render
-  if (!isMounted) {
     return (
-      <div
-        aria-hidden
-        className={
-          "inline-flex h-10 items-center rounded-lg px-5 " +
-          className +
-          " invisible"
-        }
-      />
+        <Link
+            href="/auth/register"
+            className={
+                "inline-flex h-10 items-center rounded-lg border border-border bg-background px-5 font-mono text-sm font-medium text-foreground transition-colors hover:bg-background-subtle " +
+                className
+            }
+        >
+            Create free account
+        </Link>
     );
-  }
-
-  if (loggedIn) {
-    return (
-      <Link
-        href="/user"
-        className={
-          "inline-flex h-10 items-center rounded-lg px-5 font-mono text-sm font-medium transition-opacity hover:opacity-85 " +
-          className
-        }
-      >
-        Your account
-      </Link>
-    );
-  }
-
-  return (
-    <Link
-      href="/auth/register"
-      className={
-        "inline-flex h-10 items-center rounded-lg border border-border bg-background px-5 font-mono text-sm font-medium text-foreground transition-colors hover:bg-background-subtle " +
-        className
-      }
-    >
-      Create free account
-    </Link>
-  );
 }

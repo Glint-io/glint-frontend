@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import CardNav from "./CardNav";
 import type { CardNavItem } from "./CardNav";
 import { getAccessToken } from "@/lib/auth";
+import { useAuth } from "@/components/AuthProvider";
 
 // ─── Nav item sets ─────────────────────────────────────────────────────────────
 
@@ -82,11 +82,12 @@ export default function AuthAwareNav(props: AuthAwareNavProps) {
       window.removeEventListener("glint:auth-change", onAuthChange);
     };
   }, []);
+  /* const { isLoggedIn } = useAuth(); */
 
   const accountItem = isLoggedIn ? LOGGED_IN_ACCOUNT : LOGGED_OUT_ACCOUNT;
   const items: CardNavItem[] = [...SHARED_ITEMS, accountItem];
 
-  // Render nothing until we've read localStorage to prevent hydration mismatch
+  // Render nothing until we know the auth state to prevent hydration mismatch
   if (isLoggedIn === null) return null;
 
   return <CardNav {...props} items={items} />;
