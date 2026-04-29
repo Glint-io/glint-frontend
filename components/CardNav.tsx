@@ -1,11 +1,11 @@
 "use client";
-import React, { useLayoutEffect, useRef, useState, useEffect } from 'react';
-import { gsap } from 'gsap';
-import { GoArrowUpRight } from 'react-icons/go';
-import GlintAnimation from './GlintAnimation';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { clearAuth } from '@/app/lib/auth';
+import React, { useLayoutEffect, useRef, useState, useEffect } from "react";
+import { gsap } from "gsap";
+import { GoArrowUpRight } from "react-icons/go";
+import GlintAnimation from "./GlintAnimation";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { clearAuth } from "@/lib/auth";
 
 type CardNavLink = { label: string; href: string; ariaLabel: string };
 export type CardNavItem = {
@@ -29,8 +29,8 @@ export interface CardNavProps {
 
 const CardNav: React.FC<CardNavProps> = ({
   items,
-  className = '',
-  ease = 'power3.out',
+  className = "",
+  ease = "power3.out",
   menuColor,
   buttonBgColor,
   buttonTextColor,
@@ -58,24 +58,27 @@ const CardNav: React.FC<CardNavProps> = ({
       return;
     }
     setIsHamburgerOpen(false);
-    tl.eventCallback('onReverseComplete', () => {
+    tl.eventCallback("onReverseComplete", () => {
       setIsExpanded(false);
       onClosed?.();
     });
     tl.reverse();
   };
 
-  const handleNavLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-    if (href !== '/auth/logout') {
+  const handleNavLinkClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: string,
+  ) => {
+    if (href !== "/auth/logout") {
       closeMenu(() => router.push(href));
       return;
     }
 
     e.preventDefault();
-    if (window.confirm('Are you sure you want to log out?')) {
+    if (window.confirm("Are you sure you want to log out?")) {
       closeMenu(() => {
-        clearAuth();              // wipe tokens + fire glint:auth-change
-        router.push('/auth/login');
+        clearAuth(); // wipe tokens + fire glint:auth-change
+        router.push("/auth/login");
       });
     }
   };
@@ -83,9 +86,9 @@ const CardNav: React.FC<CardNavProps> = ({
   const calculateHeight = () => {
     const navEl = navRef.current;
     if (!navEl) return 260;
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const isMobile = window.matchMedia("(max-width: 768px)").matches;
     if (isMobile) {
-      const contentEl = navEl.querySelector('.card-nav-content') as HTMLElement;
+      const contentEl = navEl.querySelector(".card-nav-content") as HTMLElement;
       if (contentEl) {
         const prev = {
           visibility: contentEl.style.visibility,
@@ -94,8 +97,10 @@ const CardNav: React.FC<CardNavProps> = ({
           height: contentEl.style.height,
         };
         Object.assign(contentEl.style, {
-          visibility: 'visible', pointerEvents: 'auto',
-          position: 'static', height: 'auto',
+          visibility: "visible",
+          pointerEvents: "auto",
+          position: "static",
+          height: "auto",
         });
         void contentEl.offsetHeight;
         const h = 60 + contentEl.scrollHeight + 16;
@@ -109,11 +114,15 @@ const CardNav: React.FC<CardNavProps> = ({
   const createTimeline = () => {
     const navEl = navRef.current;
     if (!navEl) return null;
-    gsap.set(navEl, { height: 60, overflow: 'hidden' });
+    gsap.set(navEl, { height: 60, overflow: "hidden" });
     gsap.set(cardsRef.current, { y: 50, opacity: 0 });
     const tl = gsap.timeline({ paused: true });
     tl.to(navEl, { height: calculateHeight, duration: 0.4, ease });
-    tl.to(cardsRef.current, { y: 0, opacity: 1, duration: 0.4, ease, stagger: 0.08 }, '-=0.1');
+    tl.to(
+      cardsRef.current,
+      { y: 0, opacity: 1, duration: 0.4, ease, stagger: 0.08 },
+      "-=0.1",
+    );
     return tl;
   };
 
@@ -121,7 +130,10 @@ const CardNav: React.FC<CardNavProps> = ({
     if (!isMounted) return;
     const tl = createTimeline();
     tlRef.current = tl;
-    return () => { tl?.kill(); tlRef.current = null; };
+    return () => {
+      tl?.kill();
+      tlRef.current = null;
+    };
   }, [ease, items, isMounted]);
 
   useLayoutEffect(() => {
@@ -133,23 +145,29 @@ const CardNav: React.FC<CardNavProps> = ({
         gsap.set(navRef.current, { height: calculateHeight() });
         tlRef.current.kill();
         const tl = createTimeline();
-        if (tl) { tl.progress(1); tlRef.current = tl; }
+        if (tl) {
+          tl.progress(1);
+          tlRef.current = tl;
+        }
       } else {
         tlRef.current.kill();
         const tl = createTimeline();
         if (tl) tlRef.current = tl;
       }
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, [isExpanded, isMounted]);
 
   const toggleMenu = () => {
     if (!isMounted) return;
     const tl = tlRef.current;
     if (!tl) return;
-    if (!isExpanded) { setIsHamburgerOpen(true); setIsExpanded(true); tl.play(0); }
-    else closeMenu();
+    if (!isExpanded) {
+      setIsHamburgerOpen(true);
+      setIsExpanded(true);
+      tl.play(0);
+    } else closeMenu();
   };
 
   const setCardRef = (i: number) => (el: HTMLDivElement | null) => {
@@ -157,10 +175,12 @@ const CardNav: React.FC<CardNavProps> = ({
   };
 
   return (
-    <div className={`card-nav-container absolute left-1/2 -translate-x-1/2 w-[90%] max-w-[800px] z-[99] top-[.2em] md:top-[.5em] ${className}`}>
+    <div
+      className={`card-nav-container absolute left-1/2 -translate-x-1/2 w-[90%] max-w-[800px] z-[99] top-[.2em] md:top-[.5em] ${className}`}
+    >
       <nav
         ref={navRef}
-        className={`card-nav ${isExpanded ? 'open' : ''}
+        className={`card-nav ${isExpanded ? "open" : ""}
           bg-background border border-border
           block h-[60px] p-0 rounded-xl
           shadow-[0_4px_24px_-4px_rgba(28,25,23,0.10)]
@@ -168,22 +188,28 @@ const CardNav: React.FC<CardNavProps> = ({
       >
         {/* ── Top bar ── */}
         <div className="card-nav-top absolute inset-x-0 top-0 h-[60px] flex items-center justify-between p-2 pl-[1.1rem] z-[2]">
-
           {/* Hamburger */}
           <div
-            className={`hamburger-menu ${isHamburgerOpen ? 'open' : ''} group h-full flex flex-col items-center justify-center cursor-pointer gap-[6px] order-2 md:order-none`}
+            className={`hamburger-menu ${isHamburgerOpen ? "open" : ""} group h-full flex flex-col items-center justify-center cursor-pointer gap-[6px] order-2 md:order-none`}
             onClick={toggleMenu}
             role="button"
-            aria-label={isExpanded ? 'Close menu' : 'Open menu'}
+            aria-label={isExpanded ? "Close menu" : "Open menu"}
             tabIndex={0}
-            style={{ color: menuColor ?? 'var(--foreground)' }}
+            style={{ color: menuColor ?? "var(--foreground)" }}
           >
-            <div className={`hamburger-line w-[30px] h-[2px] bg-foreground transition-[transform,opacity,margin] duration-300 ease-linear [transform-origin:50%_50%] ${isHamburgerOpen ? 'translate-y-[4px] rotate-45' : ''} group-hover:opacity-50`} />
-            <div className={`hamburger-line w-[30px] h-[2px] bg-foreground transition-[transform,opacity,margin] duration-300 ease-linear [transform-origin:50%_50%] ${isHamburgerOpen ? '-translate-y-[4px] -rotate-45' : ''} group-hover:opacity-50`} />
+            <div
+              className={`hamburger-line w-[30px] h-[2px] bg-foreground transition-[transform,opacity,margin] duration-300 ease-linear [transform-origin:50%_50%] ${isHamburgerOpen ? "translate-y-[4px] rotate-45" : ""} group-hover:opacity-50`}
+            />
+            <div
+              className={`hamburger-line w-[30px] h-[2px] bg-foreground transition-[transform,opacity,margin] duration-300 ease-linear [transform-origin:50%_50%] ${isHamburgerOpen ? "-translate-y-[4px] -rotate-45" : ""} group-hover:opacity-50`}
+            />
           </div>
 
           {/* Logo */}
-          <Link href="/" className="logo-container flex items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 order-1 md:order-0">
+          <Link
+            href="/"
+            className="logo-container flex items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 order-1 md:order-0"
+          >
             <GlintAnimation className="h-7" />
           </Link>
 
@@ -192,8 +218,8 @@ const CardNav: React.FC<CardNavProps> = ({
             href="/analysis"
             className="card-nav-cta-button hidden md:inline-flex border-0 rounded-[var(--radius-md)] px-4 items-center h-[calc(100%-10px)] font-medium cursor-pointer transition-opacity duration-200 hover:opacity-85"
             style={{
-              backgroundColor: buttonBgColor ?? 'var(--primary)',
-              color: buttonTextColor ?? 'var(--primary-fg)',
+              backgroundColor: buttonBgColor ?? "var(--primary)",
+              color: buttonTextColor ?? "var(--primary-fg)",
             }}
           >
             Get Started
@@ -203,39 +229,43 @@ const CardNav: React.FC<CardNavProps> = ({
         {/* ── Cards ── */}
         <div
           className={`card-nav-content absolute left-0 right-0 top-[60px] bottom-0 p-2 flex flex-col items-stretch gap-2 justify-start z-[1]
-            ${isExpanded ? 'visible pointer-events-auto' : 'invisible pointer-events-none'}
+            ${isExpanded ? "visible pointer-events-auto" : "invisible pointer-events-none"}
             md:flex-row md:items-end md:gap-[8px]`}
           aria-hidden={!isExpanded}
         >
-          {isMounted && (items ?? []).slice(0, 3).map((item, idx) => (
-            <div
-              key={`${item.label}-${idx}`}
-              ref={setCardRef(idx)}
-              className="nav-card select-none relative flex flex-col gap-2 p-[12px_16px] rounded-[var(--radius-md)] min-w-0 flex-[1_1_auto] h-auto min-h-[60px] md:h-full md:min-h-0 md:flex-[1_1_0%]"
-              style={{
-                backgroundColor: item.bgColor ?? 'var(--background-subtle)',
-                color: item.textColor ?? 'var(--foreground)',
-              }}
-            >
-              <div className="nav-card-label font-normal tracking-[-0.5px] text-[18px] md:text-[22px]">
-                {item.label}
+          {isMounted &&
+            (items ?? []).slice(0, 3).map((item, idx) => (
+              <div
+                key={`${item.label}-${idx}`}
+                ref={setCardRef(idx)}
+                className="nav-card select-none relative flex flex-col gap-2 p-[12px_16px] rounded-[var(--radius-md)] min-w-0 flex-[1_1_auto] h-auto min-h-[60px] md:h-full md:min-h-0 md:flex-[1_1_0%]"
+                style={{
+                  backgroundColor: item.bgColor ?? "var(--background-subtle)",
+                  color: item.textColor ?? "var(--foreground)",
+                }}
+              >
+                <div className="nav-card-label font-normal tracking-[-0.5px] text-[18px] md:text-[22px]">
+                  {item.label}
+                </div>
+                <div className="nav-card-links mt-auto flex flex-col gap-[2px]">
+                  {item.links?.map((lnk, i) => (
+                    <Link
+                      key={`${lnk.href}-${i}`}
+                      href={lnk.href}
+                      aria-label={lnk.ariaLabel}
+                      className="nav-card-link inline-flex items-center gap-[6px] no-underline cursor-pointer transition-opacity duration-200 hover:opacity-60 text-[15px] md:text-[16px]"
+                      onClick={(e) => handleNavLinkClick(e, lnk.href)}
+                    >
+                      <GoArrowUpRight
+                        className="nav-card-link-icon shrink-0"
+                        aria-hidden="true"
+                      />
+                      {lnk.label}
+                    </Link>
+                  ))}
+                </div>
               </div>
-              <div className="nav-card-links mt-auto flex flex-col gap-[2px]">
-                {item.links?.map((lnk, i) => (
-                  <Link
-                    key={`${lnk.href}-${i}`}
-                    href={lnk.href}
-                    aria-label={lnk.ariaLabel}
-                    className="nav-card-link inline-flex items-center gap-[6px] no-underline cursor-pointer transition-opacity duration-200 hover:opacity-60 text-[15px] md:text-[16px]"
-                    onClick={(e) => handleNavLinkClick(e, lnk.href)}
-                  >
-                    <GoArrowUpRight className="nav-card-link-icon shrink-0" aria-hidden="true" />
-                    {lnk.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
+            ))}
         </div>
       </nav>
     </div>

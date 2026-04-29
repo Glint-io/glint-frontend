@@ -3,14 +3,20 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, Suspense, useState } from "react";
-import { setAuth } from "@/app/lib/auth";
+import { setAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
 const base =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "https://localhost:7248";
+  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ??
+  "https://localhost:7248";
 const loginEndpoint = `${base}/auth/login`;
 
-type ErrorPayload = { message?: string; error?: string; title?: string; detail?: string };
+type ErrorPayload = {
+  message?: string;
+  error?: string;
+  title?: string;
+  detail?: string;
+};
 
 function extractMessage(payload: unknown): string | null {
   if (!payload || typeof payload !== "object") return null;
@@ -18,8 +24,12 @@ function extractMessage(payload: unknown): string | null {
   return p.message ?? p.error ?? p.title ?? p.detail ?? null;
 }
 
-function extractTokens(payload: unknown): { accessToken: string | null; refreshToken: string | null } {
-  if (!payload || typeof payload !== "object") return { accessToken: null, refreshToken: null };
+function extractTokens(payload: unknown): {
+  accessToken: string | null;
+  refreshToken: string | null;
+} {
+  if (!payload || typeof payload !== "object")
+    return { accessToken: null, refreshToken: null };
   const p = payload as Record<string, unknown>;
   const accessToken =
     typeof (p.accessToken ?? p.token ?? p.jwt ?? p.bearerToken) === "string"
@@ -30,7 +40,13 @@ function extractTokens(payload: unknown): { accessToken: string | null; refreshT
   return { accessToken, refreshToken };
 }
 
-function LoginBanner({ registered, verified }: { registered: boolean; verified: boolean }) {
+function LoginBanner({
+  registered,
+  verified,
+}: {
+  registered: boolean;
+  verified: boolean;
+}) {
   if (!registered && !verified) return null;
   return (
     <p className="rounded-md border border-green-500/30 bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-300">
@@ -60,18 +76,27 @@ function LoginInner() {
     try {
       const res = await fetch(loginEndpoint, {
         method: "POST",
-        headers: { accept: "application/json", "Content-Type": "application/json" },
+        headers: {
+          accept: "application/json",
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ email, password }),
       });
 
       const text = await res.text();
       let payload: unknown = null;
-      try { payload = text ? JSON.parse(text) : null; } catch { payload = text || null; }
+      try {
+        payload = text ? JSON.parse(text) : null;
+      } catch {
+        payload = text || null;
+      }
 
       if (!res.ok) {
         const msg = extractMessage(payload);
         if (res.status === 403) {
-          setError("Your email isn't verified yet. Check your inbox for the verification email.");
+          setError(
+            "Your email isn't verified yet. Check your inbox for the verification email.",
+          );
         } else if (res.status === 401) {
           setError("Incorrect email or password.");
         } else {
@@ -95,14 +120,19 @@ function LoginInner() {
 
   return (
     <div className="mx-auto w-full max-w-md rounded-2xl border border-border bg-background-subtle p-8 shadow-sm">
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">Sign in</h1>
+      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        Sign in
+      </h1>
       <p className="mt-2 text-sm text-foreground-muted">Welcome back.</p>
 
       <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
         <LoginBanner registered={registered} verified={verified} />
 
         <div>
-          <label htmlFor="email" className="mb-1 block text-sm font-medium text-foreground-muted">
+          <label
+            htmlFor="email"
+            className="mb-1 block text-sm font-medium text-foreground-muted"
+          >
             Email
           </label>
           <input
@@ -119,7 +149,10 @@ function LoginInner() {
         </div>
 
         <div>
-          <label htmlFor="password" className="mb-1 block text-sm font-medium text-foreground-muted">
+          <label
+            htmlFor="password"
+            className="mb-1 block text-sm font-medium text-foreground-muted"
+          >
             Password
           </label>
           <input
@@ -141,18 +174,17 @@ function LoginInner() {
           </p>
         )}
 
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full"
-        >
+        <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? "Signing in…" : "Sign in"}
         </Button>
       </form>
 
       <p className="mt-4 text-sm text-foreground-muted">
         Don&apos;t have an account?{" "}
-        <Link href="/auth/register" className="font-medium text-foreground underline">
+        <Link
+          href="/auth/register"
+          className="font-medium text-foreground underline"
+        >
           Register
         </Link>
       </p>

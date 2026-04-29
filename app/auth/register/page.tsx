@@ -2,13 +2,20 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useRef, useState, KeyboardEvent, ClipboardEvent } from "react";
-import { setAuth } from "@/app/lib/auth";
+import {
+  FormEvent,
+  useRef,
+  useState,
+  KeyboardEvent,
+  ClipboardEvent,
+} from "react";
+import { setAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
 // ─── API config ────────────────────────────────────────────────────────────────
 const base =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "https://localhost:7248";
+  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ??
+  "https://localhost:7248";
 
 const ep = {
   register: `${base}/auth/register`,
@@ -18,7 +25,12 @@ const ep = {
 };
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
-type ErrorPayload = { message?: string; error?: string; title?: string; detail?: string };
+type ErrorPayload = {
+  message?: string;
+  error?: string;
+  title?: string;
+  detail?: string;
+};
 
 function extractMessage(payload: unknown): string | null {
   if (!payload || typeof payload !== "object") return null;
@@ -28,20 +40,42 @@ function extractMessage(payload: unknown): string | null {
 
 async function apiPost(
   url: string,
-  body: object
-): Promise<{ ok: boolean; message: string | null; status: number; data: unknown }> {
+  body: object,
+): Promise<{
+  ok: boolean;
+  message: string | null;
+  status: number;
+  data: unknown;
+}> {
   try {
     const res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json", accept: "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        accept: "application/json",
+      },
       body: JSON.stringify(body),
     });
     const text = await res.text();
     let data: unknown = null;
-    try { data = text ? JSON.parse(text) : null; } catch { data = text || null; }
-    return { ok: res.ok, message: extractMessage(data), status: res.status, data };
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      data = text || null;
+    }
+    return {
+      ok: res.ok,
+      message: extractMessage(data),
+      status: res.status,
+      data,
+    };
   } catch {
-    return { ok: false, message: "Could not reach the server. Is the backend running?", status: 0, data: null };
+    return {
+      ok: false,
+      message: "Could not reach the server. Is the backend running?",
+      status: 0,
+      data: null,
+    };
   }
 }
 
@@ -66,16 +100,23 @@ function OtpInput({
   }
 
   function handleKeyDown(idx: number, e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Backspace" && !value[idx] && idx > 0) refs.current[idx - 1]?.focus();
+    if (e.key === "Backspace" && !value[idx] && idx > 0)
+      refs.current[idx - 1]?.focus();
     if (e.key === "ArrowLeft" && idx > 0) refs.current[idx - 1]?.focus();
     if (e.key === "ArrowRight" && idx < 5) refs.current[idx + 1]?.focus();
   }
 
   function handlePaste(e: ClipboardEvent<HTMLInputElement>) {
     e.preventDefault();
-    const digits = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6).split("");
+    const digits = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6)
+      .split("");
     const next = [...value];
-    digits.forEach((d, i) => { next[i] = d; });
+    digits.forEach((d, i) => {
+      next[i] = d;
+    });
     onChange(next);
     refs.current[Math.min(digits.length, 5)]?.focus();
   }
@@ -85,7 +126,9 @@ function OtpInput({
       {Array.from({ length: 6 }).map((_, i) => (
         <input
           key={i}
-          ref={(el) => { refs.current[i] = el; }}
+          ref={(el) => {
+            refs.current[i] = el;
+          }}
           type="text"
           inputMode="numeric"
           maxLength={1}
@@ -110,7 +153,11 @@ function OtpModal({
 }: {
   email: string;
   password: string;
-  onSuccess: (accessToken: string, refreshToken: string, payload: unknown) => void;
+  onSuccess: (
+    accessToken: string,
+    refreshToken: string,
+    payload: unknown,
+  ) => void;
   onClose: () => void;
 }) {
   const [digits, setDigits] = useState(Array(6).fill(""));
@@ -132,7 +179,10 @@ function OtpModal({
 
   async function handleVerify(e: FormEvent) {
     e.preventDefault();
-    if (code.length < 6) { setError("Enter all 6 digits."); return; }
+    if (code.length < 6) {
+      setError("Enter all 6 digits.");
+      return;
+    }
     setError(null);
     setIsSubmitting(true);
 
@@ -148,9 +198,9 @@ function OtpModal({
     } else {
       setError(
         verifyResult.message ??
-        (verifyResult.status === 400 || verifyResult.status === 410
-          ? "Invalid or expired code. Request a new one below."
-          : `Verification failed (${verifyResult.status}).`)
+          (verifyResult.status === 400 || verifyResult.status === 410
+            ? "Invalid or expired code. Request a new one below."
+            : `Verification failed (${verifyResult.status}).`),
       );
     }
 
@@ -177,7 +227,9 @@ function OtpModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div className="relative mx-4 w-full max-w-sm rounded-2xl border border-border bg-background p-8 shadow-xl">
         <Button
@@ -186,19 +238,33 @@ function OtpModal({
           className="absolute right-4 top-4 h-auto p-1"
           aria-label="Close"
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <path d="M2 2l12 12M14 2L2 14" />
           </svg>
         </Button>
 
-        <h2 className="text-xl font-semibold text-foreground">Verify your email</h2>
+        <h2 className="text-xl font-semibold text-foreground">
+          Verify your email
+        </h2>
         <p className="mt-2 text-sm text-foreground-muted">
           We sent a 6-digit code to{" "}
-          <span className="font-medium text-foreground">{email}</span>. Enter it below.
+          <span className="font-medium text-foreground">{email}</span>. Enter it
+          below.
         </p>
 
         <form onSubmit={handleVerify} className="mt-6 space-y-4">
-          <OtpInput value={digits} onChange={setDigits} disabled={isSubmitting} />
+          <OtpInput
+            value={digits}
+            onChange={setDigits}
+            disabled={isSubmitting}
+          />
 
           {error && (
             <p className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">
@@ -254,8 +320,14 @@ export default function RegisterPage() {
     e.preventDefault();
     setError(null);
 
-    if (password !== confirmPassword) { setError("Passwords don't match."); return; }
-    if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
+    if (password !== confirmPassword) {
+      setError("Passwords don't match.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
 
     setIsSubmitting(true);
     const result = await apiPost(ep.register, { email, password });
@@ -268,13 +340,17 @@ export default function RegisterPage() {
 
     setError(
       result.message ??
-      (result.status === 409
-        ? "An account with this email already exists."
-        : `Registration failed (${result.status}).`)
+        (result.status === 409
+          ? "An account with this email already exists."
+          : `Registration failed (${result.status}).`),
     );
   }
 
-  function handleVerified(accessToken: string, refreshToken: string, payload: unknown) {
+  function handleVerified(
+    accessToken: string,
+    refreshToken: string,
+    payload: unknown,
+  ) {
     setShowOtp(false);
 
     if (accessToken) {
@@ -299,19 +375,28 @@ export default function RegisterPage() {
       )}
 
       <div className="mx-auto w-full max-w-md rounded-2xl border border-border bg-background-subtle p-8 shadow-sm">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Create account</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Create account
+        </h1>
         <p className="mt-2 text-sm text-foreground-muted">
           We&apos;ll send a verification code to your email.
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={handleSubmit}>
           <div>
-            <label htmlFor="email" className="mb-1 block text-sm font-medium text-foreground-muted">
+            <label
+              htmlFor="email"
+              className="mb-1 block text-sm font-medium text-foreground-muted"
+            >
               Email
             </label>
             <input
-              id="email" name="email" type="email" required
-              value={email} onChange={(e) => setEmail(e.target.value)}
+              id="email"
+              name="email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
               placeholder="you@example.com"
@@ -319,12 +404,19 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium text-foreground-muted">
+            <label
+              htmlFor="password"
+              className="mb-1 block text-sm font-medium text-foreground-muted"
+            >
               Password
             </label>
             <input
-              id="password" name="password" type="password" required
-              value={password} onChange={(e) => setPassword(e.target.value)}
+              id="password"
+              name="password"
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
               placeholder="••••••••"
@@ -332,21 +424,31 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="mb-1 block text-sm font-medium text-foreground-muted">
+            <label
+              htmlFor="confirmPassword"
+              className="mb-1 block text-sm font-medium text-foreground-muted"
+            >
               Confirm password
             </label>
             <input
-              id="confirmPassword" name="confirmPassword" type="password" required
-              value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              required
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               autoComplete="new-password"
-              className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 ${confirmPassword && confirmPassword !== password
-                ? "border-red-400 focus:border-red-400"
-                : "border-border focus:border-primary"
-                }`}
+              className={`w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 ${
+                confirmPassword && confirmPassword !== password
+                  ? "border-red-400 focus:border-red-400"
+                  : "border-border focus:border-primary"
+              }`}
               placeholder="••••••••"
             />
             {confirmPassword && confirmPassword !== password && (
-              <p className="mt-1 text-xs text-red-500">Passwords don&apos;t match</p>
+              <p className="mt-1 text-xs text-red-500">
+                Passwords don&apos;t match
+              </p>
             )}
           </div>
 
@@ -356,18 +458,17 @@ export default function RegisterPage() {
             </p>
           )}
 
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full"
-          >
+          <Button type="submit" disabled={isSubmitting} className="w-full">
             {isSubmitting ? "Creating account…" : "Create account"}
           </Button>
         </form>
 
         <p className="mt-4 text-sm text-foreground-muted">
           Already have an account?{" "}
-          <Link href="/auth/login" className="font-medium text-foreground underline">
+          <Link
+            href="/auth/login"
+            className="font-medium text-foreground underline"
+          >
             Sign in
           </Link>
         </p>

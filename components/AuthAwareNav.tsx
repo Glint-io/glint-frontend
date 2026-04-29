@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import CardNav from "./CardNav";
 import type { CardNavItem } from "./CardNav";
-import { getAccessToken } from "@/app/lib/auth";
+import { getAccessToken } from "@/lib/auth";
 
 // ─── Nav item sets ─────────────────────────────────────────────────────────────
 
@@ -15,7 +15,11 @@ const SHARED_ITEMS: CardNavItem[] = [
     links: [
       { label: "Start", href: "/", ariaLabel: "Go to homepage" },
       { label: "About", href: "/#about", ariaLabel: "Go to about section" },
-      { label: "Contact", href: "/#contact", ariaLabel: "Go to contact section" },
+      {
+        label: "Contact",
+        href: "/#contact",
+        ariaLabel: "Go to contact section",
+      },
     ],
   },
   {
@@ -34,7 +38,11 @@ const LOGGED_OUT_ACCOUNT: CardNavItem = {
   textColor: "#2A1E0F",
   links: [
     { label: "Login", href: "/auth/login", ariaLabel: "Go to login page" },
-    { label: "Register", href: "/auth/register", ariaLabel: "Go to registration page" },
+    {
+      label: "Register",
+      href: "/auth/register",
+      ariaLabel: "Go to registration page",
+    },
   ],
 };
 
@@ -54,10 +62,11 @@ type AuthAwareNavProps = Omit<React.ComponentProps<typeof CardNav>, "items">;
 
 export default function AuthAwareNav(props: AuthAwareNavProps) {
   // Start as null (unknown) to avoid a flash of the wrong state.
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(() => !!getAccessToken());
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(
+    () => !!getAccessToken(),
+  );
 
   useEffect(() => {
-
     // Cross-tab: storage event fires when another tab writes/removes the key
     const onStorage = (e: StorageEvent) => {
       if (e.key === "glint.auth") setIsLoggedIn(!!getAccessToken());
