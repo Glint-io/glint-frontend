@@ -6,7 +6,8 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 const base =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "https://localhost:7248";
+  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ??
+  "https://localhost:7248";
 
 type Status = "idle" | "loading" | "success" | "error" | "needs-code";
 
@@ -30,15 +31,23 @@ function OtpInput({
     if (digit && idx < 5) refs.current[idx + 1]?.focus();
   }
 
-  function handleKeyDown(idx: number, e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Backspace" && !value[idx] && idx > 0) refs.current[idx - 1]?.focus();
+  function handleKeyDown(
+    idx: number,
+    e: React.KeyboardEvent<HTMLInputElement>,
+  ) {
+    if (e.key === "Backspace" && !value[idx] && idx > 0)
+      refs.current[idx - 1]?.focus();
     if (e.key === "ArrowLeft" && idx > 0) refs.current[idx - 1]?.focus();
     if (e.key === "ArrowRight" && idx < 5) refs.current[idx + 1]?.focus();
   }
 
   function handlePaste(e: React.ClipboardEvent<HTMLInputElement>) {
     e.preventDefault();
-    const digits = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6).split("");
+    const digits = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6)
+      .split("");
     const next = [...value];
     digits.forEach((d, i) => {
       next[i] = d;
@@ -83,44 +92,53 @@ function VerifyEmailInner() {
   const code = digits.join("");
 
   // ── Try auto-verify from URL param ──────────────────────────────────────────
-  const performVerify = useCallback(async (verifyCode: string) => {
-    setStatus("loading");
-    setErrorMsg(null);
-    try {
-      const res = await fetch(`${base}/auth/verify-email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", accept: "application/json" },
-        body: JSON.stringify({ code: verifyCode }),
-      });
-
-      if (res.ok) {
-        setStatus("success");
-        setTimeout(() => router.push("/auth/login?verified=1"), 2500);
-        return;
-      }
-
-      const text = await res.text();
-      let msg: string | null = null;
+  const performVerify = useCallback(
+    async (verifyCode: string) => {
+      setStatus("loading");
+      setErrorMsg(null);
       try {
-        const j = JSON.parse(text) as Record<string, string>;
-        msg = j.message ?? j.error ?? j.title ?? j.detail ?? null;
-      } catch {
-        msg = text || null;
-      }
+        const res = await fetch(`${base}/auth/verify-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            accept: "application/json",
+          },
+          body: JSON.stringify({ code: verifyCode }),
+        });
 
-      if (res.status === 400 || res.status === 410) {
-        setStatus("needs-code");
-        setErrorMsg(msg ?? "That link has expired or already been used. Enter your code below.");
-        setDigits(Array(6).fill(""));
-      } else {
+        if (res.ok) {
+          setStatus("success");
+          setTimeout(() => router.push("/?auth=login&verified=1"), 2500);
+          return;
+        }
+
+        const text = await res.text();
+        let msg: string | null = null;
+        try {
+          const j = JSON.parse(text) as Record<string, string>;
+          msg = j.message ?? j.error ?? j.title ?? j.detail ?? null;
+        } catch {
+          msg = text || null;
+        }
+
+        if (res.status === 400 || res.status === 410) {
+          setStatus("needs-code");
+          setErrorMsg(
+            msg ??
+              "That link has expired or already been used. Enter your code below.",
+          );
+          setDigits(Array(6).fill(""));
+        } else {
+          setStatus("error");
+          setErrorMsg(msg ?? `Verification failed (${res.status}).`);
+        }
+      } catch {
         setStatus("error");
-        setErrorMsg(msg ?? `Verification failed (${res.status}).`);
+        setErrorMsg("Could not reach the server. Is the backend running?");
       }
-    } catch {
-      setStatus("error");
-      setErrorMsg("Could not reach the server. Is the backend running?");
-    }
-  }, [router]);
+    },
+    [router],
+  );
 
   useEffect(() => {
     if (ran.current) return;
@@ -166,14 +184,25 @@ function VerifyEmailInner() {
             stroke="currentColor"
             strokeWidth="2.5"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M5 13l4 4L19 7"
+            />
           </svg>
         </div>
         <div>
-          <h2 className="text-xl font-semibold text-foreground">Email verified!</h2>
-          <p className="mt-1 text-sm text-foreground-muted">Redirecting you to sign in…</p>
+          <h2 className="text-xl font-semibold text-foreground">
+            Email verified!
+          </h2>
+          <p className="mt-1 text-sm text-foreground-muted">
+            Redirecting you to sign in…
+          </p>
         </div>
-        <Link href="/auth/login" className="text-sm font-medium text-foreground underline">
+        <Link
+          href="/?auth=login"
+          className="text-sm font-medium text-foreground underline"
+        >
           Sign in now
         </Link>
       </div>
@@ -197,10 +226,15 @@ function VerifyEmailInner() {
           </svg>
         </div>
         <div>
-          <h2 className="text-xl font-semibold text-foreground">Something went wrong</h2>
+          <h2 className="text-xl font-semibold text-foreground">
+            Something went wrong
+          </h2>
           <p className="mt-1 text-sm text-foreground-muted">{errorMsg}</p>
         </div>
-        <Link href="/auth/register" className="text-sm font-medium text-foreground underline">
+        <Link
+          href="/?auth=register"
+          className="text-sm font-medium text-foreground underline"
+        >
           Back to register
         </Link>
       </div>
@@ -211,9 +245,12 @@ function VerifyEmailInner() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h2 className="text-xl font-semibold text-foreground">Verify your email</h2>
+        <h2 className="text-xl font-semibold text-foreground">
+          Verify your email
+        </h2>
         <p className="mt-1 text-sm text-foreground-muted">
-          Enter the 6-digit code from your email, or use the direct link that was sent to you.
+          Enter the 6-digit code from your email, or use the direct link that
+          was sent to you.
         </p>
       </div>
 
@@ -225,10 +262,17 @@ function VerifyEmailInner() {
 
       <form onSubmit={handleManualSubmit} className="space-y-4">
         <div>
-          <label htmlFor="verify-code" className="mb-2 block text-sm font-medium text-foreground-muted">
+          <label
+            htmlFor="verify-code"
+            className="mb-2 block text-sm font-medium text-foreground-muted"
+          >
             Verification code
           </label>
-          <OtpInput value={digits} onChange={setDigits} disabled={isSubmitting} />
+          <OtpInput
+            value={digits}
+            onChange={setDigits}
+            disabled={isSubmitting}
+          />
         </div>
 
         <Button
@@ -242,11 +286,17 @@ function VerifyEmailInner() {
 
       <p className="text-sm text-foreground-muted">
         Didn&apos;t receive an email?{" "}
-        <Link href="/auth/register" className="font-medium text-foreground underline">
+        <Link
+          href="/?auth=register"
+          className="font-medium text-foreground underline"
+        >
           Register again
         </Link>{" "}
         or{" "}
-        <Link href="/auth/login" className="font-medium text-foreground underline">
+        <Link
+          href="/?auth=login"
+          className="font-medium text-foreground underline"
+        >
           sign in
         </Link>
         .
@@ -257,9 +307,24 @@ function VerifyEmailInner() {
 
 function Spinner() {
   return (
-    <svg className="h-10 w-10 animate-spin text-primary" viewBox="0 0 24 24" fill="none">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+    <svg
+      className="h-10 w-10 animate-spin text-primary"
+      viewBox="0 0 24 24"
+      fill="none"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="3"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8v8H4z"
+      />
     </svg>
   );
 }
@@ -268,9 +333,13 @@ function Spinner() {
 export default function VerifyEmailPage() {
   return (
     <div className="mx-auto w-full max-w-md rounded-2xl border border-border bg-background-subtle p-8 shadow-sm">
-      <Suspense fallback={<div className="flex justify-center">
-        <Spinner />
-      </div>}>
+      <Suspense
+        fallback={
+          <div className="flex justify-center">
+            <Spinner />
+          </div>
+        }
+      >
         <VerifyEmailInner />
       </Suspense>
     </div>
