@@ -1,4 +1,4 @@
-import { getMockDashboardData, mockResumes, type DashboardData } from "./mock-data";
+import { getMockDashboardData, mockResumes, type DashboardData } from "@/lib/mock-data";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "";
 

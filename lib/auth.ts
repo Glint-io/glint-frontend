@@ -105,11 +105,12 @@ export async function authedFetch(
   init: RequestInit = {}
 ): Promise<Response> {
   function buildInit(token: string | null): RequestInit {
+    const isFormDataBody = typeof FormData !== "undefined" && init.body instanceof FormData;
     return {
       ...init,
       headers: {
         accept: "application/json",
-        "Content-Type": "application/json",
+        ...(!isFormDataBody ? { "Content-Type": "application/json" } : {}),
         ...(init.headers as Record<string, string> | undefined),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
