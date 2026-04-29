@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { getAccessToken } from "@/app/lib/auth";
+import { getAccessToken } from "@/lib/auth";
 
 interface AuthContextType {
     isLoggedIn: boolean | null;
@@ -17,7 +17,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         // Initialize auth state from localStorage
         const token = getAccessToken();
+
+        // TODO: Fix the fact that this causes hydration mismatch on first load, since we don't know the auth state until we check localStorage. '
+        // TODO:We could render a placeholder until we know the state, but that causes a flash of "loading..." on every page load. 
+        // TODO: Maybe we can optimize by only checking localStorage on certain pages, or by using a cookie instead of localStorage for SSR compatibility.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setAccessToken(token);
+
+
         setIsLoggedIn(!!token);
 
         // Listen for auth changes from setAuth() and clearAuth()
