@@ -1,4 +1,4 @@
-import { getMockDashboardData, type DashboardData } from "./mock-data";
+import { getMockDashboardData, mockResumes, type DashboardData } from "./mock-data";
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "";
 
@@ -7,6 +7,12 @@ type RemoteAnalysisResponse = {
   overlap?: string[];
   missing?: string[];
   feedback?: string;
+};
+
+export type SavedResume = {
+  resumeId: string;
+  fileName: string;
+  uploadedAt: string;
 };
 
 function hasApiBaseUrl() {
@@ -34,6 +40,32 @@ export async function getUserDashboardData(userId?: string): Promise<DashboardDa
     return data;
   } catch {
     return getMockDashboardData(userId);
+  }
+}
+
+// Fetch saved resumes for the current authenticated user.
+// Falls back to mock resumes when no API is configured.
+export async function getSavedResumes(token?: string): Promise<SavedResume[]> {
+  if (!hasApiBaseUrl()) {
+    // Return mock resumes shaped like the backend DTO
+    return mockResumes.map((r) => ({
+      resumeId: r.Id,
+      fileName: r.FileName,
+      uploadedAt: r.UploadedAt,
+    }));
+  }
+
+  try {
+    const response = await fetch(`${apiBaseUrl}/user/resume`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      cache: "no-store",
+    });
+
+    if (!response.ok) return [];
+
+    return (await response.json()) as SavedResume[];
+  } catch {
+    return [];
   }
 }
 
@@ -76,25 +108,48 @@ function runLocalKeywordAnalysis(cvText: string, jobText: string) {
   };
 }
 
-export async function runAnalysisWithFallback(cvText: string, jobText: string) {
+// Run analysis using either an uploaded file or a saved resume ID.
+// When a resumeId is supplied the file argument is ignored.
+export async function runAnalysisWithFallback(
+  jobText: string,
+  options:
+    | { mode: "upload"; file: File; cvText: string }
+    | { mode: "saved"; resumeId: string; token?: string }
+) {
+  // Local mock path – used when no API base URL is configured or the saved
+  // resume mode is chosen without an API (we synthesise CV text from the
+  // mock file name so the keyword fallback still works).
   if (!hasApiBaseUrl()) {
+    const cvText =
+      options.mode === "upload"
+        ? options.cvText
+        : `mock resume content for ${options.resumeId}`;
     return runLocalKeywordAnalysis(cvText, jobText);
   }
 
   try {
-    const response = await fetch(`${apiBaseUrl}/analysis/compare`, {
+    const formData = new FormData();
+    formData.append("JobText", jobText);
+
+    if (options.mode === "upload") {
+      formData.append("Resume", options.file);
+    } else {
+      formData.append("ResumeId", options.resumeId);
+    }
+
+    const headers: Record<string, string> = {};
+    if (options.mode === "saved" && options.token) {
+      headers["Authorization"] = `Bearer ${options.token}`;
+    }
+
+    const response = await fetch(`${apiBaseUrl}/analyze`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        cvText,
-        jobText,
-        method: 2,
-      }),
+      headers,
+      body: formData,
     });
 
     if (!response.ok) {
+      const cvText = options.mode === "upload" ? options.cvText : "";
       return runLocalKeywordAnalysis(cvText, jobText);
     }
 
@@ -108,6 +163,7 @@ export async function runAnalysisWithFallback(cvText: string, jobText: string) {
       source: "api" as const,
     };
   } catch {
+    const cvText = options.mode === "upload" ? options.cvText : "";
     return runLocalKeywordAnalysis(cvText, jobText);
   }
 }
