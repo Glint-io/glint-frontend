@@ -56,7 +56,8 @@ export const AnalysisResults = ({
           )}
         </div>
       ) : (
-        <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-right-4 duration-500">
+        <div className="flex flex-col gap-4 flex-1 animate-in fade-in slide-in-from-right-4 duration-500">
+          {/* Method tabs */}
           <div className="grid grid-cols-3 gap-1 rounded-xl border border-border bg-background-subtle p-1">
             {METHODS.map((m) => (
               <button
@@ -74,6 +75,7 @@ export const AnalysisResults = ({
             ))}
           </div>
 
+          {/* Score row */}
           <div className="flex items-center gap-6 rounded-xl border border-border bg-background-subtle p-5">
             <ScoreRing target={displayScore} active={scoreActive} />
             <div className="flex flex-col gap-1.5 overflow-hidden">
@@ -86,15 +88,21 @@ export const AnalysisResults = ({
             </div>
           </div>
 
-          <div className="rounded-lg border-l-2 border-primary bg-background-subtle px-4 py-3.5 flex-1">
-            <p className="font-mono text-[9px] tracking-[0.2em] text-foreground-muted uppercase mb-1.5">
-              Feedback
-            </p>
-            <p className="font-mono text-xs leading-relaxed italic">
-              {method === "ai"
-                ? result.feedback
-                : `${method.toUpperCase()} analysis loaded from external source.`}
-            </p>
+          {/* Feedback card — grows to fill remaining height */}
+          <div className="flex flex-col flex-1 rounded-xl border border-border bg-background-subtle overflow-hidden">
+            <div className="flex items-center gap-2 border-b border-border px-4 py-2.5">
+              <span className="text-primary text-xs">◈</span>
+              <p className="font-mono text-[9px] tracking-[0.2em] text-foreground-muted uppercase">
+                Feedback
+              </p>
+            </div>
+            <div className="flex-1 p-4">
+              <p className="font-mono text-xs leading-relaxed italic">
+                {method === "ai"
+                  ? result.feedback
+                  : `${method.toUpperCase()} analysis loaded from external source.`}
+              </p>
+            </div>
           </div>
         </div>
       )}
