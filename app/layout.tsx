@@ -7,8 +7,12 @@ import { cn } from "@/lib/utils";
 import ScrollHeader from "@/components/ScrollHeader";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/components/AuthProvider";
+import AuthModal from "@/components/AuthModal";
 
-const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,7 +38,14 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-mono", jetbrainsMono.variable)}
+      className={cn(
+        "h-full",
+        "antialiased",
+        geistSans.variable,
+        geistMono.variable,
+        "font-mono",
+        jetbrainsMono.variable,
+      )}
     >
       <body className="relative min-h-full flex flex-col bg-background text-foreground">
         <AuthProvider>
@@ -58,6 +69,7 @@ export default function RootLayout({
             <main className="mx-auto flex w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
               {children}
             </main>
+            <AuthModal />
             <div className="fixed bottom-4 right-4 z-50">
               <ThemeToggle />
             </div>

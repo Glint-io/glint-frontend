@@ -6,6 +6,7 @@ import GlintAnimation from "./GlintAnimation";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { clearAuth } from "@/lib/auth";
+import { openAuthModal } from "@/components/AuthModal";
 
 type CardNavLink = { label: string; href: string; ariaLabel: string };
 export type CardNavItem = {
@@ -69,6 +70,13 @@ const CardNav: React.FC<CardNavProps> = ({
     e: React.MouseEvent<HTMLAnchorElement>,
     href: string,
   ) => {
+    if (href === "/auth/login" || href === "/auth/register") {
+      e.preventDefault();
+      const mode = href.endsWith("register") ? "register" : "login";
+      closeMenu(() => openAuthModal(mode));
+      return;
+    }
+
     if (href !== "/auth/logout") {
       closeMenu(() => router.push(href));
       return;
@@ -78,7 +86,7 @@ const CardNav: React.FC<CardNavProps> = ({
     if (window.confirm("Are you sure you want to log out?")) {
       closeMenu(() => {
         clearAuth(); // wipe tokens + fire glint:auth-change
-        router.push("/auth/login");
+        router.push("/?auth=login");
       });
     }
   };
