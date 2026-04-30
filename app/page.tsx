@@ -103,7 +103,7 @@ export default function Home() {
           <p className="font-mono text-[10px] tracking-[0.25em] text-foreground-muted uppercase mb-4">
             Three analysis methods
           </p>
-          <h2 className="font-mono text-2xl font-semibold leading-[1.25] tracking-tight text-foreground">
+          <h2 className="font-mono text-2xl font-semibold leading-tight tracking-tight text-foreground">
             AI doesn&apos;t replace precision. It adds to it.
           </h2>
           <p className="mt-4 font-mono text-xs leading-[1.9] text-foreground-muted max-w-sm">

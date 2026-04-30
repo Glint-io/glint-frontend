@@ -1,6 +1,15 @@
 export type Statistics = {
   totalAnalyses: number;
-  averageScore: number;
+  byMethod: {
+    method: string;
+    averageScore: number;
+    count: number;
+  }[];
+  scoreOverTime: {
+    date: string;
+    score: number;
+    method: string;
+  }[];
 };
 
 export type AnalysisResult = {
