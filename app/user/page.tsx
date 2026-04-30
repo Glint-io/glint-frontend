@@ -270,7 +270,7 @@ export default function UserPage() {
             />
             <StatCard
               label="Average score"
-              value={averageScore != null ? averageScore.toFixed(1) : "—"}
+              value={averageScore != null ? averageScore.toFixed(1) : "N/A"}
               sub="out of 100"
               icon={Gauge}
             />
