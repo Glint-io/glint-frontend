@@ -5,7 +5,8 @@ export interface AnalysisResult {
   keywordScore: number;
   rulesScore: number;
   feedback?: string;
-  feedbackByMethod?: Partial<Record<AnalysisMethod, string>>;
+  keywordFeedback?: string;
+  rulesFeedback?: string;
 }
 
 export interface TempData {
@@ -17,4 +18,29 @@ export interface TempData {
       feedback: string;
     }>;
   };
+}
+
+// ─── Real API types ───────────────────────────────────────────────────────────
+
+export interface ApiAnalysisResultItem {
+  id: string;
+  method: string; // "AI" | "RuleBased" | "Keyword"
+  score: number | null;
+  feedback: string | null;
+  completedAt: string | null;
+}
+
+export interface ApiAnalyzeResponse {
+  analysisId: string;
+  label: string | null;
+  status: string;
+  createdAt: string;
+  results: ApiAnalysisResultItem[];
+}
+
+export interface SavedResume {
+  resumeId: string;
+  fileName: string;
+  uploadedAt: string;
+  sizeBytes?: number;
 }

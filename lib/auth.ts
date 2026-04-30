@@ -92,7 +92,7 @@ export function refreshAccessToken(): Promise<string | null> {
   return refreshPromise;
 }
 
-// ─── Authed fetch ─────────────────────────────────────────────────────────────
+// ─── Authed fetch (JSON) ──────────────────────────────────────────────────────
 
 /**
  * Drop-in replacement for fetch() that:
@@ -105,12 +105,11 @@ export async function authedFetch(
   init: RequestInit = {}
 ): Promise<Response> {
   function buildInit(token: string | null): RequestInit {
-    const isFormDataBody = typeof FormData !== "undefined" && init.body instanceof FormData;
     return {
       ...init,
       headers: {
         accept: "application/json",
-        ...(!isFormDataBody ? { "Content-Type": "application/json" } : {}),
+        "Content-Type": "application/json",
         ...(init.headers as Record<string, string> | undefined),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
@@ -128,6 +127,37 @@ export async function authedFetch(
     if (res.status === 401) {
       clearAuth();
     }
+  }
+
+  return res;
+}
+
+// ─── Authed fetch (FormData/multipart) ───────────────────────────────────────
+
+/**
+ * Like authedFetch but for multipart/form-data.
+ * Never sets Content-Type — the browser must set it with the boundary.
+ */
+export async function authedFormFetch(
+  input: RequestInfo | URL,
+  formData: FormData
+): Promise<Response> {
+  const buildInit = (token: string | null): RequestInit => ({
+    method: "POST",
+    body: formData,
+    headers: {
+      accept: "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+
+  let token = getAccessToken();
+  let res = await fetch(input, buildInit(token));
+
+  if (res.status === 401) {
+    token = await refreshAccessToken();
+    if (token) res = await fetch(input, buildInit(token));
+    if (res.status === 401) clearAuth();
   }
 
   return res;
