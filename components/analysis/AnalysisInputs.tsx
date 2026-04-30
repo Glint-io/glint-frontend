@@ -17,6 +17,8 @@ interface Props {
   jobLabel: string;
   jobText: string;
   loading: boolean;
+  selectedResumeId: string | null;
+  onSelectedResumeChange: (resumeId: string | null) => void;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onLabelChange: (val: string) => void;
   onTextChange: (val: string) => void;
@@ -31,13 +33,14 @@ export const AnalysisInputs = ({
   jobLabel,
   jobText,
   loading,
+  selectedResumeId,
+  onSelectedResumeChange,
   onFileChange,
   onLabelChange,
   onTextChange,
   onRun,
 }: Props) => {
   const { isLoggedIn } = useAuth();
-  const [selectedCVId, setSelectedCVId] = useState<string | null>(null);
   const [showUploadOption, setShowUploadOption] = useState(false);
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [resumesLoading, setResumesLoading] = useState(false);
@@ -102,7 +105,7 @@ export const AnalysisInputs = ({
     );
   }
 
-  const selectedCV = resumes.find((cv) => cv.resumeId === selectedCVId);
+  const selectedCV = resumes.find((cv) => cv.resumeId === selectedResumeId);
 
   return (
     <div className="flex flex-col gap-5 h-full">
@@ -125,13 +128,14 @@ export const AnalysisInputs = ({
                     {resumes.map((cv) => (
                       <div
                         key={cv.resumeId}
-                        className={`flex items-center gap-2 rounded-lg border-2 px-4 py-3 transition-colors ${selectedCVId === cv.resumeId
-                            ? "border-primary bg-background-subtle"
-                            : "border-border hover:border-foreground-muted"
+                        className={`flex items-center gap-2 rounded-lg border-2 px-4 py-3 transition-colors ${selectedResumeId === cv.resumeId
+                          ? "border-primary bg-background-subtle"
+                          : "border-border hover:border-foreground-muted"
                           }`}
                       >
                         <button
-                          onClick={() => setSelectedCVId(cv.resumeId)}
+                          type="button"
+                          onClick={() => onSelectedResumeChange(cv.resumeId)}
                           className="flex-1 text-left"
                         >
                           <span className="font-mono text-sm font-medium">
@@ -148,6 +152,7 @@ export const AnalysisInputs = ({
                           </span>
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleViewResume(cv.resumeId)}
                           className="p-2 text-foreground-muted hover:text-foreground transition-colors"
                           title="View resume"
@@ -182,7 +187,11 @@ export const AnalysisInputs = ({
                   </div>
                 )}
                 <button
-                  onClick={() => setShowUploadOption(true)}
+                  type="button"
+                  onClick={() => {
+                    setShowUploadOption(true);
+                    onSelectedResumeChange(null);
+                  }}
                   className="font-mono text-xs text-primary hover:underline text-left py-2"
                 >
                   Upload a new resume instead →
@@ -208,9 +217,10 @@ export const AnalysisInputs = ({
                   )}
                 </label>
                 <button
+                  type="button"
                   onClick={() => {
                     setShowUploadOption(false);
-                    setSelectedCVId(null);
+                    onSelectedResumeChange(null);
                   }}
                   className="font-mono text-xs text-primary hover:underline text-left py-2"
                 >
@@ -268,8 +278,9 @@ export const AnalysisInputs = ({
         </div>
 
         <Button
+          type="button"
           onClick={onRun}
-          disabled={loading || !jobLabel || (!file && !selectedCV)}
+          disabled={loading || !jobLabel || !jobText || (!file && !selectedCV)}
           className="w-full"
         >
           {loading ? "Analyzing..." : "Run Analysis →"}

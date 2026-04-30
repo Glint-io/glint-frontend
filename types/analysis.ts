@@ -5,6 +5,7 @@ export interface AnalysisResult {
   keywordScore: number;
   rulesScore: number;
   feedback?: string;
+  feedbackByMethod?: Partial<Record<AnalysisMethod, string>>;
 }
 
 export interface TempData {

@@ -27,6 +27,7 @@ const METHODS: {
 interface Props {
   result: AnalysisResult | null;
   loading: boolean;
+  error: string;
   method: AnalysisMethod;
   setMethod: (m: AnalysisMethod) => void;
   scoreActive: boolean;
@@ -37,6 +38,7 @@ interface Props {
 export const AnalysisResults = ({
   result,
   loading,
+  error,
   method,
   setMethod,
   scoreActive,
@@ -50,6 +52,10 @@ export const AnalysisResults = ({
         <div className="flex flex-col items-center justify-center flex-1 rounded-xl border border-dashed border-border bg-background-subtle py-12 gap-4">
           {loading ? (
             <div className="w-8 h-8 rounded-full border-2 border-border border-t-primary animate-spin" />
+          ) : error ? (
+            <p className="max-w-sm text-center font-mono text-xs leading-relaxed text-destructive">
+              {error}
+            </p>
           ) : (
             <p className="font-mono text-xs tracking-widest text-foreground-muted uppercase">
               Ready for analysis
@@ -62,10 +68,11 @@ export const AnalysisResults = ({
           <div className="grid grid-cols-3 gap-1 rounded-xl border border-border bg-background-subtle p-1">
             {METHODS.map((m) => (
               <Button
+                type="button"
                 key={m.id}
                 variant={method === m.id ? "default" : "ghost"}
                 onClick={() => setMethod(m.id)}
-                className="flex flex-col items-center gap-1 rounded-lg text-[10px] uppercase"
+                className="flex flex-col items-center gap-1 rounded-lg my-2 text-[10px] uppercase"
               >
                 <span className="text-sm">{m.icon}</span>
                 {m.label}
@@ -96,9 +103,7 @@ export const AnalysisResults = ({
             </div>
             <div className="flex-1 p-4">
               <p className="font-mono text-xs leading-relaxed italic">
-                {method === "ai"
-                  ? result.feedback
-                  : `${method.toUpperCase()} analysis loaded from external source.`}
+                {result.feedbackByMethod?.[method] ?? result.feedback ?? `${method.toUpperCase()} analysis loaded from external source.`}
               </p>
             </div>
           </div>
