@@ -1,0 +1,36 @@
+export type Statistics = {
+  totalAnalyses: number;
+  averageScore: number;
+};
+
+export type AnalysisResult = {
+  id: string;
+  method: string;
+  score: number | null;
+  feedback: string | null;
+  completedAt: string | null;
+};
+
+export type HistoryItem = {
+  id: string;
+  label: string | null;
+  createdAt: string;
+  status: string;
+  resumeFileName: string;
+  jobAdSnippet: string;
+  results: AnalysisResult[];
+};
+
+export type PaginatedHistory = {
+  items: HistoryItem[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+};
+
+export type Resume = {
+  resumeId: string;
+  fileName: string;
+  uploadedAt: string;
+  sizeBytes?: number;
+};
