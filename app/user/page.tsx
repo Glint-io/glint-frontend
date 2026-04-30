@@ -16,19 +16,29 @@ const StatCard = ({
   value: string | number;
   sub?: string;
 }) => (
-  <div className="rounded-xl border border-border bg-background p-5">
-    <p className="text-xs font-medium uppercase tracking-wider text-foreground-muted">
+  <div className="rounded-xl border border-border bg-background p-6 flex flex-col gap-1">
+    <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-foreground-muted">
       {label}
     </p>
-    <p className="mt-1 text-3xl font-semibold text-foreground">{value}</p>
-    {sub && <p className="mt-1 text-xs text-foreground-muted">{sub}</p>}
+    <p className="font-mono text-4xl font-bold text-primary leading-none mt-2">
+      {value}
+    </p>
+    {sub && (
+      <p className="font-mono text-[10px] text-foreground-muted">{sub}</p>
+    )}
   </div>
 );
 
+const SectionLabel = ({ children }: { children: React.ReactNode }) => (
+  <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-foreground-muted mb-4">
+    {children}
+  </p>
+);
+
 const EmptyState = ({ icon, message }: { icon: string; message: string }) => (
-  <div className="flex flex-col items-center gap-2 py-12 text-foreground-muted">
+  <div className="flex flex-col items-center gap-2 py-16 text-foreground-muted">
     <span className="text-4xl">{icon}</span>
-    <p className="text-sm">{message}</p>
+    <p className="font-mono text-xs">{message}</p>
   </div>
 );
 
@@ -98,10 +108,10 @@ const ResumeUpload = ({ onUploaded }: { onUploaded: () => void }) => {
             d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
           />
         </svg>
-        <span className="text-sm font-medium text-foreground">
+        <span className="font-mono text-sm font-medium text-foreground">
           {uploading ? "Uploading…" : "Upload a resume"}
         </span>
-        <span className="text-xs text-foreground-muted">
+        <span className="font-mono text-xs text-foreground-muted">
           PDF · Max 5 MB · Drag & drop or click
         </span>
         <input
@@ -116,7 +126,9 @@ const ResumeUpload = ({ onUploaded }: { onUploaded: () => void }) => {
         />
       </label>
       {error && (
-        <p className="mt-2 text-xs text-red-600 dark:text-red-400">{error}</p>
+        <p className="mt-2 font-mono text-xs text-red-600 dark:text-red-400">
+          {error}
+        </p>
       )}
     </div>
   );
@@ -216,14 +228,29 @@ export default function UserPage() {
   const totalPages = history ? Math.ceil(history.totalCount / PAGE_SIZE) : 1;
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 px-4 py-10">
-      <div className="flex items-start justify-between">
+    <div className="flex w-full flex-1 flex-col space-y-0">
+      {/* ── Hero header ─────────────────────────────────────────────────── */}
+      <section className="pt-6 pb-12 flex items-start justify-between gap-6 border-b border-border">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            {userEmail ? "Welcome back" : "Dashboard"}
+          <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-foreground-muted mb-4">
+            Glint · Dashboard
+          </p>
+          <h1 className="font-mono text-[2rem] md:text-4xl font-semibold leading-[1.08] tracking-tight text-foreground">
+            {userEmail ? (
+              <>
+                Welcome back,{" "}
+                <span className="text-primary">{userEmail.split("@")[0]}</span>.
+              </>
+            ) : (
+              <>
+                Your <span className="text-primary">CV dashboard</span>.
+              </>
+            )}
           </h1>
           {userEmail && (
-            <p className="mt-0.5 text-sm text-foreground-muted">{userEmail}</p>
+            <p className="mt-2 font-mono text-xs text-foreground-muted">
+              {userEmail}
+            </p>
           )}
         </div>
         <Button
@@ -233,21 +260,23 @@ export default function UserPage() {
           }}
           variant="outline"
           size="sm"
+          className="font-mono text-xs shrink-0 mt-1"
         >
           Sign out
         </Button>
-      </div>
+      </section>
 
-      <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground-muted">
-          Overview
-        </h2>
+      <div className="h-px bg-border" />
+
+      {/* ── Overview stats ──────────────────────────────────────────────── */}
+      <section className="py-12">
+        <SectionLabel>Overview</SectionLabel>
         {loading ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             {[...Array(3)].map((_, i) => (
               <div
                 key={i}
-                className="h-24 animate-pulse rounded-xl border border-border bg-background"
+                className="h-28 animate-pulse rounded-xl border border-border bg-background"
               />
             ))}
           </div>
@@ -266,10 +295,11 @@ export default function UserPage() {
         ) : null}
       </section>
 
-      <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground-muted">
-          Analysis history
-        </h2>
+      <div className="h-px bg-border" />
+
+      {/* ── Analysis history ─────────────────────────────────────────────── */}
+      <section className="py-12">
+        <SectionLabel>Analysis history</SectionLabel>
         <div className="overflow-hidden rounded-xl border border-border bg-background">
           {loading ? (
             <div className="divide-y divide-border">
@@ -290,13 +320,13 @@ export default function UserPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border text-left">
-                    <th className="px-5 py-3 font-medium text-foreground-muted">
+                    <th className="px-5 py-3 font-mono text-[10px] tracking-[0.2em] uppercase text-foreground-muted">
                       Date
                     </th>
-                    <th className="px-5 py-3 font-medium text-foreground-muted">
+                    <th className="px-5 py-3 font-mono text-[10px] tracking-[0.2em] uppercase text-foreground-muted">
                       Job / Resume
                     </th>
-                    <th className="px-5 py-3 text-right font-medium text-foreground-muted">
+                    <th className="px-5 py-3 text-right font-mono text-[10px] tracking-[0.2em] uppercase text-foreground-muted">
                       Score
                     </th>
                   </tr>
@@ -307,19 +337,25 @@ export default function UserPage() {
                       key={item.id}
                       className="hover:bg-background-subtle transition-colors"
                     >
-                      <td className="whitespace-nowrap px-5 py-3 text-foreground-muted">
+                      <td className="whitespace-nowrap px-5 py-4 font-mono text-xs text-foreground-muted">
                         {new Date(item.createdAt).toLocaleDateString(
                           undefined,
-                          { year: "numeric", month: "short", day: "numeric" },
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          },
                         )}
                       </td>
-                      <td className="px-5 py-3 text-foreground">
-                        <p className="font-medium">{item.label ?? "—"}</p>
-                        <p className="text-xs text-foreground-muted">
+                      <td className="px-5 py-4">
+                        <p className="font-mono text-sm font-medium text-foreground">
+                          {item.label ?? "—"}
+                        </p>
+                        <p className="font-mono text-xs text-foreground-muted mt-0.5">
                           {item.resumeFileName}
                         </p>
                       </td>
-                      <td className="px-5 py-3 text-right">
+                      <td className="px-5 py-4 text-right">
                         <div className="flex justify-end">
                           <GradientScorePill results={item.results} />
                         </div>
@@ -329,8 +365,8 @@ export default function UserPage() {
                 </tbody>
               </table>
               {totalPages > 1 && (
-                <div className="flex items-center justify-between border-t border-border px-5 py-3 text-sm text-foreground-muted">
-                  <span>
+                <div className="flex items-center justify-between border-t border-border px-5 py-3">
+                  <span className="font-mono text-xs text-foreground-muted">
                     Page {page} of {totalPages}
                   </span>
                   <div className="flex gap-2">
@@ -339,6 +375,7 @@ export default function UserPage() {
                       onClick={() => setPage((p) => p - 1)}
                       variant="outline"
                       size="sm"
+                      className="font-mono text-xs"
                     >
                       Previous
                     </Button>
@@ -347,6 +384,7 @@ export default function UserPage() {
                       onClick={() => setPage((p) => p + 1)}
                       variant="outline"
                       size="sm"
+                      className="font-mono text-xs"
                     >
                       Next
                     </Button>
@@ -358,13 +396,14 @@ export default function UserPage() {
         </div>
       </section>
 
-      <section>
-        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-foreground-muted">
-          Saved resumes
-        </h2>
+      <div className="h-px bg-border" />
+
+      {/* ── Saved resumes ───────────────────────────────────────────────── */}
+      <section className="py-12">
+        <SectionLabel>Saved resumes</SectionLabel>
         <ResumeUpload onUploaded={() => fetchAll(page)} />
         {errorMessage && (
-          <p className="mt-2 text-xs text-red-600 dark:text-red-400">
+          <p className="mt-2 font-mono text-xs text-red-600 dark:text-red-400">
             {errorMessage}
           </p>
         )}
@@ -384,10 +423,10 @@ export default function UserPage() {
               {resumes.map((r) => (
                 <li
                   key={r.resumeId}
-                  className="flex items-center gap-3 px-5 py-3"
+                  className="flex items-center gap-3 px-5 py-4"
                 >
                   <svg
-                    className="h-4 w-4 shrink-0 text-foreground-muted"
+                    className="h-4 w-4 shrink-0 text-primary opacity-60"
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="1.5"
@@ -400,10 +439,10 @@ export default function UserPage() {
                     />
                   </svg>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-foreground">
+                    <p className="truncate font-mono text-sm font-medium text-foreground">
                       {r.fileName}
                     </p>
-                    <p className="text-xs text-foreground-muted">
+                    <p className="font-mono text-xs text-foreground-muted mt-0.5">
                       {new Date(r.uploadedAt).toLocaleDateString(undefined, {
                         year: "numeric",
                         month: "short",
@@ -491,6 +530,16 @@ export default function UserPage() {
           )}
         </div>
       </section>
+
+      {/* ── Footer ──────────────────────────────────────────────────────── */}
+      <div className="border-t border-border py-6 flex items-center justify-between">
+        <span className="font-mono text-[10px] tracking-[0.2em] text-foreground-muted uppercase">
+          Glint MVP · {new Date().getFullYear()}
+        </span>
+        <span className="font-mono text-[10px] text-foreground-muted">
+          CV Intelligence
+        </span>
+      </div>
     </div>
   );
 }
