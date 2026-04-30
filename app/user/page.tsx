@@ -213,9 +213,9 @@ export default function UserPage() {
   return (
     <div className="flex w-full flex-1 flex-col space-y-0">
       {/* ── Hero header ─────────────────────────────────────────────────── */}
-      <section className="pt-6 pb-12 flex items-start justify-between gap-6 border-b border-border">
+      <section className="pt-6 pb-8 flex items-center justify-between gap-6 border-b border-border">
         <div>
-          <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-foreground-muted mb-4">
+          <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-foreground-muted mb-3">
             Glint · Dashboard
           </p>
           <h1 className="font-mono text-[2rem] md:text-4xl font-semibold leading-[1.08] tracking-tight text-foreground">
