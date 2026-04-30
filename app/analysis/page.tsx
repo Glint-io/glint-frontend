@@ -12,7 +12,7 @@ import {
 import { getAccessToken, authedGet, authedFormFetch } from "@/lib/auth";
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "";
+  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "https://localhost:7248";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
