@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { GradientScorePill } from "@/components/user/GradientScorePill";
 import { AnalysisDetailModal } from "@/components/user/AnalysisDetailModal";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { StatCard } from "@/components/user/StatCard";
 import { SectionLabel } from "@/components/user/SectionLabel";
 import { EmptyState } from "@/components/user/EmptyState";
@@ -130,6 +131,7 @@ export default function UserPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
+  const [resumeToDelete, setResumeToDelete] = useState<Resume | null>(null);
 
   const PAGE_SIZE = 10;
   const base =
@@ -454,7 +456,7 @@ export default function UserPage() {
                   </Button>
                   <Button
                     disabled={deletingId === r.resumeId}
-                    onClick={() => handleDeleteResume(r.resumeId)}
+                    onClick={() => setResumeToDelete(r)}
                     variant="ghost"
                     size="icon"
                     className="text-foreground-muted hover:text-red-600 hover:bg-red-500/10"
@@ -477,6 +479,22 @@ export default function UserPage() {
         <AnalysisDetailModal
           item={selectedItem}
           onClose={() => setSelectedItem(null)}
+        />
+      )}
+
+      {resumeToDelete && (
+        <ConfirmModal
+          title="Delete resume"
+          ariaLabel="Delete resume confirmation"
+          message={`This will permanently delete ${resumeToDelete.fileName}. This action cannot be undone.`}
+          confirmType="simple"
+          confirmButtonLabel="Delete"
+          cancelButtonLabel="Cancel"
+          onClose={() => setResumeToDelete(null)}
+          onConfirm={async () => {
+            await handleDeleteResume(resumeToDelete.resumeId);
+            setResumeToDelete(null);
+          }}
         />
       )}
     </div>
