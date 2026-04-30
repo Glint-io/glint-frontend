@@ -1,5 +1,7 @@
 export type AnalysisMethod = "ai" | "keyword" | "rules";
 
+export type AnalysisMethodStatus = "idle" | "loading" | "done" | "error";
+
 export interface AnalysisResult {
   score: number;
   keywordScore: number;

@@ -5,8 +5,8 @@ import { AnalysisInputs } from "@/components/analysis/AnalysisInputs";
 import { AnalysisResults } from "@/components/analysis/AnalysisResults";
 import {
   AnalysisMethod,
+  AnalysisMethodStatus,
   AnalysisResult,
-  ApiAnalyzeResponse,
   SavedResume,
 } from "@/types/analysis";
 import { getAccessToken, authedGet, authedFormFetch } from "@/lib/auth";
@@ -16,63 +16,89 @@ const API_BASE =
 
 //  Helpers 
 
-function mapApiResponse(data: ApiAnalyzeResponse): AnalysisResult {
-  const byMethod = (m: string) =>
-    data.results.find((r) => r.method === m);
-
-  const ai = byMethod("AI");
-  const kw = byMethod("Keyword");
-  const rb = byMethod("RuleBased");
-
-  return {
-    score: ai?.score ?? 0,
-    keywordScore: kw?.score ?? 0,
-    rulesScore: rb?.score ?? 0,
-    feedback: ai?.feedback ?? undefined,
-    keywordFeedback: kw?.feedback ?? undefined,
-    rulesFeedback: rb?.feedback ?? undefined,
-  };
-}
-
 async function runAnalysisOnBackend(
   file: File | null,
   resumeId: string | null,
   jobText: string,
-  label: string
-): Promise<ApiAnalyzeResponse> {
-  const form = new FormData();
-  if (resumeId) {
-    form.append("ResumeId", resumeId);
-  } else if (file) {
-    form.append("Resume", file);
-  }
-  form.append("JobText", jobText);
-  if (label.trim()) form.append("Label", label.trim());
+  label: string,
+  onStatusUpdate: (method: AnalysisMethod, status: AnalysisMethodStatus) => void,
+  onResultUpdate: (method: AnalysisMethod, data: { score: number; feedback: string }) => void
+): Promise<AnalysisMethod[]> {
+  const buildFormData = () => {
+    const form = new FormData();
+    if (resumeId) {
+      form.append("ResumeId", resumeId);
+    } else if (file) {
+      form.append("Resume", file);
+    }
+    form.append("JobText", jobText);
+    if (label.trim()) form.append("Label", label.trim());
+    return form;
+  };
 
   const token = getAccessToken();
-  let res: Response;
 
-  if (token) {
-    res = await authedFormFetch(`${API_BASE}/analyze`, form);
-  } else {
-    res = await fetch(`${API_BASE}/analyze`, {
-      method: "POST",
-      headers: { accept: "application/json" },
-      body: form,
-    });
-  }
+  // Call all three endpoints concurrently
+  const endpoints = [
+    { method: "ai" as AnalysisMethod, url: `${API_BASE}/analyze/ai` },
+    { method: "keyword" as AnalysisMethod, url: `${API_BASE}/analyze/keyword` },
+    { method: "rules" as AnalysisMethod, url: `${API_BASE}/analyze/rules` },
+  ];
 
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    let msg = `Analysis failed (${res.status})`;
+  const promises = endpoints.map(async ({ method, url }) => {
+    onStatusUpdate(method, "loading");
+
     try {
-      const j = JSON.parse(text) as { error?: string; message?: string };
-      msg = j.error ?? j.message ?? msg;
-    } catch { /* ignore */ }
-    throw new Error(msg);
-  }
+      let res: Response;
+      const form = buildFormData();
 
-  return res.json() as Promise<ApiAnalyzeResponse>;
+      if (token) {
+        res = await authedFormFetch(url, form);
+      } else {
+        res = await fetch(url, {
+          method: "POST",
+          headers: { accept: "application/json" },
+          body: form,
+        });
+      }
+
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        let msg = `Analysis failed (${res.status})`;
+        try {
+          const j = JSON.parse(text) as { error?: string; message?: string };
+          msg = j.error ?? j.message ?? msg;
+        } catch { /* ignore */ }
+        throw new Error(msg);
+      }
+
+      const data = (await res.json()) as {
+        method: string;
+        score: number;
+        feedback: string;
+      };
+
+      onResultUpdate(method, {
+        score: data.score,
+        feedback: data.feedback,
+      });
+
+      onStatusUpdate(method, "done");
+      return null;
+    } catch (error) {
+      onStatusUpdate(method, "error");
+
+      const msg =
+        error instanceof Error ? error.message : "Analysis failed. Please try again.";
+      return { method, error: `${method} analysis failed: ${msg}` };
+    }
+  });
+
+  const failures = (await Promise.all(promises)).filter(
+    (entry): entry is { method: AnalysisMethod; error: string } => entry !== null
+  );
+
+  return failures.map((entry) => entry.method);
 }
 
 async function runAnalysisFromMock(label: string): Promise<{ result: AnalysisResult; label: string }> {
@@ -87,6 +113,8 @@ async function runAnalysisFromMock(label: string): Promise<{ result: AnalysisRes
       keywordScore: getScore("Keyword"),
       rulesScore: getScore("RuleBased"),
       feedback: Analysis.results.find((r) => r.method === "AI")?.feedback,
+      keywordFeedback: Analysis.results.find((r) => r.method === "Keyword")?.feedback,
+      rulesFeedback: Analysis.results.find((r) => r.method === "RuleBased")?.feedback,
     },
     label: label || Analysis.label,
   };
@@ -104,6 +132,11 @@ export default function AnalysisPage() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [method, setMethod] = useState<AnalysisMethod>("ai");
   const [scoreActive, setScoreActive] = useState(false);
+  const [methodStatuses, setMethodStatuses] = useState<Record<AnalysisMethod, AnalysisMethodStatus>>({
+    ai: "idle",
+    keyword: "idle",
+    rules: "idle",
+  });
 
   // Resume picker state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -149,19 +182,71 @@ export default function AnalysisPage() {
     setResult(null);
     setScoreActive(false);
     setError(null);
+    setMethodStatuses({ ai: "loading", keyword: "loading", rules: "loading" });
 
     try {
       if (API_BASE) {
         const fileToSend = uploadMode === "new" ? file : null;
         const idToSend = uploadMode === "saved" ? selectedResumeId : null;
-        const data = await runAnalysisOnBackend(fileToSend, idToSend, jobText, jobLabel);
-        const mapped = mapApiResponse(data);
-        setResult(mapped);
-        if (!jobLabel && data.label) setJobLabel(data.label);
+
+        // Start with empty result structure
+        const currentResult: AnalysisResult = {
+          score: 0,
+          keywordScore: 0,
+          rulesScore: 0,
+          feedback: undefined,
+          keywordFeedback: undefined,
+          rulesFeedback: undefined,
+        };
+
+        // Update result as each method completes
+        const onResultUpdate = (method: AnalysisMethod, data: { score: number; feedback: string }) => {
+          if (method === "ai") {
+            currentResult.score = data.score;
+            currentResult.feedback = data.feedback;
+          } else if (method === "keyword") {
+            currentResult.keywordScore = data.score;
+            currentResult.keywordFeedback = data.feedback;
+          } else if (method === "rules") {
+            currentResult.rulesScore = data.score;
+            currentResult.rulesFeedback = data.feedback;
+          }
+          setResult({ ...currentResult });
+          setScoreActive(true);
+        };
+
+        const failedMethods = await runAnalysisOnBackend(
+          fileToSend,
+          idToSend,
+          jobText,
+          jobLabel,
+          (analysisMethod, status) => {
+            setMethodStatuses((current) => ({
+              ...current,
+              [analysisMethod]: status,
+            }));
+          },
+          onResultUpdate
+        );
+
+        if (failedMethods.length > 0) {
+          const labels = failedMethods
+            .map((analysisMethod) =>
+              analysisMethod === "ai"
+                ? "AI"
+                : analysisMethod === "keyword"
+                  ? "Keyword"
+                  : "Rules"
+            )
+            .join(", ");
+          setError(`${labels} analysis failed.`);
+        }
       } else {
         // No API configured: fall back to mock data
         const { result: mockResult, label } = await runAnalysisFromMock(jobLabel);
         setResult(mockResult);
+        setMethodStatuses({ ai: "done", keyword: "done", rules: "done" });
+        setScoreActive(true);
         if (!jobLabel) setJobLabel(label);
       }
     } catch (err) {
@@ -169,7 +254,6 @@ export default function AnalysisPage() {
       setError(msg);
     } finally {
       setLoading(false);
-      setTimeout(() => setScoreActive(true), 150);
     }
   };
 
@@ -213,6 +297,7 @@ export default function AnalysisPage() {
         error={error}
         method={method}
         setMethod={setMethod}
+        methodStatuses={methodStatuses}
         scoreActive={scoreActive}
         displayScore={displayScore}
         jobLabel={jobLabel}
