@@ -234,14 +234,14 @@ export default function UserPage() {
           }}
           variant="outline"
           size="sm"
-          className="font-mono text-xs shrink-0 mt-1"
+          className="font-mono text-xs shrink-0"
         >
           Sign out
         </Button>
       </section>
 
       {/* ── Overview stats ──────────────────────────────────────────────── */}
-      <section className="py-12">
+      <section className="py-8">
         <SectionLabel>Overview</SectionLabel>
         {loading ? (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
@@ -266,13 +266,13 @@ export default function UserPage() {
       </section>
 
       {stats?.scoreOverTime?.length ? (
-        <div className="mt-6">
+        <div className="mt-4">
           <ScoreOverTimeChart scoreOverTime={stats.scoreOverTime} />
         </div>
       ) : null}
 
       {/* ── Analysis history ─────────────────────────────────────────────── */}
-      <section className="py-12">
+      <section className="py-8">
         <SectionLabel>Analysis history</SectionLabel>
         <div className="flex m-h-130 flex-col overflow-hidden rounded-xl border border-border bg-background">
           {loading ? (
@@ -381,7 +381,7 @@ export default function UserPage() {
       </section>
 
       {/* ── Saved resumes ───────────────────────────────────────────────── */}
-      <section className="py-12">
+      <section className="py-8">
         <SectionLabel>Saved resumes</SectionLabel>
         <ResumeUpload
           onUploaded={() => fetchAll(page)}
