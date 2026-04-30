@@ -45,7 +45,7 @@ export const AnalysisInputs = ({
   <div className="flex flex-col gap-6 h-full">
     <SectionLabel>01 · Resume</SectionLabel>
 
-    {/* ── Resume source selector ─────────────────────────────────────────── */}
+    {/*  Resume source selector  */}
     {isLoggedIn && savedResumes.length > 0 && (
       <div className="flex gap-1 p-0.5 rounded-lg bg-background-subtle border border-border w-fit">
         <button
@@ -71,7 +71,7 @@ export const AnalysisInputs = ({
       </div>
     )}
 
-    {/* ── Saved resume list ──────────────────────────────────────────────── */}
+    {/*  Saved resume list  */}
     {isLoggedIn && savedResumes.length > 0 && uploadMode === "saved" && (
       <div className="flex flex-col gap-1.5">
         {savedResumes.map((r) => (
@@ -108,7 +108,7 @@ export const AnalysisInputs = ({
       </div>
     )}
 
-    {/* ── New file upload ────────────────────────────────────────────────── */}
+    {/*  New file upload  */}
     {uploadMode === "new" && (
       <label className="relative flex flex-col items-center justify-center gap-2.5 rounded-xl border-2 border-dashed border-border bg-background px-6 py-8 cursor-pointer hover:border-primary hover:bg-primary/[0.02] transition-colors group">
         <input
@@ -132,7 +132,7 @@ export const AnalysisInputs = ({
       </label>
     )}
 
-    {/* ── Job details ────────────────────────────────────────────────────── */}
+    {/*  Job details  */}
     <div className="h-px bg-border" />
     <SectionLabel>02 · Job</SectionLabel>
 

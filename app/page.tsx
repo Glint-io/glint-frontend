@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AuthCTA from "@/components/AuthCTA";
+import { SimulatedAnalysisDemo } from "@/components/SimulatedAnalysisDemo";
 
 const steps = [
   {
@@ -29,8 +30,8 @@ export default function Home() {
   return (
     <div className="flex w-full flex-1 flex-col">
 
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="pt-6 pb-20 grid gap-12 lg:grid-cols-[1fr_auto] items-start">
+      {/*  Hero  */}
+      <section className="pt-6 pb-20 grid gap-16 lg:grid-cols-[1fr_320px] lg:items-center">
         <div className="max-w-xl">
           <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-foreground-muted mb-7">
             Glint · CV Intelligence
@@ -59,44 +60,16 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Score ring */}
-        <div className="hidden lg:flex flex-col items-center gap-3 pt-10">
-          <p className="font-mono text-[9px] tracking-[0.25em] text-foreground-muted uppercase mb-1">
-            Sample score
-          </p>
-          <div className="relative flex items-center justify-center">
-            <svg width="140" height="140" className="-rotate-90" aria-hidden>
-              <circle
-                cx="70" cy="70" r="58"
-                fill="none"
-                className="stroke-border"
-                strokeWidth="5"
-              />
-              <circle
-                cx="70" cy="70" r="58"
-                fill="none"
-                stroke="var(--primary)"
-                strokeWidth="5"
-                strokeDasharray={`${2 * Math.PI * 58}`}
-                strokeDashoffset={`${2 * Math.PI * 58 * 0.13}`}
-                strokeLinecap="round"
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="font-mono text-4xl font-bold text-primary leading-none">87</span>
-              <span className="font-mono text-[9px] tracking-widest text-foreground-muted uppercase mt-1">match</span>
-            </div>
-          </div>
-          <p className="font-mono text-[10px] text-foreground-muted text-center leading-snug max-w-[120px]">
-            Senior Frontend Eng · Acme Corp
-          </p>
+        {/* Interactive demo */}
+        <div className="hidden lg:block">
+          <SimulatedAnalysisDemo />
         </div>
       </section>
 
-      {/* ── Divider ─────────────────────────────────────────────────────── */}
+      {/*  Divider  */}
       <div className="h-px bg-border" />
 
-      {/* ── How it works ─────────────────────────────────────────────────── */}
+      {/*  How it works  */}
       <section className="py-16">
         <div className="grid sm:grid-cols-3 gap-10 sm:gap-6">
           {steps.map((step) => (
@@ -121,10 +94,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Divider ─────────────────────────────────────────────────────── */}
+      {/*  Divider  */}
       <div className="h-px bg-border" />
 
-      {/* ── Analysis methods ─────────────────────────────────────────────── */}
+      {/*  Analysis methods  */}
       <section className="py-16 grid lg:grid-cols-[1fr_1fr] gap-12 items-center">
         <div>
           <p className="font-mono text-[10px] tracking-[0.25em] text-foreground-muted uppercase mb-4">
@@ -189,10 +162,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Divider ─────────────────────────────────────────────────────── */}
+      {/*  Divider  */}
       <div className="h-px bg-border" />
 
-      {/* ── CTA strip ───────────────────────────────────────────────────── */}
+      {/*  CTA strip  */}
       <section className="py-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div>
           <h2 className="font-mono text-xl font-semibold text-foreground">
@@ -211,10 +184,10 @@ export default function Home() {
         </Link>
       </section>
 
-      {/* ── Divider ─────────────────────────────────────────────────────── */}
+      {/*  Divider  */}
       <div className="h-px bg-border" />
 
-      {/* ── About + Contact ─────────────────────────────────────────────── */}
+      {/*  About + Contact  */}
       <section
         id="about"
         className="py-14 grid sm:grid-cols-2 gap-10"
@@ -247,7 +220,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── Footer ──────────────────────────────────────────────────────── */}
+      {/*  Footer  */}
       <div className="border-t border-border py-6 flex items-center justify-between">
         <span className="font-mono text-[10px] tracking-[0.2em] text-foreground-muted uppercase">
           Glint MVP · {new Date().getFullYear()}

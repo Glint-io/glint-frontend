@@ -3,14 +3,16 @@ import { useState, useEffect, useRef } from "react";
 interface ScoreRingProps {
   target: number;
   active: boolean;
+  compact?: boolean;
 }
 
-export const ScoreRing = ({ target, active }: ScoreRingProps) => {
+export const ScoreRing = ({ target, active, compact = false }: ScoreRingProps) => {
   const [value, setValue] = useState(0);
   const raf = useRef<number | null>(null);
 
   useEffect(() => {
     if (!active) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setValue(0);
       return;
     }
@@ -38,24 +40,28 @@ export const ScoreRing = ({ target, active }: ScoreRingProps) => {
         ? "#eab308"
         : "var(--color-destructive)";
 
+  const size = compact ? 100 : 120;
+  const centerOffset = compact ? 50 : 60;
+  const strokeWidth = compact ? 6 : 8;
+
   return (
-    <div className="relative shrink-0 w-[120px] h-[120px]">
-      <svg width="120" height="120" className="-rotate-90">
+    <div className={compact ? "relative shrink-0 w-[100px] h-[100px]" : "relative shrink-0 w-[120px] h-[120px]"}>
+      <svg width={size} height={size} className="-rotate-90">
         <circle
-          cx="60"
-          cy="60"
+          cx={centerOffset}
+          cy={centerOffset}
           r={R}
           fill="none"
           className="stroke-border"
-          strokeWidth="8"
+          strokeWidth={strokeWidth}
         />
         <circle
-          cx="60"
-          cy="60"
+          cx={centerOffset}
+          cy={centerOffset}
           r={R}
           fill="none"
           stroke={accent}
-          strokeWidth="8"
+          strokeWidth={strokeWidth}
           strokeDasharray={circ}
           strokeDashoffset={active ? offset : circ}
           strokeLinecap="round"
@@ -64,12 +70,12 @@ export const ScoreRing = ({ target, active }: ScoreRingProps) => {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span
-          className="font-mono text-3xl font-bold leading-none"
+          className={compact ? "font-mono text-2xl font-bold leading-none" : "font-mono text-3xl font-bold leading-none"}
           style={{ color: accent }}
         >
           {value}
         </span>
-        <span className="font-mono text-[9px] tracking-widest text-foreground-muted mt-0.5 uppercase">
+        <span className={compact ? "font-mono text-[8px] tracking-widest text-foreground-muted mt-0.5 uppercase" : "font-mono text-[9px] tracking-widest text-foreground-muted mt-0.5 uppercase"}>
           Match
         </span>
       </div>

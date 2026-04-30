@@ -20,7 +20,7 @@ export interface TempData {
   };
 }
 
-// ─── Real API types ───────────────────────────────────────────────────────────
+//  Real API types 
 
 export interface ApiAnalysisResultItem {
   id: string;

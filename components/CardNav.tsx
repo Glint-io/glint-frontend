@@ -194,7 +194,7 @@ const CardNav: React.FC<CardNavProps> = ({
           shadow-[0_4px_24px_-4px_rgba(28,25,23,0.10)]
           relative overflow-hidden will-change-[height]`}
       >
-        {/* ── Top bar ── */}
+        {/*  Top bar  */}
         <div className="card-nav-top absolute inset-x-0 top-0 h-[60px] flex items-center justify-between p-2 pl-[1.1rem] z-[2]">
           {/* Hamburger */}
           <div
@@ -234,7 +234,7 @@ const CardNav: React.FC<CardNavProps> = ({
           </Link>
         </div>
 
-        {/* ── Cards ── */}
+        {/*  Cards  */}
         <div
           className={`card-nav-content absolute left-0 right-0 top-[60px] bottom-0 p-2 flex flex-col items-stretch gap-2 justify-start z-[1]
             ${isExpanded ? "visible pointer-events-auto" : "invisible pointer-events-none"}

@@ -11,7 +11,7 @@ const base =
 
 type Status = "idle" | "loading" | "success" | "error" | "needs-code";
 
-// ─── OTP Input ─────────────────────────────────────────────────────────────
+//  OTP Input 
 function OtpInput({
   value,
   onChange,
@@ -91,7 +91,7 @@ function VerifyEmailInner() {
 
   const code = digits.join("");
 
-  // ── Try auto-verify from URL param ──────────────────────────────────────────
+  //  Try auto-verify from URL param 
   const performVerify = useCallback(
     async (verifyCode: string) => {
       setStatus("loading");
@@ -162,7 +162,7 @@ function VerifyEmailInner() {
     setIsSubmitting(false);
   }
 
-  // ── Loading ──────────────────────────────────────────────────────────────────
+  //  Loading 
   if (status === "loading") {
     return (
       <div className="flex flex-col items-center gap-4 text-center">
@@ -172,7 +172,7 @@ function VerifyEmailInner() {
     );
   }
 
-  // ── Success ──────────────────────────────────────────────────────────────────
+  //  Success 
   if (status === "success") {
     return (
       <div className="flex flex-col items-center gap-4 text-center">
@@ -209,7 +209,7 @@ function VerifyEmailInner() {
     );
   }
 
-  // ── Hard error (network, server 5xx) ────────────────────────────────────────
+  //  Hard error (network, server 5xx) 
   if (status === "error") {
     return (
       <div className="flex flex-col items-center gap-4 text-center">
@@ -241,7 +241,7 @@ function VerifyEmailInner() {
     );
   }
 
-  // ── No code in URL / expired → manual entry fallback ────────────────────────
+  //  No code in URL / expired → manual entry fallback 
   return (
     <div className="flex flex-col gap-4">
       <div>

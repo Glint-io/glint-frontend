@@ -14,7 +14,7 @@ import { getAccessToken, authedGet, authedFormFetch } from "@/lib/auth";
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "https://localhost:7248";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+//  Helpers 
 
 function mapApiResponse(data: ApiAnalyzeResponse): AnalysisResult {
   const byMethod = (m: string) =>
@@ -92,7 +92,7 @@ async function runAnalysisFromMock(label: string): Promise<{ result: AnalysisRes
   };
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+//  Page 
 
 export default function AnalysisPage() {
   const [file, setFile] = useState<File | null>(null);

@@ -4,7 +4,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* ─── Light mode ──────────────────────────────────────────── */
+/*  Light mode  */
 :root {
   --background: #FAFAF8;
   --background-subtle: #F0EDE7;
@@ -53,7 +53,7 @@
   --shadow-glow: 0 0 0 1px var(--primary), 0 0 16px -2px color-mix(in srgb, var(--primary) 40%, transparent);
 }
 
-/* ─── Dark mode ───────────────────────────────────────────── */
+/*  Dark mode  */
 .dark {
   --background: #1C1917;
   --background-subtle: #292524;
@@ -100,7 +100,7 @@
   --shadow-glow: 0 0 0 1px var(--primary), 0 0 20px -2px color-mix(in srgb, var(--primary) 35%, transparent);
 }
 
-/* ─── Tailwind theme wiring ───────────────────────────────── */
+/*  Tailwind theme wiring  */
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -155,7 +155,7 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ─── Base styles ─────────────────────────────────────────── */
+/*  Base styles  */
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -176,7 +176,7 @@
     text-rendering: optimizeLegibility;
   }
 
-  /* ── Custom scrollbar ─────────────────────────────────── */
+  /*  Custom scrollbar  */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -192,26 +192,26 @@
     background: var(--foreground-muted);
   }
 
-  /* ── Selection color ─────────────────────────────────── */
+  /*  Selection color  */
   ::selection {
     background: color-mix(in srgb, var(--primary) 25%, transparent);
     color: var(--foreground);
   }
 
-  /* ── Focus refinement ────────────────────────────────── */
+  /*  Focus refinement  */
   :focus-visible {
     outline: 2px solid var(--primary);
     outline-offset: 2px;
     border-radius: 4px;
   }
 
-  /* ── Refined input base ───────────────────────────────── */
+  /*  Refined input base  */
   input, textarea, select {
     font-family: var(--font-mono), monospace;
     font-size: 0.875rem;
   }
 
-  /* ── Heading defaults (monospace) ────────────────────── */
+  /*  Heading defaults (monospace)  */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-mono), monospace;
     font-feature-settings: "kern" 1, "liga" 0;
@@ -219,7 +219,7 @@
   }
 }
 
-/* ─── Glint brand classes ─────────────────────────────────── */
+/*  Glint brand classes  */
 .glint-text {
   color: var(--foreground);
 }
@@ -233,25 +233,25 @@
   transform-origin: center;
 }
 
-/* ─── Utility: dot grid background ───────────────────────── */
+/*  Utility: dot grid background  */
 .bg-dot-grid {
   background-image: radial-gradient(circle, var(--border) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
-/* ─── Utility: amber glow on focus ───────────────────────── */
+/*  Utility: amber glow on focus  */
 .focus-glow:focus-visible {
   box-shadow: var(--shadow-glow);
   outline: none;
 }
 
-/* ─── Refined button base ─────────────────────────────────── */
+/*  Refined button base  */
 button {
   font-family: var(--font-mono), monospace;
   letter-spacing: 0;
 }
 
-/* ─── Grain overlay (apply to a ::before pseudo or a child div) ─── */
+/*  Grain overlay (apply to a ::before pseudo or a child div)  */
 /*
    Usage: add class "grain" to any container, then add a
    `before:content-[''] before:glint-grain before:absolute before:inset-0 before:pointer-events-none`
@@ -268,7 +268,7 @@ button {
   border-radius: inherit;
 }
 
-/* ─── Page-level grain (body overlay) ────────────────────── */
+/*  Page-level grain (body overlay)  */
 body::after {
   content: '';
   position: fixed;
@@ -280,7 +280,7 @@ body::after {
   background-size: 200px 200px;
 }
 
-/* ─── Refined card / section borders ─────────────────────── */
+/*  Refined card / section borders  */
 /*
   Instead of the generic equal-weight borders, add a subtle
   inset highlight at the top of cards for a "lifted" feel in light mode.
@@ -296,7 +296,7 @@ body::after {
     var(--shadow-sm);
 }
 
-/* ─── Monospace label utility ─────────────────────────────── */
+/*  Monospace label utility  */
 .label-mono {
   font-family: var(--font-mono), monospace;
   font-size: 0.625rem;
@@ -305,7 +305,7 @@ body::after {
   color: var(--foreground-muted);
 }
 
-/* ─── Amber divider line ──────────────────────────────────── */
+/*  Amber divider line  */
 .divider-amber {
   height: 1px;
   background: linear-gradient(

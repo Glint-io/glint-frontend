@@ -17,7 +17,7 @@ export type StoredAuth = {
   loggedInAt: string;
 };
 
-// ─── Storage helpers ──────────────────────────────────────────────────────────
+//  Storage helpers 
 
 export function getStoredAuth(): StoredAuth | null {
   if (typeof window === "undefined") return null;
@@ -57,7 +57,7 @@ export function clearAuth(): void {
   window.dispatchEvent(new Event("glint:auth-change"));
 }
 
-// ─── Token refresh ────────────────────────────────────────────────────────────
+//  Token refresh 
 
 let refreshPromise: Promise<string | null> | null = null;
 
@@ -92,7 +92,7 @@ export function refreshAccessToken(): Promise<string | null> {
   return refreshPromise;
 }
 
-// ─── Authed fetch (JSON) ──────────────────────────────────────────────────────
+//  Authed fetch (JSON) 
 
 /**
  * Drop-in replacement for fetch() that:
@@ -132,7 +132,7 @@ export async function authedFetch(
   return res;
 }
 
-// ─── Authed fetch (FormData/multipart) ───────────────────────────────────────
+//  Authed fetch (FormData/multipart) 
 
 /**
  * Like authedFetch but for multipart/form-data.
@@ -163,7 +163,7 @@ export async function authedFormFetch(
   return res;
 }
 
-// ─── Convenience: GET / POST helpers ─────────────────────────────────────────
+//  Convenience: GET / POST helpers 
 
 export async function authedGet<T = unknown>(path: string): Promise<T> {
   const res = await authedFetch(`${base}${path}`);

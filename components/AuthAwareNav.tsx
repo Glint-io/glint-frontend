@@ -4,7 +4,7 @@ import CardNav from "./CardNav";
 import type { CardNavItem } from "./CardNav";
 import { useAuth } from "@/components/AuthProvider";
 
-// ─── Nav item sets ─────────────────────────────────────────────────────────────
+//  Nav item sets 
 
 const SHARED_ITEMS: CardNavItem[] = [
   {
@@ -55,7 +55,7 @@ const LOGGED_IN_ACCOUNT: CardNavItem = {
   ],
 };
 
-// ─── Component ─────────────────────────────────────────────────────────────────
+//  Component 
 
 type AuthAwareNavProps = Omit<React.ComponentProps<typeof CardNav>, "items">;
 
