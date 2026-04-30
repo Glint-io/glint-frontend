@@ -10,10 +10,16 @@ import {
 } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { GradientScorePill } from "@/components/user/GradientScorePill";
+import { AnalysisDetailModal } from "@/components/user/AnalysisDetailModal";
 import { StatCard } from "@/components/user/StatCard";
 import { SectionLabel } from "@/components/user/SectionLabel";
 import { EmptyState } from "@/components/user/EmptyState";
-import type { Statistics, PaginatedHistory, Resume } from "@/types";
+import type {
+  Statistics,
+  PaginatedHistory,
+  Resume,
+  HistoryItem,
+} from "@/types";
 import { ScoreOverTimeChart } from "@/components/user/ScoreOverTimeChart";
 import { Upload, FileText, Eye, Trash2, Loader2 } from "lucide-react";
 
@@ -114,6 +120,7 @@ export default function UserPage() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
 
   const PAGE_SIZE = 10;
   const base =
@@ -290,9 +297,6 @@ export default function UserPage() {
                 <thead>
                   <tr className="border-b border-border text-left">
                     <th className="sticky top-0 z-10 bg-background px-5 py-3 font-mono text-[10px] tracking-[0.2em] uppercase text-foreground-muted">
-                      Date
-                    </th>
-                    <th className="sticky top-0 z-10 bg-background px-5 py-3 font-mono text-[10px] tracking-[0.2em] uppercase text-foreground-muted">
                       Job / Resume
                     </th>
                     <th className="sticky top-0 z-10 bg-background px-5 py-3 text-right font-mono text-[10px] tracking-[0.2em] uppercase text-foreground-muted">
@@ -304,29 +308,40 @@ export default function UserPage() {
                   {history.items.map((item) => (
                     <tr
                       key={item.id}
-                      className="hover:bg-background-subtle transition-colors"
+                      onClick={() => setSelectedItem(item)}
+                      className="hover:bg-background-subtle transition-colors cursor-pointer"
                     >
-                      <td className="whitespace-nowrap px-5 py-4 font-mono text-xs text-foreground-muted">
-                        {new Date(item.createdAt).toLocaleDateString(
-                          undefined,
-                          {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                          },
-                        )}
-                      </td>
-                      <td className="px-5 py-4">
-                        <p className="font-mono text-sm font-medium text-foreground">
+                      <td className="px-5 py-4 min-w-0">
+                        <p className="font-mono text-sm font-medium text-foreground truncate max-w-50 sm:max-w-none">
                           {item.label ?? "—"}
                         </p>
-                        <p className="font-mono text-xs text-foreground-muted mt-0.5">
+                        <p className="font-mono text-xs text-foreground-muted mt-0.5 truncate">
                           {item.resumeFileName}
                         </p>
+                        <p className="font-mono text-[10px] text-foreground-muted mt-0.5 sm:hidden">
+                          {new Date(item.createdAt).toLocaleDateString(
+                            undefined,
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            },
+                          )}
+                        </p>
                       </td>
-                      <td className="px-5 py-4 text-right">
-                        <div className="flex justify-end">
+                      <td className="px-5 py-4 text-right align-middle whitespace-nowrap">
+                        <div className="flex flex-col items-end gap-1">
                           <GradientScorePill results={item.results} />
+                          <span className="hidden sm:block font-mono text-[10px] text-foreground-muted">
+                            {new Date(item.createdAt).toLocaleDateString(
+                              undefined,
+                              {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              },
+                            )}
+                          </span>
                         </div>
                       </td>
                     </tr>
@@ -439,6 +454,13 @@ export default function UserPage() {
           )}
         </div>
       </section>
+
+      {selectedItem && (
+        <AnalysisDetailModal
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
+        />
+      )}
     </div>
   );
 }
