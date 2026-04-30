@@ -1,3 +1,5 @@
+import { Bot, Hash, ListChecks, ScanText } from "lucide-react";
+
 type AnalysisResult = {
   id: string;
   method: string;
@@ -6,17 +8,44 @@ type AnalysisResult = {
   completedAt: string | null;
 };
 
+const METHOD_ORDER: Record<string, number> = {
+  AI: 0,
+  RuleBased: 1,
+  Keyword: 2,
+};
+
 export const GradientScorePill = ({
   results,
 }: {
   results: AnalysisResult[];
 }) => {
-  const scores = results
+  const scoredResults = results
     .filter((r) => r.score != null)
-    .map((r) => Math.round(r.score!));
+    .map((r) => ({ ...r, roundedScore: Math.round(r.score!) }))
+    .sort((a, b) => {
+      const aRank = METHOD_ORDER[a.method] ?? Number.MAX_SAFE_INTEGER;
+      const bRank = METHOD_ORDER[b.method] ?? Number.MAX_SAFE_INTEGER;
+      if (aRank !== bRank) return aRank - bRank;
+      return a.method.localeCompare(b.method);
+    });
+
+  const scores = scoredResults.map((r) => r.roundedScore);
 
   if (scores.length === 0)
     return <span className="text-xs text-foreground-muted">—</span>;
+
+  const getMethodIcon = (method: string) => {
+    switch (method) {
+      case "AI":
+        return Bot;
+      case "RuleBased":
+        return ListChecks;
+      case "Keyword":
+        return ScanText;
+      default:
+        return Hash;
+    }
+  };
 
   const getColor = (score: number) =>
     score >= 80
@@ -45,15 +74,20 @@ export const GradientScorePill = ({
         boxShadow: `0 0 0 1px rgba(${colors[0].r},${colors[0].g},${colors[0].b},0.35)`,
       }}
     >
-      {scores.map((score, i) => (
-        <span
-          key={i}
-          className="text-xs font-semibold"
-          style={{ color: `rgb(${colors[i].r},${colors[i].g},${colors[i].b})` }}
-        >
-          {score}
-        </span>
-      ))}
+      {scores.map((score, i) => {
+        const Icon = getMethodIcon(scoredResults[i].method);
+
+        return (
+          <span
+            key={scoredResults[i].id}
+            className="inline-flex items-center gap-1 text-xs font-semibold"
+            style={{ color: `rgb(${colors[i].r},${colors[i].g},${colors[i].b})` }}
+          >
+            <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+            {score}
+          </span>
+        );
+      })}
     </div>
   );
 };

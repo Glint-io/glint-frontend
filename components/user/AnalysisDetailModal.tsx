@@ -3,6 +3,7 @@
 import { Modal } from "@/components/ui/Modal";
 import { GradientScorePill } from "@/components/user/GradientScorePill";
 import type { HistoryItem } from "@/types";
+import { Bot, Hash, ListChecks, ScanText, type LucideIcon } from "lucide-react";
 
 type Props = {
   item: HistoryItem;
@@ -13,6 +14,18 @@ const METHOD_LABELS: Record<string, string> = {
   AI: "AI Semantic",
   RuleBased: "Rule-Based",
   Keyword: "Keyword Match",
+};
+
+const METHOD_ICONS: Record<string, LucideIcon> = {
+  AI: Bot,
+  RuleBased: ListChecks,
+  Keyword: ScanText,
+};
+
+const METHOD_ORDER: Record<string, number> = {
+  AI: 0,
+  RuleBased: 1,
+  Keyword: 2,
 };
 
 const ScoreBar = ({ score }: { score: number | null }) => {
@@ -38,6 +51,13 @@ const ScoreBar = ({ score }: { score: number | null }) => {
 };
 
 export function AnalysisDetailModal({ item, onClose }: Props) {
+  const orderedResults = [...item.results].sort((a, b) => {
+    const aRank = METHOD_ORDER[a.method] ?? Number.MAX_SAFE_INTEGER;
+    const bRank = METHOD_ORDER[b.method] ?? Number.MAX_SAFE_INTEGER;
+    if (aRank !== bRank) return aRank - bRank;
+    return a.method.localeCompare(b.method);
+  });
+
   return (
     <Modal onClose={onClose} aria-label="Analysis detail">
       {/* Header */}
@@ -78,26 +98,31 @@ export function AnalysisDetailModal({ item, onClose }: Props) {
 
       {/* Per-method breakdown */}
       <div className="flex flex-col gap-4">
-        {item.results.map((result) => (
-          <div
-            key={result.id}
-            className="rounded-xl border border-border bg-background px-5 py-4 flex flex-col gap-3"
-          >
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-xs font-semibold uppercase tracking-widest text-foreground">
-                {METHOD_LABELS[result.method] ?? result.method}
-              </span>
+        {orderedResults.map((result) => {
+          const Icon = METHOD_ICONS[result.method] ?? Hash;
+
+          return (
+            <div
+              key={result.id}
+              className="rounded-xl border border-border bg-background px-5 py-4 flex flex-col gap-3"
+            >
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-2 font-mono text-xs font-semibold uppercase tracking-widest text-foreground">
+                  <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                  {METHOD_LABELS[result.method] ?? result.method}
+                </span>
+              </div>
+
+              <ScoreBar score={result.score} />
+
+              {result.feedback && (
+                <p className="font-mono text-xs leading-relaxed text-foreground-muted border-t border-border pt-3">
+                  {result.feedback}
+                </p>
+              )}
             </div>
-
-            <ScoreBar score={result.score} />
-
-            {result.feedback && (
-              <p className="font-mono text-xs leading-relaxed text-foreground-muted border-t border-border pt-3">
-                {result.feedback}
-              </p>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
     </Modal>
   );

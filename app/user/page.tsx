@@ -21,7 +21,16 @@ import type {
   HistoryItem,
 } from "@/types";
 import { ScoreOverTimeChart } from "@/components/user/ScoreOverTimeChart";
-import { Upload, FileText, Eye, Trash2, Loader2 } from "lucide-react";
+import {
+  Upload,
+  FileText,
+  Eye,
+  Trash2,
+  Loader2,
+  Activity,
+  Gauge,
+  FolderOpen,
+} from "lucide-react";
 
 const ResumeUpload = ({
   onUploaded,
@@ -253,14 +262,23 @@ export default function UserPage() {
             ))}
           </div>
         ) : stats ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <StatCard label="Total analyses" value={stats.totalAnalyses} />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <StatCard
+              label="Total analyses"
+              value={stats.totalAnalyses}
+              icon={Activity}
+            />
             <StatCard
               label="Average score"
               value={averageScore != null ? averageScore.toFixed(1) : "—"}
               sub="out of 100"
+              icon={Gauge}
             />
-            <StatCard label="Resumes saved" value={resumes.length} />
+            <StatCard
+              label="Resumes saved"
+              value={resumes.length}
+              icon={FolderOpen}
+            />
           </div>
         ) : null}
       </section>
