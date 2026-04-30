@@ -61,10 +61,11 @@ export default function RootLayout({
                 <AuthAwareNav
                   logo="/next.svg"
                   logoAlt="Glint logo"
-                  baseColor="#FAEFD9"
-                  menuColor="#2A1E0F"
-                  buttonBgColor="#2A1E0F"
-                  buttonTextColor="#FAEFD9"
+                  // Use CSS variables so header adapts to light/dark themes
+                  baseColor="var(--foreground)"
+                  menuColor="var(--foreground)"
+                  buttonBgColor="var(--primary)"
+                  buttonTextColor="var(--primary-fg)"
                   ease="power3.out"
                 />
               </ScrollHeader>

@@ -4,13 +4,14 @@ import CardNav from "./CardNav";
 import type { CardNavItem } from "./CardNav";
 import { useAuth } from "@/components/AuthProvider";
 
-//  Nav item sets 
+//  Nav item sets
 
 const SHARED_ITEMS: CardNavItem[] = [
   {
     label: "Landing",
-    bgColor: "#2A1E0F",
-    textColor: "#FAEFD9",
+    // Use theme-aware CSS variables so nav matches the rest of the site
+    bgColor: "var(--background-subtle)",
+    textColor: "var(--foreground)",
     links: [
       { label: "Start", href: "/", ariaLabel: "Go to homepage" },
       { label: "About", href: "/#about", ariaLabel: "Go to about section" },
@@ -23,8 +24,8 @@ const SHARED_ITEMS: CardNavItem[] = [
   },
   {
     label: "Analysis",
-    bgColor: "#3A2A18",
-    textColor: "#FAEFD9",
+    bgColor: "var(--background-subtle)",
+    textColor: "var(--foreground)",
     links: [
       { label: "Run analysis", href: "/analysis", ariaLabel: "Run analysis" },
     ],
@@ -33,8 +34,8 @@ const SHARED_ITEMS: CardNavItem[] = [
 
 const LOGGED_OUT_ACCOUNT: CardNavItem = {
   label: "Account",
-  bgColor: "#E8A736",
-  textColor: "#2A1E0F",
+  bgColor: "var(--primary)",
+  textColor: "var(--primary-fg)",
   links: [
     { label: "Login", href: "/auth/login", ariaLabel: "Go to login page" },
     {
@@ -47,15 +48,15 @@ const LOGGED_OUT_ACCOUNT: CardNavItem = {
 
 const LOGGED_IN_ACCOUNT: CardNavItem = {
   label: "Account",
-  bgColor: "#E8A736",
-  textColor: "#2A1E0F",
+  bgColor: "var(--primary)",
+  textColor: "var(--primary-fg)",
   links: [
     { label: "Profile", href: "/user", ariaLabel: "Go to user profile" },
     { label: "Logout", href: "/auth/logout", ariaLabel: "Logout from account" },
   ],
 };
 
-//  Component 
+//  Component
 
 type AuthAwareNavProps = Omit<React.ComponentProps<typeof CardNav>, "items">;
 
