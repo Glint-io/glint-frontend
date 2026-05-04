@@ -22,7 +22,7 @@ export type AnalysisResult = {
 
 export type HistoryItem = {
   id: string;
-  label: string | null;
+  jobTitle: string | null;
   createdAt: string;
   status: string;
   resumeFileName: string;

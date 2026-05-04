@@ -65,8 +65,11 @@ export function AnalysisDetailModal({ item, onClose }: Props) {
         <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-foreground-muted mb-2">
           Analysis detail
         </p>
+        <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-foreground-muted mb-2">
+          Job title
+        </p>
         <h2 className="font-mono text-lg font-semibold text-foreground leading-snug">
-          {item.label ?? "—"}
+          {item.jobTitle ?? "—"}
         </h2>
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
           <span className="font-mono text-xs text-foreground-muted">

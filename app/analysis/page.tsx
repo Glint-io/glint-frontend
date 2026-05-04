@@ -20,7 +20,7 @@ async function runAnalysisOnBackend(
   file: File | null,
   resumeId: string | null,
   jobText: string,
-  label: string,
+  jobTitle: string,
   onStatusUpdate: (
     method: AnalysisMethod,
     status: AnalysisMethodStatus,
@@ -34,7 +34,7 @@ async function runAnalysisOnBackend(
   if (resumeId) form.append("ResumeId", resumeId);
   else if (file) form.append("Resume", file);
   form.append("JobText", jobText);
-  if (label.trim()) form.append("Label", label.trim());
+  if (jobTitle.trim()) form.append("JobTitle", jobTitle.trim());
 
   const token = getAccessToken();
   const headers: HeadersInit = { accept: "text/event-stream" };

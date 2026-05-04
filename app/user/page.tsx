@@ -72,7 +72,7 @@ const ResumeUpload = ({
         let msg = "Upload failed.";
         try {
           msg = (JSON.parse(text) as { error?: string }).error ?? msg;
-        } catch {}
+        } catch { }
         setError(msg);
       }
     } catch {
@@ -170,6 +170,7 @@ export default function UserPage() {
           authedGet<Resume[]>("/user/resume"),
         ]);
         setStats(s);
+        console.log("Fetched history:", h);
         setHistory(h);
         setResumes(r);
       } catch (err: unknown) {
@@ -218,7 +219,7 @@ export default function UserPage() {
   const averageScore =
     stats && stats.byMethod.length
       ? stats.byMethod.reduce((sum, m) => sum + m.averageScore * m.count, 0) /
-        stats.byMethod.reduce((sum, m) => sum + m.count, 0)
+      stats.byMethod.reduce((sum, m) => sum + m.count, 0)
       : null;
 
   return (
@@ -317,7 +318,7 @@ export default function UserPage() {
                 <thead>
                   <tr className="border-b border-border text-left">
                     <th className="sticky top-0 z-10 bg-background px-5 py-3 font-mono text-[10px] tracking-[0.2em] uppercase text-foreground-muted">
-                      Job / Resume
+                      Job title / Resume
                     </th>
                     <th className="sticky top-0 z-10 bg-background px-5 py-3 text-right font-mono text-[10px] tracking-[0.2em] uppercase text-foreground-muted">
                       Score
@@ -333,7 +334,7 @@ export default function UserPage() {
                     >
                       <td className="px-5 py-4 min-w-0">
                         <p className="font-mono text-sm font-medium text-foreground truncate max-w-50 sm:max-w-none">
-                          {item.label ?? "—"}
+                          {item.jobTitle ?? "—"}
                         </p>
                         <p className="font-mono text-xs text-foreground-muted mt-0.5 truncate">
                           {item.resumeFileName}
