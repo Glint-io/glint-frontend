@@ -17,27 +17,50 @@ const METHOD_CONFIG: Record<
 
 const METHOD_ORDER = ["AI", "RuleBased", "Keyword"];
 
+const toDateKey = (iso: string) => iso.slice(0, 10);
+
+/**
+ * For each (date, method) pair keep only the latest entry.
+ * "Latest" = the entry with the lexicographically greatest `date` string,
+ * which works correctly for ISO-8601 timestamps.
+ */
+function aggregateLatestPerDay(
+  data: Statistics["scoreOverTime"],
+): Statistics["scoreOverTime"] {
+  const map = new Map<string, (typeof data)[number]>();
+
+  for (const point of data) {
+    const key = `${toDateKey(point.date)}__${point.method}`;
+    const existing = map.get(key);
+    if (!existing || point.date > existing.date) {
+      map.set(key, point);
+    }
+  }
+
+  return [...map.values()];
+}
+
 export function ScoreOverTimeChart({ scoreOverTime }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  // Keep a ref to the Chart instance so we can destroy it on re-render
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
 
   useEffect(() => {
     if (!canvasRef.current || !scoreOverTime?.length) return;
 
-    // Dynamically import Chart.js to avoid SSR issues
     import("chart.js/auto").then((mod) => {
       const Chart = mod.default;
 
-      // Destroy previous instance if it exists
       if (chartRef.current) {
         chartRef.current.destroy();
         chartRef.current = null;
       }
 
-      // Collect unique sorted date strings
-      const allDates = [...new Set(scoreOverTime.map((d) => d.date))].sort();
+      const aggregated = aggregateLatestPerDay(scoreOverTime);
+
+      const allDates = [
+        ...new Set(aggregated.map((d) => toDateKey(d.date))),
+      ].sort();
 
       const formatDate = (iso: string) =>
         new Date(iso).toLocaleDateString(undefined, {
@@ -46,7 +69,7 @@ export function ScoreOverTimeChart({ scoreOverTime }: Props) {
         });
 
       const datasets = METHOD_ORDER.filter((m) =>
-        scoreOverTime.some((d) => d.method === m),
+        aggregated.some((d) => d.method === m),
       ).map((m) => {
         const cfg = METHOD_CONFIG[m] ?? {
           label: m,
@@ -56,8 +79,8 @@ export function ScoreOverTimeChart({ scoreOverTime }: Props) {
         return {
           label: cfg.label,
           data: allDates.map((date) => {
-            const point = scoreOverTime.find(
-              (d) => d.date === date && d.method === m,
+            const point = aggregated.find(
+              (d) => toDateKey(d.date) === date && d.method === m,
             );
             return point ? point.score : null;
           }),
@@ -160,9 +183,7 @@ export function ScoreOverTimeChart({ scoreOverTime }: Props) {
             >
               <span
                 className="inline-block h-2 w-2 rounded-full"
-                style={{
-                  background: cfg.color,
-                }}
+                style={{ background: cfg.color }}
               />
               {cfg.label}
             </span>
