@@ -16,40 +16,22 @@ export default function GlintAnimation({ className = '' }: GlintAnimationProps) 
         scopeRef.current = createScope({ root: rootRef }).add(() => {
 
             // --- Text: draw stroke, then crossfade into solid fill ---
-            const letterDrawables = svg.createDrawable('.glint-letter');
-            if (localStorage.getItem('theme') === 'dark') {
-                animate(letterDrawables, {
-                    fillOpacity: [0, 1],
-                    strokeOpacity: [1, 0],
-                    strokeWidth: [1.25, 0],
-                    draw: ['0 0', '0 1'],
-                    ease: 'easeOutQuad',
-                    duration: 950,
-                    delay: stagger(200),
-                    loop: false,
-                });
-            } else {
-                animate(letterDrawables, {
-                    draw: ['0 0', '0 1'],
-                    ease: 'easeOutQuad',
-                    duration: 2500,
-                    delay: stagger(200),
-                    loop: false,
-                });
+            const letterDrawable = svg.createDrawable('.glint-letter');
+            animate(letterDrawable, {
+                draw: ['0 0', '0 1'],
+                ease: 'easeOutQuad',
+                duration: 2500,
+                loop: false,
+            });
 
-                animate('.glint-letter', {
-                    fillOpacity: [0, 1],
-                    strokeOpacity: [1, 0],
-                    strokeWidth: [1.25, 0],
-                    duration: 700,
-                    // Stagger mirrors the draw stagger so each letter crossfades
-                    // ~200ms before its own stroke finishes drawing.
-                    // Letter draw ends at: 3500 + (index * 200)
-                    // Fill crossfade starts at: 3300 + (index * 200)
-                    delay: stagger(200, { start: 2300 }),
-                    ease: 'easeOutQuad',
-                });
-            }
+            animate('.glint-letter', {
+                fillOpacity: [0, 1],
+                strokeOpacity: [1, 0],
+                strokeWidth: [1.25, 0],
+                duration: 700,
+                delay: 800,
+                ease: 'easeOutQuad',
+            });
 
             // --- Star: quick draw → continuous spin + glow pulse ---
             const starDrawable = svg.createDrawable('.glint-star-draw');
@@ -89,100 +71,55 @@ export default function GlintAnimation({ className = '' }: GlintAnimationProps) 
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
             <svg
-                width="160"
-                height="50"
-                viewBox="0 0 155 72"
+                width="180"
+                height="55"
+                viewBox="-5 0 240 80"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
                 style={{
                     // Block removes the inline baseline descender gap that can
                     // cause a sub-pixel shift when animations change paint layers.
                     display: 'block',
-                    // Prevent the rotating star from nudging the SVG's overflow
-                    // boundary and causing a reflow.
-                    overflow: 'hidden',
+                    // Allow star glow to render beyond bounds
+                    overflow: 'visible',
                 }}
             >
                 <g clipPath="url(#clip0_1_18)">
-                    {/* g */}
                     <path
                         className="glint-letter"
-                        d="M10.7213 63.416V57.092H22.2133C24.1173 57.092 25.5226 56.6387 26.4293 55.732C27.3813 54.8254 27.8573 53.488 27.8573 51.72V47.98L27.9933 41.044H26.4293L27.9253 39.684C27.9253 42.54 27.0186 44.784 25.2053 46.416C23.4373 48.048 21.0346 48.864 17.9973 48.864C14.1439 48.864 11.1066 47.5947 8.88528 45.056C6.66395 42.5174 5.55328 39.0947 5.55328 34.788V27.172C5.55328 22.8654 6.66395 19.4427 8.88528 16.904C11.1066 14.3654 14.1439 13.096 17.9973 13.096C21.0346 13.096 23.4373 13.9347 25.2053 15.612C27.0186 17.244 27.9253 19.488 27.9253 22.344L26.4293 20.916H27.9253L27.8573 13.776H35.1333V51.856C35.1333 55.4374 34 58.248 31.7333 60.288C29.4666 62.3734 26.3159 63.416 22.2813 63.416H10.7213ZM20.3773 42.54C22.6893 42.54 24.5026 41.8374 25.8173 40.432C27.1773 38.9814 27.8573 36.9867 27.8573 34.448V27.58C27.8573 25.0414 27.1773 23.0694 25.8173 21.664C24.5026 20.2134 22.6893 19.488 20.3773 19.488C17.9746 19.488 16.1159 20.1907 14.8013 21.596C13.5319 22.956 12.8973 24.9507 12.8973 27.58V34.448C12.8973 37.032 13.5319 39.0267 14.8013 40.432C16.1159 41.8374 17.9746 42.54 20.3773 42.54Z"
                         fill="currentColor"
                         fillOpacity="0"
                         stroke="currentColor"
                         strokeWidth="1.25"
                         strokeLinecap="round"
                         strokeLinejoin="round"
+                        d="M60.9721 37.84H77.3601V63H72.7361L72.1921 56.472C71.0588 59.1467 69.4494 61.1187 67.3641 62.388C65.3241 63.612 62.9668 64.224 60.2921 64.224C56.4841 64.224 53.1974 63.2493 50.4321 61.3C47.6668 59.3507 45.5134 56.54 43.9721 52.868C42.4761 49.196 41.7281 44.7533 41.7281 39.54C41.7281 34.1453 42.5214 29.5893 44.1081 25.872C45.7401 22.1093 47.9841 19.2533 50.8401 17.304C53.7414 15.3547 57.1188 14.38 60.9721 14.38C65.1428 14.38 68.6788 15.4907 71.5801 17.712C74.5268 19.9333 76.4988 23.56 77.4961 28.592H71.0361C70.4014 25.328 69.1774 23.084 67.3641 21.86C65.5961 20.5907 63.4654 19.956 60.9721 19.956C56.8014 19.956 53.6508 21.7013 51.5201 25.192C49.3894 28.6373 48.3241 33.3067 48.3241 39.2C48.3241 45.8187 49.4348 50.7147 51.6561 53.888C53.8774 57.0613 56.8014 58.648 60.4281 58.648C63.0574 58.648 65.2108 58.036 66.8881 56.812C68.5654 55.588 69.7894 53.9333 70.5601 51.848C71.3761 49.7173 71.7841 47.36 71.7841 44.776V43.416H60.9721V37.84ZM99.1993 13.428V58.376H110.147V63H81.3833V58.376H93.6913V18.052H81.3833V13.428H99.1993ZM126.206 22.268V15.468H133.006V22.268H126.206ZM132.394 27.368V58.376H143.342V63H114.578V58.376H126.818V31.992H114.578V27.368H132.394ZM149.406 63V27.368H154.642V33.284C156.047 31.108 157.656 29.408 159.47 28.184C161.328 26.96 163.663 26.348 166.474 26.348C168.559 26.348 170.44 26.7107 172.118 27.436C173.84 28.116 175.2 29.1813 176.198 30.632C177.24 32.0373 177.762 33.8507 177.762 36.072V63H172.118V38.316C172.118 35.9133 171.392 34.1453 169.942 33.012C168.491 31.8787 166.768 31.312 164.774 31.312C162.643 31.312 160.852 31.856 159.402 32.944C157.951 34.032 156.863 35.46 156.138 37.228C155.412 38.996 155.05 40.9 155.05 42.94V63H149.406ZM198.377 27.368H212.385V31.992H198.377V51.848C198.377 54.4773 199.057 56.3133 200.417 57.356C201.777 58.3533 203.749 58.852 206.333 58.852C207.511 58.852 208.599 58.8067 209.597 58.716C210.594 58.58 211.523 58.3987 212.385 58.172V63.136C211.251 63.4533 210.141 63.6573 209.053 63.748C207.965 63.884 206.945 63.952 205.993 63.952C201.686 63.952 198.399 63.068 196.133 61.3C193.866 59.532 192.733 56.7213 192.733 52.868V31.992H182.465V27.368H192.733V17.576H198.377V27.368Z"
                     />
-                    {/* l */}
+                </g>
+
+                {/* Star outside clipped group to show glow */}
+                <g transform="translate(42, -12)">
                     <path
-                        className="glint-letter"
-                        d="M51.8853 53.176C49.5733 53.176 47.5559 52.7227 45.8333 51.816C44.1106 50.864 42.7506 49.5267 41.7533 47.804C40.8013 46.0814 40.3253 44.0867 40.3253 41.82V10.2H28.0853V3.53602H47.6693V41.82C47.6693 43.2707 48.0773 44.4267 48.8933 45.288C49.7093 46.104 50.8199 46.512 52.2253 46.512H63.7853V53.176H51.8853Z"
-                        fill="currentColor"
-                        fillOpacity="0"
-                        stroke="currentColor"
-                        strokeWidth="1.25"
+                        className="glint-star glint-star-draw"
+                        d="M171.811 20.0728L171.094 27.8748L177.89 31.6618L170.161 30.6051L165.989 37.1052L166.748 29.4385L159.911 25.5162L167.681 26.7082L171.811 20.0728Z"
+                        fill="var(--primary)"
+                        fillOpacity="0.9"
+                        stroke="var(--primary)"
+                        strokeWidth="1.75"
                         strokeLinecap="round"
                         strokeLinejoin="round"
+                        style={{
+                            transformBox: 'fill-box',
+                            transformOrigin: 'center',
+                            // Promote to its own compositor layer so the continuous
+                            // rotation never triggers a repaint of the text paths.
+                            willChange: 'transform',
+                        }}
                     />
-                    {/* i */}
-                    <path
-                        className="glint-letter"
-                        d="M50.6213 53.176V46.512H63.7453V22.44H52.3213V15.776H70.8853V46.512H82.9213V53.176H50.6213ZM66.6013 9.31602C65.0146 9.31602 63.7453 8.90802 62.7933 8.09202C61.8413 7.23069 61.3653 6.09736 61.3653 4.69202C61.3653 3.24135 61.8413 2.10802 62.7933 1.29202C63.7453 0.430689 65.0146 2.09808e-05 66.6013 2.09808e-05C68.1879 2.09808e-05 69.4573 0.430689 70.4093 1.29202C71.3613 2.10802 71.8373 3.24135 71.8373 4.69202C71.8373 6.09736 71.3613 7.23069 70.4093 8.09202C69.4573 8.90802 68.1879 9.31602 66.6013 9.31602Z"
-                        fill="currentColor"
-                        fillOpacity="0"
-                        stroke="currentColor"
-                        strokeWidth="1.25"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    />
-                    {/* n */}
-                    <path
-                        className="glint-letter"
-                        d="M77.8253 53.176V15.776H85.1013V22.916H86.8693L85.1013 24.616C85.1013 21.624 85.9853 19.2894 87.7533 17.612C89.5213 15.9347 91.9693 15.096 95.0973 15.096C98.8146 15.096 101.784 16.2974 104.005 18.7C106.227 21.0574 107.337 24.2534 107.337 28.288V53.176H99.9933V29.104C99.9933 26.656 99.3359 24.7747 98.0213 23.46C96.7066 22.1454 94.9159 21.488 92.6493 21.488C90.3373 21.488 88.5013 22.1907 87.1413 23.596C85.8266 24.956 85.1693 26.9507 85.1693 29.58V53.176H77.8253Z"
-                        fill="currentColor"
-                        fillOpacity="0"
-                        stroke="currentColor"
-                        strokeWidth="1.25"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    />
-                    {/* t */}
-                    <path
-                        className="glint-letter"
-                        d="M126.093 63.176C122.693 63.176 120.041 62.2467 118.137 60.388C116.233 58.5294 115.281 55.9454 115.281 52.636V32.44H104.945V25.776H115.281V15.236H122.625V25.776H137.245V32.44H122.625V52.636C122.625 55.22 123.872 56.512 126.365 56.512H136.565V63.176H126.093Z"
-                        fill="currentColor"
-                        fillOpacity="0"
-                        stroke="currentColor"
-                        strokeWidth="1.25"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    />
-                    {/* Star repositioned above the "t" */}
-                    <g transform="translate(-36 -12)">
-                        <path
-                            className="glint-star glint-star-draw"
-                            d="M171.811 20.0728L171.094 27.8748L177.89 31.6618L170.161 30.6051L165.989 37.1052L166.748 29.4385L159.911 25.5162L167.681 26.7082L171.811 20.0728Z"
-                            fill="var(--primary)"
-                            fillOpacity="0.9"
-                            stroke="var(--primary)"
-                            strokeWidth="1.75"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            style={{
-                                transformBox: 'fill-box',
-                                transformOrigin: 'center',
-                                // Promote to its own compositor layer so the continuous
-                                // rotation never triggers a repaint of the text paths.
-                                willChange: 'transform',
-                            }}
-                        />
-                    </g>
                 </g>
                 <defs>
                     <clipPath id="clip0_1_18">
-                        <rect width="155" height="72" fill="white" />
+                        <rect width="240" height="100" fill="white" />
                     </clipPath>
                 </defs>
             </svg>
