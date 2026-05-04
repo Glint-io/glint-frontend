@@ -21,84 +21,91 @@ async function runAnalysisOnBackend(
   resumeId: string | null,
   jobText: string,
   label: string,
-  onStatusUpdate: (method: AnalysisMethod, status: AnalysisMethodStatus) => void,
-  onResultUpdate: (method: AnalysisMethod, data: { score: number; feedback: string }) => void
+  onStatusUpdate: (
+    method: AnalysisMethod,
+    status: AnalysisMethodStatus,
+  ) => void,
+  onResultUpdate: (
+    method: AnalysisMethod,
+    data: { score: number; feedback: string },
+  ) => void,
 ): Promise<AnalysisMethod[]> {
-  const buildFormData = () => {
-    const form = new FormData();
-    if (resumeId) {
-      form.append("ResumeId", resumeId);
-    } else if (file) {
-      form.append("Resume", file);
-    }
-    form.append("JobText", jobText);
-    if (label.trim()) form.append("Label", label.trim());
-    return form;
-  };
+  const form = new FormData();
+  if (resumeId) form.append("ResumeId", resumeId);
+  else if (file) form.append("Resume", file);
+  form.append("JobText", jobText);
+  if (label.trim()) form.append("Label", label.trim());
 
   const token = getAccessToken();
+  const headers: HeadersInit = { accept: "text/event-stream" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
 
-  // Call all three endpoints concurrently
-  const endpoints = [
-    { method: "ai" as AnalysisMethod, url: `${API_BASE}/analyze/ai` },
-    { method: "keyword" as AnalysisMethod, url: `${API_BASE}/analyze/keyword` },
-    { method: "rules" as AnalysisMethod, url: `${API_BASE}/analyze/rules` },
-  ];
+  // Mark all three as loading upfront
+  onStatusUpdate("ai", "loading");
+  onStatusUpdate("keyword", "loading");
+  onStatusUpdate("rules", "loading");
 
-  const promises = endpoints.map(async ({ method, url }) => {
-    onStatusUpdate(method, "loading");
+  const failedMethods: AnalysisMethod[] = [];
 
-    try {
-      let res: Response;
-      const form = buildFormData();
+  try {
+    const res = await fetch(`${API_BASE}/analyze/stream`, {
+      method: "POST",
+      headers,
+      body: form,
+    });
 
-      if (token) {
-        res = await authedFormFetch(url, form);
-      } else {
-        res = await fetch(url, {
-          method: "POST",
-          headers: { accept: "application/json" },
-          body: form,
-        });
-      }
-
-      if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        let msg = `Analysis failed (${res.status})`;
-        try {
-          const j = JSON.parse(text) as { error?: string; message?: string };
-          msg = j.error ?? j.message ?? msg;
-        } catch { /* ignore */ }
-        throw new Error(msg);
-      }
-
-      const data = (await res.json()) as {
-        method: string;
-        score: number;
-        feedback: string;
-      };
-
-      onResultUpdate(method, {
-        score: data.score,
-        feedback: data.feedback,
-      });
-
-      onStatusUpdate(method, "done");
-      return null;
-    } catch (error) {
-      onStatusUpdate(method, "error");
-
-      const msg =
-        error instanceof Error ? error.message : "Analysis failed. Please try again.";
-      return { method, error: `${method} analysis failed: ${msg}` };
+    if (!res.ok || !res.body) {
+      onStatusUpdate("ai", "error");
+      onStatusUpdate("keyword", "error");
+      onStatusUpdate("rules", "error");
+      return ["ai", "keyword", "rules"];
     }
-  });
 
-  const failures = (await Promise.all(promises)).filter(
-    (entry): entry is { method: AnalysisMethod; error: string } => entry !== null
-  );
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
 
-  return failures.map((entry) => entry.method);
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const payload = line.slice(6).trim();
+        if (payload === "[DONE]") break;
+
+        try {
+          const evt = JSON.parse(payload) as {
+            result: { method: string; score: number; feedback: string };
+          };
+
+          const methodKey = evt.result.method.toLowerCase() as AnalysisMethod;
+          // map "rulebased" -> "rules"
+          const mapped: AnalysisMethod =
+            methodKey === ("rulebased" as string) ? "rules" : methodKey;
+
+          onResultUpdate(mapped, {
+            score: evt.result.score ?? 0,
+            feedback: evt.result.feedback ?? "",
+          });
+          onStatusUpdate(mapped, "done");
+        } catch {
+          // malformed event, skip
+        }
+      }
+    }
+  } catch (err) {
+    onStatusUpdate("ai", "error");
+    onStatusUpdate("keyword", "error");
+    onStatusUpdate("rules", "error");
+    return ["ai", "keyword", "rules"];
+  }
+
+  return failedMethods;
 }
 
 async function runAnalysisFromMock(label: string): Promise<{ result: AnalysisResult; label: string }> {
