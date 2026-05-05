@@ -1,7 +1,12 @@
 "use client";
 
 import { MarkdownContent } from "@/components/ui/MarkdownContent";
-import { KeywordFeedbackView, parseKeywordFeedback } from "@/components/analysis/AnalysisResults"
+import {
+  KeywordFeedbackView,
+  parseKeywordFeedback,
+  RulesFeedbackView,
+  parseRulesFeedback,
+} from "@/components/analysis/AnalysisResults";
 import { Modal } from "@/components/ui/Modal";
 import { GradientScorePill } from "@/components/user/GradientScorePill";
 import type { HistoryItem } from "@/types";
@@ -30,8 +35,6 @@ const METHOD_ORDER: Record<string, number> = {
   Keyword: 2,
 };
 
-
-
 const ScoreBar = ({ score }: { score: number | null }) => {
   if (score == null)
     return <span className="font-mono text-xs text-foreground-muted">—</span>;
@@ -58,19 +61,24 @@ const formatMethodFeedback = (result: HistoryItem["results"][number]) => {
   if (!result.feedback) return null;
 
   if (result.method === "AI") {
-    return (
-      <MarkdownContent
-        content={result.feedback}
-        className="rounded-xl border border-border bg-background-subtle/60 p-3.5"
-      />
-    );
+    return <MarkdownContent content={result.feedback} />;
   }
 
-  if(result.method === "Keyword") {
+  if (result.method === "Keyword") {
     const data = parseKeywordFeedback(result.feedback || "");
     if (data) {
       return <KeywordFeedbackView data={data} />;
     }
+    return (
+      <p className="whitespace-pre-wrap wrap-break-word font-mono text-xs leading-relaxed text-foreground-muted">
+        {result.feedback}
+      </p>
+    );
+  }
+
+  if (result.method === "RuleBased") {
+    const data = parseRulesFeedback(result.feedback || "");
+    if (data) return <RulesFeedbackView data={data} />;
     return (
       <p className="whitespace-pre-wrap wrap-break-word font-mono text-xs leading-relaxed text-foreground-muted">
         {result.feedback}

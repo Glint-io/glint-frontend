@@ -5,9 +5,19 @@ import { ScoreRing } from "./ScoreRing";
 import { SectionLabel } from "@/components/analysis/SectionLabel";
 import { MarkdownContent } from "@/components/ui/MarkdownContent";
 import { Modal } from "@/components/ui/Modal";
-import { AnalysisMethod, AnalysisMethodStatus, AnalysisResult } from "@/types/analysis";
+import {
+  AnalysisMethod,
+  AnalysisMethodStatus,
+  AnalysisResult,
+} from "@/types/analysis";
 import { Button } from "@/components/ui/button";
-import { Bot, ListChecks, ScanText, Loader2, type LucideIcon } from "lucide-react";
+import {
+  Bot,
+  ListChecks,
+  ScanText,
+  Loader2,
+  type LucideIcon,
+} from "lucide-react";
 
 const METHODS: {
   id: AnalysisMethod;
@@ -15,10 +25,10 @@ const METHODS: {
   label: string;
   desc: string;
 }[] = [
-    { id: "ai", icon: Bot, label: "AI", desc: "Semantic understanding" },
-    { id: "keyword", icon: ScanText, label: "Keyword", desc: "Term overlap" },
-    { id: "rules", icon: ListChecks, label: "Rules", desc: "Industry criteria" },
-  ];
+  { id: "ai", icon: Bot, label: "AI", desc: "Semantic understanding" },
+  { id: "keyword", icon: ScanText, label: "Keyword", desc: "Term overlap" },
+  { id: "rules", icon: ListChecks, label: "Rules", desc: "Industry criteria" },
+];
 
 export interface KeywordFeedbackData {
   summary: string;
@@ -33,7 +43,7 @@ export function parseKeywordFeedback(raw: string): KeywordFeedbackData | null {
     if (typeof data?.summary === "string" && Array.isArray(data?.matched)) {
       return data as KeywordFeedbackData;
     }
-  } catch { }
+  } catch {}
   return null;
 }
 
@@ -91,7 +101,6 @@ export function KeywordFeedbackView({ data }: { data: KeywordFeedbackData }) {
   );
 }
 
-
 function FeedbackContent({
   method,
   result,
@@ -119,19 +128,22 @@ function FeedbackContent({
     if (data) return <KeywordFeedbackView data={data} />;
   }
 
+  if (method === "rules") {
+    const data = parseRulesFeedback(raw);
+    if (data) return <RulesFeedbackView data={data} />;
+  }
+
   if (method === "ai") {
-    return (
-      <MarkdownContent
-        content={raw}
-        className="rounded-xl border border-border bg-background-subtle/60 p-3.5"
-      />
-    );
+    return <MarkdownContent content={raw} />;
   }
 
   return (
     <div className="flex flex-col gap-1">
       {raw.split("\n").map((line, i) => (
-        <p key={i} className="font-mono text-[10px] leading-relaxed text-foreground-muted italic">
+        <p
+          key={i}
+          className="font-mono text-[10px] leading-relaxed text-foreground-muted italic"
+        >
           {line}
         </p>
       ))}
@@ -243,7 +255,9 @@ interface Props {
   compact?: boolean;
 }
 
-export const AnalysisResults = (props: Props) => <AnalysisResultsInner {...props} />;
+export const AnalysisResults = (props: Props) => (
+  <AnalysisResultsInner {...props} />
+);
 
 function AnalysisResultsInner({
   result,
@@ -259,15 +273,26 @@ function AnalysisResultsInner({
   compact = false,
 }: Props) {
   return (
-    <div className={compact ? "flex flex-col gap-3" : "flex flex-col gap-6 h-full overflow-y-auto"}>
+    <div
+      className={
+        compact
+          ? "flex flex-col gap-3"
+          : "flex flex-col gap-6 h-full overflow-y-auto"
+      }
+    >
       {showLabel && <SectionLabel>03 · Results</SectionLabel>}
 
-      <div className={compact ? "flex flex-col gap-3" : "flex flex-col flex-1 min-h-0"}>
+      <div
+        className={
+          compact ? "flex flex-col gap-3" : "flex flex-col flex-1 min-h-0"
+        }
+      >
         {error && !loading && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 mb-4 space-y-1 shrink-0">
             <p className="font-mono text-xs text-destructive">{error}</p>
             <p className="font-mono text-[10px] text-foreground-muted">
-              Finished results stay visible so you can compare the methods that completed.
+              Finished results stay visible so you can compare the methods that
+              completed.
             </p>
           </div>
         )}
@@ -288,35 +313,58 @@ function AnalysisResultsInner({
             )}
           </div>
         ) : result ? (
-          <div className={compact ? "flex flex-col gap-2" : "flex flex-col gap-4 flex-1 min-h-0 animate-in fade-in slide-in-from-bottom-2 duration-400"}>
+          <div
+            className={
+              compact
+                ? "flex flex-col gap-2"
+                : "flex flex-col gap-4 flex-1 min-h-0 animate-in fade-in slide-in-from-bottom-2 duration-400"
+            }
+          >
             {/* Status bar */}
             <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background-subtle px-3 py-2 shrink-0">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
                 <p className="font-mono text-[10px] tracking-[0.18em] text-foreground-muted uppercase truncate">
-                  {loading ? "Running three checks in parallel" : "Analysis complete"}
+                  {loading
+                    ? "Running three checks in parallel"
+                    : "Analysis complete"}
                 </p>
               </div>
               <p className="font-mono text-[10px] text-foreground-muted whitespace-nowrap">
-                {Object.values(methodStatuses).filter((s) => s === "done").length}/3 done
+                {
+                  Object.values(methodStatuses).filter((s) => s === "done")
+                    .length
+                }
+                /3 done
               </p>
             </div>
 
             {/* Method tabs */}
-            <div className={compact ? "flex gap-0.5 p-0.5 rounded-lg border border-border bg-background-subtle shrink-0" : "flex gap-1 p-0.5 rounded-lg border border-border bg-background-subtle shrink-0"}>
+            <div
+              className={
+                compact
+                  ? "flex gap-0.5 p-0.5 rounded-lg border border-border bg-background-subtle shrink-0"
+                  : "flex gap-1 p-0.5 rounded-lg border border-border bg-background-subtle shrink-0"
+              }
+            >
               {METHODS.map((m) => (
                 <Button
                   key={m.id}
                   variant={method === m.id ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setMethod(m.id)}
-                  className={compact
-                    ? "relative flex-1 flex flex-col items-center gap-0 h-auto py-1.5 rounded-md text-[9px] uppercase tracking-wide"
-                    : `${method === m.id ? "bg-primary/70" : ""} relative flex-1 flex flex-col items-center gap-0.5 h-auto py-2 rounded-md text-[10px] uppercase tracking-wide`}
+                  className={
+                    compact
+                      ? "relative flex-1 flex flex-col items-center gap-0 h-auto py-1.5 rounded-md text-[9px] uppercase tracking-wide"
+                      : `${method === m.id ? "bg-primary/70" : ""} relative flex-1 flex flex-col items-center gap-0.5 h-auto py-2 rounded-md text-[10px] uppercase tracking-wide`
+                  }
                 >
                   <span className="flex items-center justify-center text-sm leading-none">
                     {methodStatuses[m.id] === "loading" ? (
-                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                      <Loader2
+                        className="h-4 w-4 animate-spin"
+                        aria-hidden="true"
+                      />
                     ) : (
                       <m.icon
                         className={`h-4 w-4 ${methodStatuses[m.id] === "done" ? "text-green-500" : "text-red-500"}`}
@@ -325,7 +373,13 @@ function AnalysisResultsInner({
                     )}
                   </span>
                   {m.label}
-                  <span className={compact ? "font-mono text-[8px] leading-none text-foreground-muted" : "font-mono text-[9px] leading-none text-foreground-muted"}>
+                  <span
+                    className={
+                      compact
+                        ? "font-mono text-[8px] leading-none text-foreground-muted"
+                        : "font-mono text-[9px] leading-none text-foreground-muted"
+                    }
+                  >
                     {methodStatuses[m.id] === "loading"
                       ? "Running"
                       : methodStatuses[m.id] === "done"
@@ -339,42 +393,82 @@ function AnalysisResultsInner({
             </div>
 
             {/* Score row */}
-            <div className={compact ? "flex items-center gap-3 rounded-lg border border-border bg-background p-3 shrink-0" : "flex items-center gap-5 rounded-xl border border-border bg-background p-5 shrink-0"}>
+            <div
+              className={
+                compact
+                  ? "flex items-center gap-3 rounded-lg border border-border bg-background p-3 shrink-0"
+                  : "flex items-center gap-5 rounded-xl border border-border bg-background p-5 shrink-0"
+              }
+            >
               {methodStatuses[method] === "loading" ? (
-                <div className={compact ? "flex h-25 flex-1 items-center justify-center rounded-xl border border-dashed border-border bg-background-subtle px-4 text-center" : "flex h-30 flex-1 items-center justify-center rounded-xl px-5 text-center"}>
+                <div
+                  className={
+                    compact
+                      ? "flex h-25 flex-1 items-center justify-center rounded-xl border border-dashed border-border bg-background-subtle px-4 text-center"
+                      : "flex h-30 flex-1 items-center justify-center rounded-xl px-5 text-center"
+                  }
+                >
                   <div className="flex flex-col items-center gap-2">
                     <div className="h-8 w-8 rounded-full border-2 border-border border-t-primary animate-spin" />
                     <p className="font-mono text-[10px] tracking-widest text-foreground-muted uppercase">
-                      {METHODS.find((m) => m.id === method)?.label} analysis is still running
+                      {METHODS.find((m) => m.id === method)?.label} analysis is
+                      still running
                     </p>
                     <p className="font-mono text-[10px] text-foreground-muted max-w-[20rem]">
-                      The other checks will fill in automatically as they finish.
+                      The other checks will fill in automatically as they
+                      finish.
                     </p>
                   </div>
                 </div>
               ) : methodStatuses[method] === "error" ? (
-                <div className={compact ? "flex h-25 flex-1 items-center justify-center rounded-xl border border-dashed border-destructive/40 bg-destructive/5 px-4 text-center" : "flex h-30 flex-1 items-center justify-center rounded-xl border border-dashed border-destructive/40 bg-destructive/5 px-5 text-center"}>
+                <div
+                  className={
+                    compact
+                      ? "flex h-25 flex-1 items-center justify-center rounded-xl border border-dashed border-destructive/40 bg-destructive/5 px-4 text-center"
+                      : "flex h-30 flex-1 items-center justify-center rounded-xl border border-dashed border-destructive/40 bg-destructive/5 px-5 text-center"
+                  }
+                >
                   <div className="flex flex-col items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full border border-destructive/30 bg-background text-destructive">!</div>
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full border border-destructive/30 bg-background text-destructive">
+                      !
+                    </div>
                     <p className="font-mono text-[10px] tracking-widest text-destructive uppercase">
-                      {METHODS.find((m) => m.id === method)?.label} analysis failed
+                      {METHODS.find((m) => m.id === method)?.label} analysis
+                      failed
                     </p>
                   </div>
                 </div>
               ) : (
                 <>
-                  <ScoreRing target={displayScore} active={scoreActive} compact={compact} />
+                  <ScoreRing
+                    target={displayScore}
+                    active={scoreActive}
+                    compact={compact}
+                  />
                   <div className="flex flex-col gap-0.5 overflow-hidden min-w-0">
-                    <p className={compact ? "font-mono text-xs font-semibold truncate leading-tight" : "font-mono text-sm font-semibold truncate leading-tight"}>
+                    <p
+                      className={
+                        compact
+                          ? "font-mono text-xs font-semibold truncate leading-tight"
+                          : "font-mono text-sm font-semibold truncate leading-tight"
+                      }
+                    >
                       {jobLabel || "Untitled analysis"}
                     </p>
-                    <p className={compact ? "font-mono text-[11px] text-foreground-muted" : "font-mono text-xs text-foreground-muted"}>
+                    <p
+                      className={
+                        compact
+                          ? "font-mono text-[11px] text-foreground-muted"
+                          : "font-mono text-xs text-foreground-muted"
+                      }
+                    >
                       {METHODS.find((m) => m.id === method)?.desc}
                     </p>
                     <div className="flex gap-2 mt-1">
                       {METHODS.map((m) => {
                         const s =
-                          m.id === "ai" ? result.score
+                          m.id === "ai"
+                            ? result.score
                             : m.id === "keyword"
                               ? result.keywordScore
                               : result.rulesScore;
@@ -382,10 +476,11 @@ function AnalysisResultsInner({
                           <button
                             key={m.id}
                             onClick={() => setMethod(m.id)}
-                            className={`font-mono text-[9px] transition-colors ${method === m.id
-                              ? "text-primary font-semibold"
-                              : "text-foreground-muted hover:text-foreground"
-                              }`}
+                            className={`font-mono text-[9px] transition-colors ${
+                              method === m.id
+                                ? "text-primary font-semibold"
+                                : "text-foreground-muted hover:text-foreground"
+                            }`}
                           >
                             {Math.round(s)}
                           </button>
@@ -402,6 +497,111 @@ function AnalysisResultsInner({
           </div>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+export interface RuleCheck {
+  rule: string;
+  passed: boolean;
+  weight: number;
+  detail: string;
+}
+
+export interface RulesFeedbackData {
+  passed: number;
+  total: number;
+  criticalGapCount?: number;
+  minorGapCount?: number;
+  checks: RuleCheck[];
+  criticalGaps?: string[];
+  minorGaps?: string[];
+}
+
+export function parseRulesFeedback(raw: string): RulesFeedbackData | null {
+  try {
+    const data = JSON.parse(raw);
+    if (
+      typeof data?.passed === "number" &&
+      typeof data?.total === "number" &&
+      Array.isArray(data?.checks)
+    ) {
+      return data as RulesFeedbackData;
+    }
+  } catch {}
+  return null;
+}
+
+export function RulesFeedbackView({ data }: { data: RulesFeedbackData }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-mono text-[11px] font-semibold">{`${data.passed}/${data.total} passed`}</p>
+          <p className="font-mono text-[9px] text-foreground-muted">{`${data.criticalGapCount ?? 0} critical, ${data.minorGapCount ?? 0} minor gaps`}</p>
+        </div>
+        <div className="flex gap-2">
+          {data.criticalGaps && data.criticalGaps.length > 0 && (
+            <span className="inline-flex items-center gap-1 rounded px-2 py-1 text-[10px] bg-destructive/10 text-destructive border border-destructive/20">
+              Critical: {data.criticalGaps.length}
+            </span>
+          )}
+          {data.minorGaps && data.minorGaps.length > 0 && (
+            <span className="inline-flex items-center gap-1 rounded px-2 py-1 text-[10px] bg-amber-500/10 text-amber-500 border border-amber-500/20">
+              Minor: {data.minorGaps.length}
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        {data.checks.map((c, i) => (
+          <div key={i} className="flex items-start gap-3">
+            <div
+              className={`h-5 w-5 rounded-full flex items-center justify-center ${c.passed ? "bg-green-500/10 text-green-600" : "bg-destructive/10 text-destructive"} font-mono text-[10px]`}
+            >
+              {c.passed ? "✓" : "✗"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-mono text-[10px] font-semibold truncate">
+                {c.rule}
+              </p>
+              <p className="font-mono text-[9px] text-foreground-muted">
+                {c.detail}
+              </p>
+            </div>
+            <div className="font-mono text-[9px] text-foreground-muted">
+              w:{c.weight}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {data.criticalGaps && data.criticalGaps.length > 0 && (
+        <div>
+          <p className="font-mono text-[9px] uppercase tracking-widest text-foreground-muted">
+            Critical Gaps
+          </p>
+          <ul className="list-disc ml-4 mt-2 font-mono text-[9px] text-destructive">
+            {data.criticalGaps.map((g, i) => (
+              <li key={i}>{g}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {data.minorGaps && data.minorGaps.length > 0 && (
+        <div>
+          <p className="font-mono text-[9px] uppercase tracking-widest text-foreground-muted">
+            Minor Gaps
+          </p>
+          <ul className="list-disc ml-4 mt-2 font-mono text-[9px] text-amber-500">
+            {data.minorGaps.map((g, i) => (
+              <li key={i}>{g}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
