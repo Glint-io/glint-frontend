@@ -73,13 +73,13 @@ export default function GlintAnimation({ className = '' }: GlintAnimationProps) 
             <svg
                 width="180"
                 height="55"
-                viewBox="-5 0 240 80"
+                viewBox="18 0 220 80"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
                 style={{
                     // Block removes the inline baseline descender gap that can
                     // cause a sub-pixel shift when animations change paint layers.
-                    display: 'block',
+                    display: 'flex',
                     // Allow star glow to render beyond bounds
                     overflow: 'visible',
                 }}

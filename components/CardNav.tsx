@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { clearAuth } from "@/lib/auth";
 import { openAuthModal } from "@/components/AuthModal";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 type CardNavLink = { label: string; href: string; ariaLabel: string };
 export type CardNavItem = {
@@ -40,6 +41,7 @@ const CardNav: React.FC<CardNavProps> = ({
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const navRef = useRef<HTMLDivElement | null>(null);
   const cardsRef = useRef<HTMLDivElement[]>([]);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
@@ -47,6 +49,7 @@ const CardNav: React.FC<CardNavProps> = ({
   // Prevent hydration issues by only rendering interactive content after mount
   useEffect(() => {
     // When mounted on client, now we can show the UI
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 
@@ -83,12 +86,12 @@ const CardNav: React.FC<CardNavProps> = ({
     }
 
     e.preventDefault();
-    if (window.confirm("Are you sure you want to log out?")) {
-      closeMenu(() => {
-        clearAuth(); // wipe tokens + fire glint:auth-change
-        router.push("/?auth=login");
-      });
-    }
+    closeMenu(() => setLogoutConfirmOpen(true));
+  };
+
+  const handleCtaClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    closeMenu(() => router.push("/analysis"));
   };
 
   const calculateHeight = () => {
@@ -195,7 +198,7 @@ const CardNav: React.FC<CardNavProps> = ({
           relative overflow-hidden will-change-[height]`}
       >
         {/*  Top bar  */}
-        <div className="card-nav-top absolute inset-x-0 top-0 h-[60px] flex items-center justify-between p-2 pl-[1.1rem] z-[2]">
+        <div className="card-nav-top absolute inset-x-0 top-0 h-[60px] flex items-center justify-between py-2 px-4 z-[2]">
           {/* Hamburger */}
           <div
             className={`hamburger-menu ${isHamburgerOpen ? "open" : ""} group h-full flex flex-col items-center justify-center cursor-pointer gap-[6px] order-2 md:order-none`}
@@ -216,7 +219,7 @@ const CardNav: React.FC<CardNavProps> = ({
           {/* Logo */}
           <Link
             href="/"
-            className="logo-container flex items-center md:absolute md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 order-1 md:order-0"
+            className="logo-container absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center"
           >
             <GlintAnimation className="h-7" />
           </Link>
@@ -229,6 +232,7 @@ const CardNav: React.FC<CardNavProps> = ({
               backgroundColor: buttonBgColor ?? "var(--primary)",
               color: buttonTextColor ?? "var(--primary-fg)",
             }}
+            onClick={handleCtaClick}
           >
             Get Started
           </Link>
@@ -276,6 +280,23 @@ const CardNav: React.FC<CardNavProps> = ({
             ))}
         </div>
       </nav>
+
+      {logoutConfirmOpen && (
+        <ConfirmModal
+          title="Sign out"
+          ariaLabel="Sign out confirmation"
+          message="Are you sure you want to sign out?"
+          confirmType="simple"
+          confirmButtonLabel="Sign out"
+          cancelButtonLabel="Cancel"
+          onClose={() => setLogoutConfirmOpen(false)}
+          onConfirm={() => {
+            clearAuth();
+            setLogoutConfirmOpen(false);
+            router.push("/auth/login");
+          }}
+        />
+      )}
     </div>
   );
 };

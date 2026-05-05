@@ -31,7 +31,7 @@ export function Modal({ onClose, children, "aria-label": ariaLabel, panelClassNa
 
   return (
     <div
-      className="fixed inset-0 z-120 flex items-center justify-center bg-black/55 px-4 backdrop-blur-sm"
+      className="fixed inset-0 z-120 flex items-start justify-center overflow-y-auto bg-black/55 px-4 py-6 backdrop-blur-sm sm:items-center"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -39,7 +39,12 @@ export function Modal({ onClose, children, "aria-label": ariaLabel, panelClassNa
       aria-modal="true"
       aria-label={ariaLabel}
     >
-      <div className={cn("relative w-full max-w-md rounded-2xl border border-border bg-background p-8 shadow-xl", panelClassName)}>
+      <div
+        className={cn(
+          "relative w-full max-w-md rounded-2xl border border-border bg-background p-8 shadow-xl",
+          panelClassName,
+        )}
+      >
         <Button
           variant="ghost"
           onClick={onClose}

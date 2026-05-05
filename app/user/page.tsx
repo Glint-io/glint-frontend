@@ -6,12 +6,14 @@ import {
   authedFetch,
   authedFormFetch,
   clearAuth,
-  AUTH_KEY,
+  getStoredAuth,
 } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { GradientScorePill } from "@/components/user/GradientScorePill";
 import { AnalysisDetailModal } from "@/components/user/AnalysisDetailModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { openAuthModal } from "@/components/AuthModal";
+import { useAuth } from "@/components/AuthProvider";
 import { StatCard } from "@/components/user/StatCard";
 import { SectionLabel } from "@/components/user/SectionLabel";
 import { EmptyState } from "@/components/user/EmptyState";
@@ -122,6 +124,7 @@ const ResumeUpload = ({
 
 export default function UserPage() {
   const router = useRouter();
+  const { isLoggedIn } = useAuth();
   const [stats, setStats] = useState<Statistics | null>(null);
   const [history, setHistory] = useState<PaginatedHistory | null>(null);
   const [resumes, setResumes] = useState<Resume[]>([]);
@@ -139,27 +142,26 @@ export default function UserPage() {
     "https://localhost:7248";
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(AUTH_KEY);
-      if (!raw) return void router.replace("/auth/login");
-      const auth = JSON.parse(raw) as {
-        accessToken?: string;
-        payload?: { email?: string };
-      };
-      if (!auth.accessToken) return void router.replace("/auth/login");
+    if (isLoggedIn === false) {
+      openAuthModal("login");
+      setLoading(false);
+      return;
+    }
+
+    if (isLoggedIn === true) {
+      const auth = getStoredAuth();
       const email =
-        auth.payload && typeof auth.payload === "object"
+        auth?.payload && typeof auth.payload === "object"
           ? (((auth.payload as Record<string, unknown>).email as string) ??
             null)
           : null;
       setUserEmail(email);
-    } catch {
-      router.replace("/auth/login");
     }
-  }, [router]);
+  }, [isLoggedIn]);
 
   const fetchAll = useCallback(
     async (p: number) => {
+      if (isLoggedIn !== true) return;
       setLoading(true);
       try {
         const [s, h, r] = await Promise.all([
@@ -174,18 +176,53 @@ export default function UserPage() {
         setHistory(h);
         setResumes(r);
       } catch (err: unknown) {
-        if (err instanceof Error && err.message.includes("401"))
-          router.replace("/auth/login");
+        if (err instanceof Error && err.message.includes("401")) {
+          openAuthModal("login");
+        }
       } finally {
         setLoading(false);
       }
     },
-    [router],
+    [isLoggedIn],
   );
 
   useEffect(() => {
-    fetchAll(page);
-  }, [page, fetchAll]);
+    if (isLoggedIn === true) fetchAll(page);
+  }, [page, fetchAll, isLoggedIn]);
+
+  if (isLoggedIn === false) {
+    return (
+      <div className="flex w-full flex-1 items-center justify-center">
+        <div className="w-full max-w-md rounded-2xl border border-border bg-background p-8">
+          <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-foreground-muted">
+            Account required
+          </p>
+          <h1 className="mt-3 font-mono text-xl font-semibold text-foreground">
+            Sign in to view your dashboard
+          </h1>
+          <p className="mt-2 font-mono text-sm text-foreground-muted">
+            Your saved resumes and analysis history are only available when
+            you’re logged in.
+          </p>
+          <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="outline"
+              onClick={() => router.push("/")}
+              className="font-mono text-xs"
+            >
+              Back
+            </Button>
+            <Button
+              onClick={() => openAuthModal("login")}
+              className="font-mono text-xs"
+            >
+              Sign in
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleDeleteResume = async (id: string) => {
     setDeletingId(id);

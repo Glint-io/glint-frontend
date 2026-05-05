@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ScoreRing } from "./ScoreRing";
 import { SectionLabel } from "@/components/analysis/SectionLabel";
+import { MarkdownContent } from "@/components/ui/MarkdownContent";
 import { Modal } from "@/components/ui/Modal";
 import { AnalysisMethod, AnalysisMethodStatus, AnalysisResult } from "@/types/analysis";
 import { Button } from "@/components/ui/button";
@@ -19,14 +20,14 @@ const METHODS: {
     { id: "rules", icon: ListChecks, label: "Rules", desc: "Industry criteria" },
   ];
 
-interface KeywordFeedbackData {
+export interface KeywordFeedbackData {
   summary: string;
   matched: string[];
   missing: string[];
   tip: string;
 }
 
-function parseKeywordFeedback(raw: string): KeywordFeedbackData | null {
+export function parseKeywordFeedback(raw: string): KeywordFeedbackData | null {
   try {
     const data = JSON.parse(raw);
     if (typeof data?.summary === "string" && Array.isArray(data?.matched)) {
@@ -36,10 +37,12 @@ function parseKeywordFeedback(raw: string): KeywordFeedbackData | null {
   return null;
 }
 
-function KeywordFeedbackView({ data }: { data: KeywordFeedbackData }) {
+export function KeywordFeedbackView({ data }: { data: KeywordFeedbackData }) {
   return (
-    <div className="flex flex-col gap-2.5">
-      <p className="font-mono text-[10px] text-foreground-muted">{data.summary}</p>
+    <div className="flex flex-col gap-3">
+      <p className="font-mono text-[10px] leading-relaxed text-foreground-muted">
+        {data.summary}
+      </p>
 
       {data.matched.length > 0 && (
         <div className="flex flex-col gap-1">
@@ -80,13 +83,14 @@ function KeywordFeedbackView({ data }: { data: KeywordFeedbackData }) {
       )}
 
       {data.tip && (
-        <p className="font-mono text-[9px] text-foreground-muted italic border-t border-border pt-2">
+        <p className="border-t border-amber-500/15 pt-2 font-mono text-[9px] italic text-foreground-muted">
           {data.tip}
         </p>
       )}
     </div>
   );
 }
+
 
 function FeedbackContent({
   method,
@@ -113,6 +117,15 @@ function FeedbackContent({
   if (method === "keyword") {
     const data = parseKeywordFeedback(raw);
     if (data) return <KeywordFeedbackView data={data} />;
+  }
+
+  if (method === "ai") {
+    return (
+      <MarkdownContent
+        content={raw}
+        className="rounded-xl border border-border bg-background-subtle/60 p-3.5"
+      />
+    );
   }
 
   return (
@@ -145,7 +158,7 @@ function FeedbackPanel({
 }) {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const rawFeedback = getFeedbackRaw(method, result);
-  const canOpenFeedback = Boolean(rawFeedback);
+  const canOpenFeedback = Boolean(rawFeedback) && !compact;
 
   return (
     <div className="flex flex-col rounded-xl border border-border bg-background overflow-hidden flex-1">
@@ -163,8 +176,8 @@ function FeedbackPanel({
             : "flex flex-1 min-h-0 flex-col p-4 gap-3"
         }
       >
-        {/* Preview — fills all space, clips overflow */}
-        <div className="flex-1 min-h-0 overflow-hidden">
+        {/* Preview — fills all space and scrolls independently */}
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-1">
           <FeedbackContent method={method} result={result} />
         </div>
 
