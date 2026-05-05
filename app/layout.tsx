@@ -48,7 +48,7 @@ export default function RootLayout({
         jetbrainsMono.variable,
       )}
     >
-      <body className="relative min-h-full flex flex-col bg-background text-foreground">
+      <body className="relative min-h-dvh flex flex-col bg-background text-foreground">
         <NotificationProvider>
           <AuthProvider>
             <ThemeProvider
@@ -69,7 +69,7 @@ export default function RootLayout({
                   ease="power3.out"
                 />
               </ScrollHeader>
-              <main className="mx-auto flex w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
+              <main className="mx-auto flex flex-col w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
                 {children}
               </main>
               <AuthModal />

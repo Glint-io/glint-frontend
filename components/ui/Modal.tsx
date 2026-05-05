@@ -3,14 +3,16 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type Props = {
   onClose: () => void;
   children: React.ReactNode;
   "aria-label"?: string;
+  panelClassName?: string;
 };
 
-export function Modal({ onClose, children, "aria-label": ariaLabel }: Props) {
+export function Modal({ onClose, children, "aria-label": ariaLabel, panelClassName }: Props) {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -37,7 +39,7 @@ export function Modal({ onClose, children, "aria-label": ariaLabel }: Props) {
       aria-modal="true"
       aria-label={ariaLabel}
     >
-      <div className="relative w-full max-w-md rounded-2xl border border-border bg-background p-8 shadow-xl">
+      <div className={cn("relative w-full max-w-md rounded-2xl border border-border bg-background p-8 shadow-xl", panelClassName)}>
         <Button
           variant="ghost"
           onClick={onClose}

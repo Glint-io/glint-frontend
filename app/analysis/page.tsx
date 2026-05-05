@@ -3,13 +3,14 @@
 import { useState, useEffect } from "react";
 import { AnalysisInputs } from "@/components/analysis/AnalysisInputs";
 import { AnalysisResults } from "@/components/analysis/AnalysisResults";
+import { useAuth } from "@/components/AuthProvider";
 import {
   AnalysisMethod,
   AnalysisMethodStatus,
   AnalysisResult,
   SavedResume,
 } from "@/types/analysis";
-import { getAccessToken, authedGet, authedFormFetch } from "@/lib/auth";
+import { getAccessToken, authedGet } from "@/lib/auth";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ?? "https://localhost:7248";
@@ -98,7 +99,7 @@ async function runAnalysisOnBackend(
         }
       }
     }
-  } catch (err) {
+  } catch {
     onStatusUpdate("ai", "error");
     onStatusUpdate("keyword", "error");
     onStatusUpdate("rules", "error");
@@ -130,6 +131,7 @@ async function runAnalysisFromMock(label: string): Promise<{ result: AnalysisRes
 //  Page 
 
 export default function AnalysisPage() {
+  const { isLoggedIn } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState("");
   const [jobLabel, setJobLabel] = useState("");
@@ -146,16 +148,18 @@ export default function AnalysisPage() {
   });
 
   // Resume picker state
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [savedResumes, setSavedResumes] = useState<SavedResume[]>([]);
   const [uploadMode, setUploadMode] = useState<"new" | "saved">("new");
   const [selectedResumeId, setSelectedResumeId] = useState<string | null>(null);
 
   // Detect auth + fetch saved resumes
   useEffect(() => {
-    const token = getAccessToken();
-    if (!token) return;
-    setIsLoggedIn(true);
+    if (isLoggedIn !== true) {
+      setSavedResumes([]);
+      setSelectedResumeId(null);
+      setUploadMode("new");
+      return;
+    }
 
     authedGet<SavedResume[]>("/user/resume")
       .then((resumes: SavedResume[]) => {
@@ -165,7 +169,7 @@ export default function AnalysisPage() {
       .catch(() => {
         // Non-critical: just can't show saved resumes
       });
-  }, []);
+  }, [isLoggedIn]);
 
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] ?? null;
@@ -273,7 +277,7 @@ export default function AnalysisPage() {
     : 0;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-stretch w-full max-w-7xl mx-auto">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 w-full max-w-7xl mx-auto flex-1 min-h-0 h-full">
       <AnalysisInputs
         file={file}
         fileError={fileError}
