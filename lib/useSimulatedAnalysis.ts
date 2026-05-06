@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AnalysisResult } from "@/types/analysis";
 
 const SAMPLE_JOBS = [
@@ -38,69 +38,63 @@ const FEEDBACK_TEMPLATES = {
   ],
 };
 
-export function useSimulatedAnalysis() {
-  const [result, setResult] = useState<AnalysisResult | null>(null);
-  const [jobLabel, setJobLabel] = useState("");
+function createSimulatedAnalysis() {
+  // Generate correlated scores (they tend to be in similar ranges)
+  const baseScore = Math.random();
+  const variance = 0.15;
 
-  const generateResult = () => {
-    // Generate correlated scores (they tend to be in similar ranges)
-    const baseScore = Math.random();
-    const variance = 0.15;
+  const score = Math.max(
+    35,
+    Math.min(
+      98,
+      Math.round(baseScore * 100 + (Math.random() - 0.5) * variance * 100)
+    )
+  );
 
-    const score = Math.max(
-      35,
-      Math.min(
-        98,
-        Math.round(baseScore * 100 + (Math.random() - 0.5) * variance * 100)
-      )
-    );
+  const keywordScore = Math.max(
+    30,
+    Math.min(
+      100,
+      Math.round(score + (Math.random() - 0.5) * 25)
+    )
+  );
 
-    const keywordScore = Math.max(
-      30,
-      Math.min(
-        100,
-        Math.round(score + (Math.random() - 0.5) * 25)
-      )
-    );
+  const rulesScore = Math.max(
+    35,
+    Math.min(
+      100,
+      Math.round(score + (Math.random() - 0.5) * 20)
+    )
+  );
 
-    const rulesScore = Math.max(
-      35,
-      Math.min(
-        100,
-        Math.round(score + (Math.random() - 0.5) * 20)
-      )
-    );
-
-    const getFeedback = (scores: number[], templates: string[]) => {
-      const avg = Math.round((scores[0] + scores[1] + scores[2]) / 3);
-      if (avg >= 85) return templates[4];
-      if (avg >= 70) return templates[0];
-      if (avg >= 55) return templates[1];
-      if (avg >= 40) return templates[2];
-      return templates[3];
-    };
-
-    const scores = [score, keywordScore, rulesScore];
-
-    setJobLabel(
-      SAMPLE_JOBS[Math.floor(Math.random() * SAMPLE_JOBS.length)]
-    );
-
-    setResult({
-      score,
-      keywordScore,
-      rulesScore,
-      feedback: getFeedback(scores, FEEDBACK_TEMPLATES.ai),
-      keywordFeedback: getFeedback(scores, FEEDBACK_TEMPLATES.keyword),
-      rulesFeedback: getFeedback(scores, FEEDBACK_TEMPLATES.rules),
-    });
+  const getFeedback = (scores: number[], templates: string[]) => {
+    const avg = Math.round((scores[0] + scores[1] + scores[2]) / 3);
+    if (avg >= 85) return templates[4];
+    if (avg >= 70) return templates[0];
+    if (avg >= 55) return templates[1];
+    if (avg >= 40) return templates[2];
+    return templates[3];
   };
 
-  useEffect(() => {
-    // Generate initial result
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    generateResult();
-  }, []);
+  const scores = [score, keywordScore, rulesScore];
+  const nextJobLabel = SAMPLE_JOBS[Math.floor(Math.random() * SAMPLE_JOBS.length)];
+  const nextResult: AnalysisResult = {
+    score,
+    keywordScore,
+    rulesScore,
+    feedback: getFeedback(scores, FEEDBACK_TEMPLATES.ai),
+    keywordFeedback: getFeedback(scores, FEEDBACK_TEMPLATES.keyword),
+    rulesFeedback: getFeedback(scores, FEEDBACK_TEMPLATES.rules),
+  };
+
+  return { result: nextResult, jobLabel: nextJobLabel };
+}
+
+const sharedSimulation = createSimulatedAnalysis();
+
+export function useSimulatedAnalysis() {
+  const [result] = useState<AnalysisResult | null>(sharedSimulation.result);
+  const [jobLabel] = useState(sharedSimulation.jobLabel);
 
   return {
     result,

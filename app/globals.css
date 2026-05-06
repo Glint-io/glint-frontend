@@ -315,3 +315,37 @@ body::after {
   );
   border: none;
 }
+
+/*  Progress bar animations  */
+@keyframes fillBar {
+  from {
+    width: 0%;
+    opacity: 0;
+  }
+  to {
+    width: var(--fill-percent, 100%);
+    opacity: 1;
+  }
+}
+
+.animate-fill-bar {
+  animation: fillBar 0.9s ease-out forwards;
+  animation-delay: var(--anim-delay, 0s);
+}
+
+/*  Sparkline bar animation  */
+@keyframes riseBar {
+  from {
+    height: 0%;
+    opacity: 0;
+  }
+  to {
+    height: var(--bar-height, 50%);
+    opacity: 1;
+  }
+}
+
+.animate-rise-bar {
+  animation: riseBar 0.75s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  animation-delay: var(--anim-delay, 0s);
+}

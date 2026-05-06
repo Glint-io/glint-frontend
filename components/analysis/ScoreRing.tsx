@@ -34,11 +34,11 @@ export const ScoreRing = ({ target, active, compact = false }: ScoreRingProps) =
   const circ = 2 * Math.PI * R;
   const offset = circ - (value / 100) * circ;
   const accent =
-    value >= 75
-      ? "var(--color-primary)"
-      : value >= 50
-        ? "#eab308"
-        : "var(--color-destructive)";
+    value >= 80
+      ? "rgb(34,197,94)"
+      : value >= 60
+        ? "rgb(234,179,8)"
+        : "rgb(239,68,68)";
 
   const size = compact ? 100 : 120;
   const centerOffset = compact ? 50 : 60;

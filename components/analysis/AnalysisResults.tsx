@@ -30,6 +30,13 @@ const METHODS: {
   { id: "rules", icon: ListChecks, label: "Rules", desc: "Industry criteria" },
 ];
 
+const getScoreAccent = (score: number) =>
+  score >= 80
+    ? "rgb(34,197,94)"
+    : score >= 60
+      ? "rgb(234,179,8)"
+      : "rgb(239,68,68)";
+
 export interface KeywordFeedbackData {
   summary: string;
   matched: string[];
@@ -472,17 +479,23 @@ function AnalysisResultsInner({
                             : m.id === "keyword"
                               ? result.keywordScore
                               : result.rulesScore;
+                        const roundedScore = Math.round(s);
                         return (
                           <button
                             key={m.id}
                             onClick={() => setMethod(m.id)}
                             className={`font-mono text-[9px] transition-colors ${
                               method === m.id
-                                ? "text-primary font-semibold"
+                                ? "font-semibold"
                                 : "text-foreground-muted hover:text-foreground"
                             }`}
+                            style={
+                              method === m.id
+                                ? { color: getScoreAccent(roundedScore) }
+                                : undefined
+                            }
                           >
-                            {Math.round(s)}
+                            {roundedScore}
                           </button>
                         );
                       })}

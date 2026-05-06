@@ -1,11 +1,11 @@
 import Link from "next/link";
-import AuthCTA from "@/components/AuthCTA";
 import { SimulatedAnalysisDemo } from "@/components/SimulatedAnalysisDemo";
+import AnimatedMethodStats from "@/components/AnimatedMethodStats";
 
 const steps = [
   {
     n: "01",
-    title: "Upload your CV",
+    title: "Upload your resume",
     body: "Drop a PDF resume. Parsed locally — your data stays with you.",
   },
   {
@@ -20,43 +20,49 @@ const steps = [
   },
 ];
 
-const methods = [
-  { label: "AI Semantic", pct: 87 },
-  { label: "Keyword Match", pct: 73 },
-  { label: "Rule-Based", pct: 91 },
-];
-
 export default function Home() {
   return (
     <div className="flex w-full flex-1 flex-col">
-
       {/*  Hero  */}
-      <section className="pt-6 pb-20 grid gap-16 lg:grid-cols-[1fr_320px] lg:items-center">
+      <section className="relative pt-12 pb-24 grid gap-16 lg:grid-cols-[1fr_320px] lg:items-center overflow-hidden">
         <div className="max-w-xl">
-          <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-foreground-muted mb-7">
-            Glint · CV Intelligence
-          </p>
+          <div className="inline-flex items-center gap-2 mb-6 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 w-fit">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+            <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-foreground-muted">
+              Glint · Resume Intelligence
+            </p>
+          </div>
 
           <h1 className="font-mono text-[2.75rem] md:text-5xl lg:text-[3.25rem] font-semibold leading-[1.08] tracking-tight text-foreground">
-            Know exactly how your CV{" "}
-            <span className="text-primary">fits the role</span>{" "}
+            Know exactly how your resume{" "}
+            <span className="bg-linear-to-r from-primary via-primary to-primary/80 bg-clip-text text-transparent">
+              fits the role
+            </span>{" "}
             before you apply.
           </h1>
 
-          <p className="mt-6 font-mono text-sm leading-[1.85] text-foreground-muted">
-            Upload your CV, paste a job ad. Three analysis engines give you a
-            match score in seconds.
+          <p className="mt-6 font-mono text-sm leading-[1.85] text-foreground-muted max-w-md">
+            Upload your resume, paste a job ad. Three analysis engines give you
+            a match score in seconds. No account required.
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-3">
             <Link
               href="/analysis"
-              className="inline-flex h-10 items-center rounded-lg px-5 font-mono text-sm font-medium transition-opacity hover:opacity-85"
-              style={{ background: "var(--primary)", color: "var(--primary-fg)" }}
+              className="inline-flex h-10 items-center rounded-lg px-5 font-mono text-sm font-medium transition-all hover:shadow-lg hover:scale-105 active:scale-95 origin-left"
+              style={{
+                background: "var(--primary)",
+                color: "var(--primary-fg)",
+              }}
             >
-              Run your first analysis →
+              Analyze →
             </Link>
-            <AuthCTA />
+            <Link
+              href="/auth/register"
+              className="inline-flex h-10 items-center rounded-lg px-5 font-mono text-sm font-medium border border-primary/40 text-foreground transition-all hover:border-primary hover:bg-primary/10"
+            >
+              Create account
+            </Link>
           </div>
         </div>
 
@@ -70,17 +76,34 @@ export default function Home() {
       <div className="h-px bg-border" />
 
       {/*  How it works  */}
-      <section className="py-16">
-        <div className="grid sm:grid-cols-3 gap-10 sm:gap-6">
+      <section className="py-20">
+        <div className="mb-12">
+          <p className="font-mono text-[10px] tracking-[0.25em] text-foreground-muted uppercase mb-3">
+            Simple process
+          </p>
+          <h2 className="font-mono text-2xl font-semibold text-foreground">
+            Three steps to better insights
+          </h2>
+        </div>
+        <div className="grid sm:grid-cols-3 gap-6">
           {steps.map((step) => (
-            <div key={step.n} className="flex flex-col gap-4">
-              <span
-                className="font-mono text-[4rem] font-bold leading-none select-none"
-                style={{ color: "var(--primary)", opacity: 0.18 }}
-                aria-hidden
-              >
-                {step.n}
-              </span>
+            <div
+              key={step.n}
+              className="group relative p-6 rounded-xl border border-border bg-linear-to-br from-background-subtle/30 to-background/30 hover:border-primary/50 hover:bg-background-subtle/60 transition-all duration-300 overflow-hidden"
+            >
+              {/* Gradient accent on hover */}
+              <div className="absolute inset-0 bg-linear-to-br from-primary/0 to-primary/0 group-hover:from-primary/5 group-hover:to-primary/10 transition-all duration-300 -z-10"></div>
+
+              <div className="flex items-start gap-4 mb-4">
+                <div className="shrink-0">
+                  <span
+                    className="flex items-center justify-center w-10 h-10 rounded-lg font-mono text-xs font-bold text-primary-fg transition-all group-hover:scale-110"
+                    style={{ background: "var(--primary)" }}
+                  >
+                    {step.n}
+                  </span>
+                </div>
+              </div>
               <div>
                 <h3 className="font-mono text-sm font-semibold text-foreground">
                   {step.title}
@@ -98,15 +121,18 @@ export default function Home() {
       <div className="h-px bg-border" />
 
       {/*  Analysis methods  */}
-      <section className="py-16 grid lg:grid-cols-[1fr_1fr] gap-12 items-center">
+      <section className="py-20 grid lg:grid-cols-[1fr_1fr] gap-16 items-center">
         <div>
           <p className="font-mono text-[10px] tracking-[0.25em] text-foreground-muted uppercase mb-4">
             Three analysis methods
           </p>
-          <h2 className="font-mono text-2xl font-semibold leading-tight tracking-tight text-foreground">
-            AI doesn&apos;t replace precision. It adds to it.
+          <h2 className="font-mono text-3xl font-semibold leading-tight tracking-tight text-foreground">
+            AI doesn&apos;t replace precision.{" "}
+            <span className="bg-linear-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+              It adds to it.
+            </span>
           </h2>
-          <p className="mt-4 font-mono text-xs leading-[1.9] text-foreground-muted max-w-sm">
+          <p className="mt-6 font-mono text-xs leading-[1.9] text-foreground-muted max-w-sm">
             Semantic AI finds conceptual overlap. Keyword match checks literal
             coverage. Rule-based criteria flag industry requirements. Together
             they leave nothing out.
@@ -114,84 +140,44 @@ export default function Home() {
 
           <Link
             href="/analysis"
-            className="mt-8 inline-flex h-9 items-center rounded-lg border border-border bg-background px-4 font-mono text-sm font-medium text-foreground transition-colors hover:bg-background-subtle"
+            className="mt-8 inline-flex h-10 items-center rounded-lg border border-primary/40 bg-primary/10 px-5 font-mono text-sm font-medium text-foreground transition-all hover:border-primary hover:bg-primary/20 hover:shadow-lg"
           >
-            Try it now
+            Try it now →
           </Link>
         </div>
 
-        <div className="flex flex-col gap-4">
-          {methods.map((m) => (
-            <div key={m.label} className="flex items-center gap-4">
-              <span className="font-mono text-[10px] text-foreground-muted w-28 shrink-0">
-                {m.label}
-              </span>
-              <div className="flex-1 h-1 rounded-full bg-border overflow-hidden">
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${m.pct}%`, background: "var(--primary)" }}
-                />
-              </div>
-              <span
-                className="font-mono text-xs font-semibold w-5 text-right"
-                style={{ color: "var(--primary)" }}
-              >
-                {m.pct}
-              </span>
-            </div>
-          ))}
-
-          {/* Score trend sparkline */}
-          <div className="mt-4 pt-4 border-t border-border">
-            <p className="font-mono text-[10px] text-foreground-muted tracking-wide uppercase mb-3">
-              Score over time
-            </p>
-            <div className="flex items-end gap-1 h-10">
-              {[40, 55, 52, 68, 72, 79, 87].map((h, i, arr) => (
-                <div
-                  key={i}
-                  className="flex-1 rounded-sm transition-all"
-                  style={{
-                    height: `${h}%`,
-                    background: i === arr.length - 1 ? "var(--primary)" : "var(--border)",
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
+        <AnimatedMethodStats />
       </section>
-
-      {/*  Divider  */}
-      <div className="h-px bg-border" />
 
       {/*  CTA strip  */}
-      <section className="py-14 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+      <section className="py-16 px-8 rounded-2xl bg-linear-to-r from-primary/5 via-primary/3 to-background border border-primary/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div>
-          <h2 className="font-mono text-xl font-semibold text-foreground">
-            Start your first analysis.
+          <h2 className="font-mono text-2xl font-semibold text-foreground">
+            Ready to get started?
           </h2>
-          <p className="mt-1.5 font-mono text-xs text-foreground-muted">
-            No account required to try it.
+          <p className="mt-2 font-mono text-xs text-foreground-muted">
+            See how well your resume aligns with your target role in seconds.
           </p>
         </div>
-        <Link
-          href="/analysis"
-          className="shrink-0 inline-flex h-10 items-center rounded-lg px-6 font-mono text-sm font-medium transition-opacity hover:opacity-85"
-          style={{ background: "var(--primary)", color: "var(--primary-fg)" }}
-        >
-          Get started →
-        </Link>
+        <div className="shrink-0 flex items-center gap-3">
+          <Link
+            href="/analysis"
+            className="inline-flex h-11 items-center rounded-lg px-6 font-mono text-sm font-medium transition-all hover:shadow-lg hover:scale-105 active:scale-95 origin-left"
+            style={{ background: "var(--primary)", color: "var(--primary-fg)" }}
+          >
+            Analyze →
+          </Link>
+          <Link
+            href="/auth/register"
+            className="inline-flex h-11 items-center rounded-lg px-6 font-mono text-sm font-medium border border-primary/40 text-foreground transition-all hover:border-primary hover:bg-primary/10"
+          >
+            Create account
+          </Link>
+        </div>
       </section>
 
-      {/*  Divider  */}
-      <div className="h-px bg-border" />
-
       {/*  About + Contact  */}
-      <section
-        id="about"
-        className="py-14 grid sm:grid-cols-2 gap-10"
-      >
+      <section id="about" className="py-14 grid sm:grid-cols-2 gap-10">
         <div>
           <p className="font-mono text-[10px] tracking-[0.25em] text-foreground-muted uppercase mb-4">
             About Glint
@@ -199,7 +185,8 @@ export default function Home() {
           <p className="font-mono text-xs leading-[1.9] text-foreground-muted max-w-xs">
             Glint builds lightweight tools that help candidates understand how
             well their profile aligns with role requirements. This MVP focuses
-            on the core loop: upload CV, run analysis, follow your score over time.
+            on the core loop: upload resume, run analysis, follow your score
+            over time.
           </p>
         </div>
 
@@ -226,10 +213,9 @@ export default function Home() {
           Glint MVP · {new Date().getFullYear()}
         </span>
         <span className="font-mono text-[10px] text-foreground-muted">
-          CV Intelligence
+          Resume Intelligence
         </span>
       </div>
-
     </div>
   );
 }
