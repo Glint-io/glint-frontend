@@ -27,6 +27,11 @@ export interface CardNavProps {
   menuColor?: string;
   buttonBgColor?: string;
   buttonTextColor?: string;
+  secondaryAction?: {
+    href: string;
+    ariaLabel: string;
+    Icon: React.ComponentType<{ size?: number; strokeWidth?: number }>;
+  };
 }
 
 const CardNav: React.FC<CardNavProps> = ({
@@ -36,6 +41,7 @@ const CardNav: React.FC<CardNavProps> = ({
   menuColor,
   buttonBgColor,
   buttonTextColor,
+  secondaryAction,
 }) => {
   const router = useRouter();
   const [isHamburgerOpen, setIsHamburgerOpen] = useState(false);
@@ -46,11 +52,12 @@ const CardNav: React.FC<CardNavProps> = ({
   const cardsRef = useRef<HTMLDivElement[]>([]);
   const tlRef = useRef<gsap.core.Timeline | null>(null);
 
-  // Prevent hydration issues by only rendering interactive content after mount
   useEffect(() => {
-    // When mounted on client, now we can show the UI
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsMounted(true);
+    // Defer setting mount state until after paint to avoid hydration
+    // mismatch without causing a synchronous state update in the effect body.
+    let raf = 0;
+    raf = window.requestAnimationFrame(() => setIsMounted(true));
+    return () => void window.cancelAnimationFrame(raf);
   }, []);
 
   const closeMenu = (onClosed?: () => void) => {
@@ -197,7 +204,7 @@ const CardNav: React.FC<CardNavProps> = ({
           shadow-[0_4px_24px_-4px_rgba(28,25,23,0.10)]
           relative overflow-hidden will-change-[height]`}
       >
-        {/*  Top bar  */}
+        {/* Top bar */}
         <div className="card-nav-top absolute inset-x-0 top-0 h-[60px] flex items-center justify-between py-2 px-4 z-[2]">
           {/* Hamburger */}
           <div
@@ -224,21 +231,34 @@ const CardNav: React.FC<CardNavProps> = ({
             <GlintAnimation className="h-7" />
           </Link>
 
-          {/* CTA */}
-          <Link
-            href="/analysis"
-            className="card-nav-cta-button hidden md:inline-flex border-0 rounded-[var(--radius-md)] px-4 items-center h-[calc(100%-10px)] font-medium cursor-pointer transition-opacity duration-200 hover:opacity-85"
-            style={{
-              backgroundColor: buttonBgColor ?? "var(--primary)",
-              color: buttonTextColor ?? "var(--primary-fg)",
-            }}
-            onClick={handleCtaClick}
-          >
-            Get Started
-          </Link>
+          {/* Right-side actions: CTA + secondary icon */}
+          <div className="hidden md:flex items-center gap-2">
+            <Link
+              href="/analysis"
+              className="card-nav-cta-button inline-flex border-0 rounded-[var(--radius-md)] px-4 items-center h-[calc(100%-10px)] min-h-[38px] font-medium cursor-pointer transition-opacity duration-200 hover:opacity-85"
+              style={{
+                backgroundColor: buttonBgColor ?? "var(--primary)",
+                color: buttonTextColor ?? "var(--primary-fg)",
+              }}
+              onClick={handleCtaClick}
+            >
+              Analyze
+            </Link>
+
+            {secondaryAction && (
+              <Link
+                href={secondaryAction.href}
+                aria-label={secondaryAction.ariaLabel}
+                className="inline-flex items-center justify-center w-[38px] h-[38px] rounded-[var(--radius-md)] border border-border text-foreground hover:opacity-60 transition-opacity duration-200 shrink-0"
+                onClick={(e) => handleNavLinkClick(e, secondaryAction.href)}
+              >
+                <secondaryAction.Icon size={18} strokeWidth={1.75} />
+              </Link>
+            )}
+          </div>
         </div>
 
-        {/*  Cards  */}
+        {/* Cards */}
         <div
           className={`card-nav-content absolute left-0 right-0 top-[60px] bottom-0 p-2 flex flex-col items-stretch gap-2 justify-start z-[1]
             ${isExpanded ? "visible pointer-events-auto" : "invisible pointer-events-none"}

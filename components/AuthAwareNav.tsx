@@ -3,6 +3,7 @@
 import CardNav from "./CardNav";
 import type { CardNavItem } from "./CardNav";
 import { useAuth } from "@/components/AuthProvider";
+import { LogIn, UserRound } from "lucide-react";
 
 //  Nav item sets
 
@@ -65,9 +66,20 @@ export default function AuthAwareNav(props: AuthAwareNavProps) {
 
   const accountItem = isLoggedIn ? LOGGED_IN_ACCOUNT : LOGGED_OUT_ACCOUNT;
   const items: CardNavItem[] = [...SHARED_ITEMS, accountItem];
+  const secondaryAction = isLoggedIn
+    ? {
+        href: "/user",
+        ariaLabel: "Go to your user page",
+        Icon: UserRound,
+      }
+    : {
+        href: "/auth/login",
+        ariaLabel: "Sign in to your account",
+        Icon: LogIn,
+      };
 
   // Render nothing until we know the auth state to prevent hydration mismatch
   if (isLoggedIn === null) return null;
 
-  return <CardNav {...props} items={items} />;
+  return <CardNav {...props} items={items} secondaryAction={secondaryAction} />;
 }
