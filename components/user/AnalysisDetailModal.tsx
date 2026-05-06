@@ -9,12 +9,22 @@ import {
 } from "@/components/analysis/AnalysisResults";
 import { Modal } from "@/components/ui/Modal";
 import { GradientScorePill } from "@/components/user/GradientScorePill";
-import type { HistoryItem } from "@/types";
-import { Bot, Hash, ListChecks, ScanText, type LucideIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import type { HistoryItem, JobAdvertisement } from "@/types";
+import {
+  Bot,
+  Eye,
+  Hash,
+  ListChecks,
+  ScanText,
+  type LucideIcon,
+} from "lucide-react";
 
 type Props = {
   item: HistoryItem;
   onClose: () => void;
+  jobAdvertisements?: JobAdvertisement[];
+  onJobAdPreview?: (jobAd: JobAdvertisement) => void;
 };
 
 const METHOD_LABELS: Record<string, string> = {
@@ -93,13 +103,25 @@ const formatMethodFeedback = (result: HistoryItem["results"][number]) => {
   );
 };
 
-export function AnalysisDetailModal({ item, onClose }: Props) {
+export function AnalysisDetailModal({
+  item,
+  onClose,
+  jobAdvertisements = [],
+  onJobAdPreview,
+}: Props) {
   const orderedResults = [...item.results].sort((a, b) => {
     const aRank = METHOD_ORDER[a.method] ?? Number.MAX_SAFE_INTEGER;
     const bRank = METHOD_ORDER[b.method] ?? Number.MAX_SAFE_INTEGER;
     if (aRank !== bRank) return aRank - bRank;
     return a.method.localeCompare(b.method);
   });
+
+  const findMatchingJobAd = (): JobAdvertisement | undefined => {
+    if (!item.jobAdSnippet) return undefined;
+    return jobAdvertisements.find((ad) =>
+      ad.rawText.includes(item.jobAdSnippet!.substring(0, 50)),
+    );
+  };
 
   return (
     <Modal
@@ -117,23 +139,25 @@ export function AnalysisDetailModal({ item, onClose }: Props) {
             <h2 className="mt-2 truncate font-mono text-lg font-semibold text-foreground leading-snug">
               {item.jobTitle ?? "—"}
             </h2>
-            <div className="mt-2 grid min-w-0 grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-3">
-              <span className="font-mono text-xs text-foreground-muted">
-                {new Date(item.createdAt).toLocaleDateString(undefined, {
-                  year: "numeric",
-                  month: "short",
-                  day: "numeric",
-                })}
-              </span>
-              <span className="font-mono text-xs text-foreground-muted">
-                {new Date(item.createdAt).toLocaleTimeString(undefined, {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
+            <div className="mt-2 grid min-w-0 grid-rows-1 gap-x-4 gap-y-1">
               <span className="min-w-0 font-mono text-xs text-foreground-muted break-all">
                 {item.resumeFileName}
               </span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs text-foreground-muted">
+                  {new Date(item.createdAt).toLocaleDateString(undefined, {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  })}
+                </span>
+                <span className="font-mono text-xs text-foreground-muted">
+                  {new Date(item.createdAt).toLocaleTimeString(undefined, {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -146,6 +170,33 @@ export function AnalysisDetailModal({ item, onClose }: Props) {
               Overall
             </span>
             <GradientScorePill results={item.results} />
+          </div>
+
+          <div className="shrink-0 rounded-xl border border-border bg-background-subtle/50 px-4 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-foreground-muted">
+                  Job advertisement
+                </span>
+                <p className="mt-2 max-h-40 overflow-y-auto whitespace-pre-wrap wrap-break-word font-mono text-xs leading-relaxed text-foreground-muted">
+                  {item.jobAdSnippet || "No job advertisement text available."}
+                </p>
+              </div>
+              {item.jobAdSnippet && onJobAdPreview && findMatchingJobAd() && (
+                <Button
+                  onClick={() => {
+                    const ad = findMatchingJobAd();
+                    if (ad) onJobAdPreview(ad);
+                  }}
+                  variant="ghost"
+                  size="icon"
+                  className="shrink-0 text-foreground-muted hover:text-foreground hover:bg-background-subtle"
+                  aria-label="Preview job advertisement"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Per-method breakdown — fills remaining height */}

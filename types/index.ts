@@ -12,6 +12,13 @@ export type Statistics = {
   }[];
 };
 
+export type HistoryRange =
+  | "All"
+  | "Today"
+  | "Last7Days"
+  | "Last30Days"
+  | "Last365Days";
+
 export type AnalysisResult = {
   id: string;
   method: string;
@@ -42,4 +49,11 @@ export type Resume = {
   fileName: string;
   uploadedAt: string;
   sizeBytes?: number;
+};
+
+export type JobAdvertisement = {
+  id: string;
+  title: string | null;
+  rawText: string;
+  createdAt: string;
 };

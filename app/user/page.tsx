@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { GradientScorePill } from "@/components/user/GradientScorePill";
 import { AnalysisDetailModal } from "@/components/user/AnalysisDetailModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { JobAdvertisementPreviewModal } from "@/components/ui/JobAdvertisementPreviewModal";
 import { openAuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
 import { StatCard } from "@/components/user/StatCard";
@@ -22,6 +23,8 @@ import type {
   PaginatedHistory,
   Resume,
   HistoryItem,
+  HistoryRange,
+  JobAdvertisement,
 } from "@/types";
 import { ScoreOverTimeChart } from "@/components/user/ScoreOverTimeChart";
 import {
@@ -34,6 +37,14 @@ import {
   Gauge,
   FolderOpen,
 } from "lucide-react";
+
+const HISTORY_RANGE_OPTIONS: { value: HistoryRange; label: string }[] = [
+  { value: "All", label: "All time" },
+  { value: "Today", label: "Today" },
+  { value: "Last7Days", label: "Last 7 days" },
+  { value: "Last30Days", label: "Last 30 days" },
+  { value: "Last365Days", label: "Last year" },
+];
 
 const ResumeUpload = ({
   onUploaded,
@@ -74,7 +85,7 @@ const ResumeUpload = ({
         let msg = "Upload failed.";
         try {
           msg = (JSON.parse(text) as { error?: string }).error ?? msg;
-        } catch { }
+        } catch {}
         setError(msg);
       }
     } catch {
@@ -128,13 +139,25 @@ export default function UserPage() {
   const [stats, setStats] = useState<Statistics | null>(null);
   const [history, setHistory] = useState<PaginatedHistory | null>(null);
   const [resumes, setResumes] = useState<Resume[]>([]);
+  const [jobAdvertisements, setJobAdvertisements] = useState<
+    JobAdvertisement[]
+  >([]);
   const [page, setPage] = useState(1);
+  const [historyRange, setHistoryRange] = useState<HistoryRange>("All");
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
   const [resumeToDelete, setResumeToDelete] = useState<Resume | null>(null);
+  const [jobAdToPreview, setJobAdToPreview] = useState<JobAdvertisement | null>(
+    null,
+  );
+  const [jobAdToDelete, setJobAdToDelete] = useState<JobAdvertisement | null>(
+    null,
+  );
+  const [deletingJobAdId, setDeletingJobAdId] = useState<string | null>(null);
+  const [jobAdNotice, setJobAdNotice] = useState<string | null>(null);
 
   const PAGE_SIZE = 10;
   const base =
@@ -159,22 +182,32 @@ export default function UserPage() {
     }
   }, [isLoggedIn]);
 
+  useEffect(() => {
+    const storedNotice = sessionStorage.getItem("glint:last-job-ad-notice");
+    if (storedNotice) {
+      setJobAdNotice(storedNotice);
+      sessionStorage.removeItem("glint:last-job-ad-notice");
+    }
+  }, []);
+
   const fetchAll = useCallback(
-    async (p: number) => {
+    async (p: number, range: HistoryRange) => {
       if (isLoggedIn !== true) return;
       setLoading(true);
       try {
-        const [s, h, r] = await Promise.all([
-          authedGet<Statistics>("/user/statistics"),
+        const [s, h, r, jobAds] = await Promise.all([
+          authedGet<Statistics>(`/user/statistics?range=${range}`),
           authedGet<PaginatedHistory>(
-            `/user/history?page=${p}&pageSize=${PAGE_SIZE}`,
+            `/user/history?page=${p}&pageSize=${PAGE_SIZE}&range=${range}`,
           ),
           authedGet<Resume[]>("/user/resume"),
+          authedGet<JobAdvertisement[]>("/user/job-advertisement"),
         ]);
         setStats(s);
         console.log("Fetched history:", h);
         setHistory(h);
         setResumes(r);
+        setJobAdvertisements(jobAds);
       } catch (err: unknown) {
         if (err instanceof Error && err.message.includes("401")) {
           openAuthModal("login");
@@ -187,8 +220,8 @@ export default function UserPage() {
   );
 
   useEffect(() => {
-    if (isLoggedIn === true) fetchAll(page);
-  }, [page, fetchAll, isLoggedIn]);
+    if (isLoggedIn === true) fetchAll(page, historyRange);
+  }, [page, fetchAll, historyRange, isLoggedIn]);
 
   if (isLoggedIn === false) {
     return (
@@ -234,6 +267,28 @@ export default function UserPage() {
     }
   };
 
+  const handleDeleteJobAd = async (id: string) => {
+    setDeletingJobAdId(id);
+    try {
+      const res = await authedFetch(`${base}/user/job-advertisement/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        setJobAdNotice("Unable to delete that saved job advertisement.");
+        return;
+      }
+
+      setJobAdvertisements((prev) => prev.filter((jobAd) => jobAd.id !== id));
+      if (jobAdToPreview?.id === id) {
+        setJobAdToPreview(null);
+      }
+    } finally {
+      setDeletingJobAdId(null);
+      setJobAdToDelete(null);
+    }
+  };
+
   const handleViewResume = async (id: string) => {
     try {
       const res = await authedFetch(`${base}/user/resume/${id}`);
@@ -256,7 +311,7 @@ export default function UserPage() {
   const averageScore =
     stats && stats.byMethod.length
       ? stats.byMethod.reduce((sum, m) => sum + m.averageScore * m.count, 0) /
-      stats.byMethod.reduce((sum, m) => sum + m.count, 0)
+        stats.byMethod.reduce((sum, m) => sum + m.count, 0)
       : null;
 
   return (
@@ -325,13 +380,40 @@ export default function UserPage() {
 
       {stats?.scoreOverTime?.length ? (
         <div className="mt-4">
-          <ScoreOverTimeChart scoreOverTime={stats.scoreOverTime} />
+          <ScoreOverTimeChart
+            scoreOverTime={stats.scoreOverTime}
+            range={historyRange}
+          />
         </div>
       ) : null}
 
       {/* ── Analysis history ─────────────────────────────────────────────── */}
       <section className="py-8">
-        <SectionLabel>Analysis history</SectionLabel>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between mb-4">
+          <div>
+            <SectionLabel>Analysis history</SectionLabel>
+            <p className="mt-2 font-mono text-xs text-foreground-muted">
+              Filter the dashboard by the analysis creation date.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {HISTORY_RANGE_OPTIONS.map((option) => (
+              <Button
+                key={option.value}
+                variant={historyRange === option.value ? "default" : "outline"}
+                size="sm"
+                className="font-mono text-xs"
+                onClick={() => {
+                  setHistoryRange(option.value);
+                  setPage(1);
+                  setSelectedItem(null);
+                }}
+              >
+                {option.label}
+              </Button>
+            ))}
+          </div>
+        </div>
         <div className="flex m-h-130 flex-col overflow-hidden rounded-xl border border-border bg-background">
           {loading ? (
             <div className="flex-1 overflow-y-auto divide-y divide-border">
@@ -376,6 +458,11 @@ export default function UserPage() {
                         <p className="font-mono text-xs text-foreground-muted mt-0.5 truncate">
                           {item.resumeFileName}
                         </p>
+                        {item.jobAdSnippet && (
+                          <p className="mt-1 max-h-10 overflow-hidden whitespace-pre-wrap wrap-break-word font-mono text-[10px] leading-relaxed text-foreground-muted">
+                            {item.jobAdSnippet}
+                          </p>
+                        )}
                         <p className="font-mono text-[10px] text-foreground-muted mt-0.5 sm:hidden">
                           {new Date(item.createdAt).toLocaleDateString(
                             undefined,
@@ -438,11 +525,93 @@ export default function UserPage() {
         </div>
       </section>
 
+      {/* ── Job advertisements ───────────────────────────────────────────── */}
+      <section className="py-8">
+        <div className="flex items-end justify-between gap-4 mb-4">
+          <div>
+            <SectionLabel>Job advertisements</SectionLabel>
+            <p className="mt-2 font-mono text-xs text-foreground-muted">
+              Browse the exact ads saved from prior analyses.
+            </p>
+          </div>
+          <span className="font-mono text-xs text-foreground-muted">
+            {jobAdvertisements.length} saved
+          </span>
+        </div>
+
+        {(jobAdNotice || jobAdvertisements.length >= 5) && (
+          <div className="mb-4 rounded-xl border border-border bg-background-subtle px-4 py-3 font-mono text-xs text-foreground-muted">
+            {jobAdNotice ??
+              "Saved job ads are capped at 5. Adding a new one replaces the oldest saved job advertisement."}
+          </div>
+        )}
+
+        <div className="overflow-hidden rounded-xl border border-border bg-background">
+          {loading ? (
+            <div className="divide-y divide-border px-5 py-4">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="h-16 animate-pulse rounded bg-border/40"
+                />
+              ))}
+            </div>
+          ) : !jobAdvertisements.length ? (
+            <EmptyState icon="🗂️" message="No saved job advertisements yet." />
+          ) : (
+            <ul className="divide-y divide-border">
+              {jobAdvertisements.map((jobAd) => (
+                <li key={jobAd.id} className="flex items-start gap-3 px-5 py-4">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-mono text-sm font-medium text-foreground">
+                      {jobAd.title ?? "Untitled job advertisement"}
+                    </p>
+                    <p className="mt-0.5 font-mono text-xs text-foreground-muted">
+                      {new Date(jobAd.createdAt).toLocaleDateString(undefined, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </p>
+                    <p className="mt-2 max-h-10 overflow-hidden whitespace-pre-wrap wrap-break-word font-mono text-[10px] leading-relaxed text-foreground-muted">
+                      {jobAd.rawText}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => setJobAdToPreview(jobAd)}
+                    variant="ghost"
+                    size="icon"
+                    className="text-foreground-muted hover:text-foreground hover:bg-background-subtle"
+                    aria-label="Preview job advertisement"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    disabled={deletingJobAdId === jobAd.id}
+                    onClick={() => setJobAdToDelete(jobAd)}
+                    variant="ghost"
+                    size="icon"
+                    className="text-foreground-muted hover:text-red-600 hover:bg-red-500/10"
+                    aria-label="Delete saved job advertisement"
+                  >
+                    {deletingJobAdId === jobAd.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="h-4 w-4" />
+                    )}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </section>
+
       {/* ── Saved resumes ───────────────────────────────────────────────── */}
       <section className="py-8">
         <SectionLabel>Saved resumes</SectionLabel>
         <ResumeUpload
-          onUploaded={() => fetchAll(page)}
+          onUploaded={() => fetchAll(page, historyRange)}
           resumeCount={resumes.length}
         />
         {errorMessage && (
@@ -517,6 +686,28 @@ export default function UserPage() {
         <AnalysisDetailModal
           item={selectedItem}
           onClose={() => setSelectedItem(null)}
+          jobAdvertisements={jobAdvertisements}
+          onJobAdPreview={(jobAd) => setJobAdToPreview(jobAd)}
+        />
+      )}
+
+      <JobAdvertisementPreviewModal
+        jobAd={jobAdToPreview}
+        onClose={() => setJobAdToPreview(null)}
+      />
+
+      {jobAdToDelete && (
+        <ConfirmModal
+          title="Delete saved job advertisement"
+          ariaLabel="Delete saved job advertisement confirmation"
+          message={`This will permanently remove ${jobAdToDelete.title ?? "this saved job advertisement"} from your saved list. This action cannot be undone.`}
+          confirmType="simple"
+          confirmButtonLabel="Delete"
+          cancelButtonLabel="Cancel"
+          onClose={() => setJobAdToDelete(null)}
+          onConfirm={async () => {
+            await handleDeleteJobAd(jobAdToDelete.id);
+          }}
         />
       )}
 

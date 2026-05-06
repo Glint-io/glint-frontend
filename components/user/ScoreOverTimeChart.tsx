@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useRef } from "react";
-import type { Statistics } from "@/types";
+import type { HistoryRange, Statistics } from "@/types";
 
 type Props = {
   scoreOverTime: Statistics["scoreOverTime"];
+  range: HistoryRange;
 };
 
 const METHOD_CONFIG: Record<
@@ -17,30 +18,45 @@ const METHOD_CONFIG: Record<
 
 const METHOD_ORDER = ["AI", "RuleBased", "Keyword"];
 
-const toDateKey = (iso: string) => iso.slice(0, 10);
+const FALLBACK_METHOD_STYLE = {
+  label: "Other",
+  color: "#888780",
+  dash: [] as number[],
+};
 
-/**
- * For each (date, method) pair keep only the latest entry.
- * "Latest" = the entry with the lexicographically greatest `date` string,
- * which works correctly for ISO-8601 timestamps.
- */
-function aggregateLatestPerDay(
-  data: Statistics["scoreOverTime"],
-): Statistics["scoreOverTime"] {
-  const map = new Map<string, (typeof data)[number]>();
+const TICK_FORMATTERS: Record<HistoryRange, Intl.DateTimeFormatOptions> = {
+  Today: { hour: "2-digit", minute: "2-digit" },
+  Last7Days: { month: "short", day: "numeric" },
+  Last30Days: { month: "short", day: "numeric" },
+  Last365Days: { month: "short", year: "2-digit" },
+  All: { month: "short", year: "numeric" },
+};
 
-  for (const point of data) {
-    const key = `${toDateKey(point.date)}__${point.method}`;
-    const existing = map.get(key);
-    if (!existing || point.date > existing.date) {
-      map.set(key, point);
-    }
-  }
+const FULL_DATE_FORMATTER: Intl.DateTimeFormatOptions = {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+};
 
-  return [...map.values()];
-}
+const METHOD_TICK_LIMIT: Record<HistoryRange, number> = {
+  Today: 10,
+  Last7Days: 8,
+  Last30Days: 10,
+  Last365Days: 12,
+  All: 12,
+};
 
-export function ScoreOverTimeChart({ scoreOverTime }: Props) {
+const toEpochMs = (iso: string) => new Date(iso).getTime();
+
+const formatTick = (value: number, range: HistoryRange) =>
+  new Date(value).toLocaleDateString(undefined, TICK_FORMATTERS[range]);
+
+const formatFullDate = (value: number) =>
+  new Date(value).toLocaleString(undefined, FULL_DATE_FORMATTER);
+
+export function ScoreOverTimeChart({ scoreOverTime, range }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null);
@@ -56,58 +72,79 @@ export function ScoreOverTimeChart({ scoreOverTime }: Props) {
         chartRef.current = null;
       }
 
-      const aggregated = aggregateLatestPerDay(scoreOverTime);
+      const sortedPoints = [...scoreOverTime]
+        .filter((d) => Number.isFinite(toEpochMs(d.date)))
+        .sort((a, b) => toEpochMs(a.date) - toEpochMs(b.date));
 
-      const allDates = [
-        ...new Set(aggregated.map((d) => toDateKey(d.date))),
-      ].sort();
+      if (!sortedPoints.length) return;
 
-      const formatDate = (iso: string) =>
-        new Date(iso).toLocaleDateString(undefined, {
-          month: "short",
-          day: "numeric",
-        });
+      const knownMethods = METHOD_ORDER.filter((m) =>
+        sortedPoints.some((d) => d.method === m),
+      );
+      const otherMethods = [...new Set(sortedPoints.map((d) => d.method))].filter(
+        (m) => !METHOD_ORDER.includes(m),
+      );
+      const methodOrder = [...knownMethods, ...otherMethods];
 
-      const datasets = METHOD_ORDER.filter((m) =>
-        aggregated.some((d) => d.method === m),
-      ).map((m) => {
-        const cfg = METHOD_CONFIG[m] ?? {
-          label: m,
-          color: "#888780",
-          dash: [],
+      const xMin = toEpochMs(sortedPoints[0].date);
+      const xMax = toEpochMs(sortedPoints[sortedPoints.length - 1].date);
+      const hasSinglePoint = xMin === xMax;
+      const singlePointPaddingMs = 1000 * 60 * 60 * 12;
+
+      const pointRadius =
+        sortedPoints.length > 120 ? 1.5 : sortedPoints.length > 60 ? 2 : 3;
+
+      const datasets = methodOrder.map((method) => {
+        const cfg = METHOD_CONFIG[method] ?? {
+          ...FALLBACK_METHOD_STYLE,
+          label: method,
         };
+
+        const methodPoints = sortedPoints
+          .filter((d) => d.method === method)
+          .map((d) => ({
+            x: toEpochMs(d.date),
+            y: d.score,
+          }));
+
         return {
           label: cfg.label,
-          data: allDates.map((date) => {
-            const point = aggregated.find(
-              (d) => toDateKey(d.date) === date && d.method === m,
-            );
-            return point ? point.score : null;
-          }),
+          data: methodPoints,
           borderColor: cfg.color,
           backgroundColor: cfg.color + "18",
           borderWidth: 1.5,
           borderDash: cfg.dash,
-          pointRadius: 3,
+          pointRadius,
+          pointHoverRadius: 4,
           pointBackgroundColor: cfg.color,
-          tension: 0.35,
+          pointBorderWidth: 0,
+          tension: 0.25,
           spanGaps: false,
+          fill: false,
         };
       });
 
       chartRef.current = new Chart(canvasRef.current!, {
         type: "line",
         data: {
-          labels: allDates.map(formatDate),
           datasets,
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          parsing: true,
+          interaction: {
+            mode: "nearest",
+            intersect: false,
+          },
           plugins: {
             legend: { display: false },
             tooltip: {
               callbacks: {
+                title: (items) => {
+                  if (!items.length) return "";
+                  return formatFullDate(items[0].parsed.x as number);
+                },
                 label: (ctx) =>
                   ` ${ctx.dataset.label}: ${(ctx.parsed.y as number).toFixed(1)}`,
               },
@@ -115,12 +152,16 @@ export function ScoreOverTimeChart({ scoreOverTime }: Props) {
           },
           scales: {
             x: {
+              type: "linear",
+              min: hasSinglePoint ? xMin - singlePointPaddingMs : undefined,
+              max: hasSinglePoint ? xMax + singlePointPaddingMs : undefined,
               grid: { color: "rgba(128,128,128,0.08)" },
               ticks: {
                 font: { family: "monospace", size: 10 },
                 color: "#888",
                 autoSkip: true,
-                maxTicksLimit: 8,
+                maxTicksLimit: METHOD_TICK_LIMIT[range],
+                callback: (value) => formatTick(Number(value), range),
               },
             },
             y: {
@@ -144,13 +185,16 @@ export function ScoreOverTimeChart({ scoreOverTime }: Props) {
         chartRef.current = null;
       }
     };
-  }, [scoreOverTime]);
+  }, [range, scoreOverTime]);
 
   if (!scoreOverTime?.length) return null;
 
-  const presentMethods = METHOD_ORDER.filter((m) =>
-    scoreOverTime.some((d) => d.method === m),
-  );
+  const presentMethods = [
+    ...METHOD_ORDER.filter((m) => scoreOverTime.some((d) => d.method === m)),
+    ...[...new Set(scoreOverTime.map((d) => d.method))].filter(
+      (m) => !METHOD_ORDER.includes(m),
+    ),
+  ];
 
   return (
     <div className="rounded-xl border border-border bg-background p-6">
@@ -172,9 +216,8 @@ export function ScoreOverTimeChart({ scoreOverTime }: Props) {
       <div className="flex flex-wrap gap-4 mt-4">
         {presentMethods.map((m) => {
           const cfg = METHOD_CONFIG[m] ?? {
+            ...FALLBACK_METHOD_STYLE,
             label: m,
-            color: "#888780",
-            dash: [],
           };
           return (
             <span
