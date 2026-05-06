@@ -15,6 +15,7 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { JobAdvertisementPreviewModal } from "@/components/ui/JobAdvertisementPreviewModal";
 import { openAuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
+import { toast } from "react-toastify";
 import { StatCard } from "@/components/user/StatCard";
 import { SectionLabel } from "@/components/user/SectionLabel";
 import { EmptyState } from "@/components/user/EmptyState";
@@ -36,6 +37,7 @@ import {
   Activity,
   Gauge,
   FolderOpen,
+  AlertTriangle,
 } from "lucide-react";
 
 const HISTORY_RANGE_OPTIONS: { value: HistoryRange; label: string }[] = [
@@ -45,6 +47,8 @@ const HISTORY_RANGE_OPTIONS: { value: HistoryRange; label: string }[] = [
   { value: "Last30Days", label: "Last 30 days" },
   { value: "Last365Days", label: "Last year" },
 ];
+
+const MAX_RESUMES = 5;
 
 const ResumeUpload = ({
   onUploaded,
@@ -66,9 +70,9 @@ const ResumeUpload = ({
       return setError("Only PDF files are supported.");
     if (file.size > 5 * 1024 * 1024)
       return setError("File must be under 5 MB.");
-    if (resumeCount >= 3)
+    if (resumeCount >= MAX_RESUMES)
       return setError(
-        "You may only have 3 saved resumes. Please delete one before uploading a new one.",
+        `You may only have ${MAX_RESUMES} saved resumes. Please delete one before uploading a new one.`,
       );
 
     setError(null);
@@ -98,9 +102,10 @@ const ResumeUpload = ({
   return (
     <div>
       <label
-        className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border px-6 py-8 text-center transition hover:border-primary hover:bg-primary/5"
+        className={`${resumeCount >= MAX_RESUMES ? "opacity-50 cursor-not-allowed" : "cursor-pointer transition hover:border-primary hover:bg-primary/5"} flex flex-col items-center gap-2 rounded-xl border-2 border-dashed border-border px-6 py-8 text-center`}
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
+          if (resumeCount >= MAX_RESUMES) return;
           e.preventDefault();
           const f = e.dataTransfer.files[0];
           if (f) handleFile(f);
@@ -117,8 +122,10 @@ const ResumeUpload = ({
           ref={inputRef}
           type="file"
           accept=".pdf"
+          disabled={resumeCount >= MAX_RESUMES}
           className="hidden"
           onChange={(e) => {
+            if (resumeCount >= MAX_RESUMES) return;
             const f = e.target.files?.[0];
             if (f) handleFile(f);
           }}
@@ -157,7 +164,6 @@ export default function UserPage() {
     null,
   );
   const [deletingJobAdId, setDeletingJobAdId] = useState<string | null>(null);
-  const [jobAdNotice, setJobAdNotice] = useState<string | null>(null);
 
   const PAGE_SIZE = 10;
   const base =
@@ -181,14 +187,6 @@ export default function UserPage() {
       setUserEmail(email);
     }
   }, [isLoggedIn]);
-
-  useEffect(() => {
-    const storedNotice = sessionStorage.getItem("glint:last-job-ad-notice");
-    if (storedNotice) {
-      setJobAdNotice(storedNotice);
-      sessionStorage.removeItem("glint:last-job-ad-notice");
-    }
-  }, []);
 
   const fetchAll = useCallback(
     async (p: number, range: HistoryRange) => {
@@ -275,7 +273,7 @@ export default function UserPage() {
       });
 
       if (!res.ok) {
-        setJobAdNotice("Unable to delete that saved job advertisement.");
+        toast.error("Unable to delete that saved job advertisement.");
         return;
       }
 
@@ -539,10 +537,10 @@ export default function UserPage() {
           </span>
         </div>
 
-        {(jobAdNotice || jobAdvertisements.length >= 5) && (
+        {jobAdvertisements.length >= 5 && (
           <div className="mb-4 rounded-xl border border-border bg-background-subtle px-4 py-3 font-mono text-xs text-foreground-muted">
-            {jobAdNotice ??
-              "Saved job ads are capped at 5. Adding a new one replaces the oldest saved job advertisement."}
+            Saved job ads are capped at 5. Adding a new one replaces the oldest
+            saved job advertisement.
           </div>
         )}
 
@@ -610,6 +608,15 @@ export default function UserPage() {
       {/* ── Saved resumes ───────────────────────────────────────────────── */}
       <section className="py-8">
         <SectionLabel>Saved resumes</SectionLabel>
+        {resumes.length >= MAX_RESUMES && (
+          <div className="mb-4 flex items-start justify-between gap-3 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-amber-950 dark:text-amber-100">
+            <p className="font-mono text-xs text-foreground-muted dark:text-amber-100/80">
+              Saved resumes are capped at {MAX_RESUMES}. Deleting a resume will
+              free up space for a new upload.
+            </p>
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500 dark:text-amber-300" />
+          </div>
+        )}
         <ResumeUpload
           onUploaded={() => fetchAll(page, historyRange)}
           resumeCount={resumes.length}

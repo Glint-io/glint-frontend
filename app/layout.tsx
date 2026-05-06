@@ -9,6 +9,8 @@ import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "@/components/AuthProvider";
 import AuthModal from "@/components/AuthModal";
 import { NotificationProvider } from "@/components/NotificationProvider";
+import { GlintToastProvider } from "@/components/ui/toast";
+import "react-toastify/dist/ReactToastify.css";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -76,6 +78,7 @@ export default function RootLayout({
               <div className="fixed bottom-4 right-4 z-50">
                 <ThemeToggle />
               </div>
+              <GlintToastProvider />
             </ThemeProvider>
           </AuthProvider>
         </NotificationProvider>

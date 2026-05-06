@@ -18,6 +18,7 @@ import {
   Loader2,
   type LucideIcon,
 } from "lucide-react";
+import { FileText, RotateCcw, BarChart2 } from "lucide-react";
 
 const METHODS: {
   id: AnalysisMethod;
@@ -195,12 +196,12 @@ function FeedbackPanel({
             : "flex flex-1 min-h-0 flex-col p-4 gap-3"
         }
       >
-        {/* Preview — fills all space and scrolls independently */}
+        {/* Preview - fills all space and scrolls independently */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pr-1">
           <FeedbackContent method={method} result={result} />
         </div>
 
-        {/* Button row — never grows or shrinks */}
+        {/* Button row - never grows or shrinks */}
         {canOpenFeedback && (
           <div className="shrink-0 border-t border-border pt-2 flex justify-end">
             <Button
@@ -266,6 +267,24 @@ export const AnalysisResults = (props: Props) => (
   <AnalysisResultsInner {...props} />
 );
 
+const TIPS = [
+  {
+    icon: FileText,
+    title: "Use the full job description.",
+    body: "Paste the entire posting, not just the title - keyword and rules analysis depend on exact phrasing.",
+  },
+  {
+    icon: RotateCcw,
+    title: "Try the same CV against multiple roles.",
+    body: "Saved CVs make it quick to compare your fit across different positions.",
+  },
+  {
+    icon: BarChart2,
+    title: "All three scores matter.",
+    body: "AI catches nuance, keyword finds term gaps, rules checks structure - a high score across all three is the goal.",
+  },
+];
+
 function AnalysisResultsInner({
   result,
   loading,
@@ -305,18 +324,47 @@ function AnalysisResultsInner({
         )}
 
         {!result && !error ? (
-          <div className="flex flex-col items-center justify-center flex-1 rounded-xl border border-dashed border-border py-16 gap-3">
+          <div className="flex flex-col flex-1 rounded-xl border-2 border-dashed border-border overflow-hidden">
             {loading ? (
-              <>
+              <div className="flex flex-1 flex-col items-center justify-center py-16 gap-3">
                 <div className="h-8 w-8 rounded-full border-2 border-border border-t-primary animate-spin" />
                 <p className="font-mono text-[10px] tracking-widest text-foreground-muted uppercase">
                   Running analysis…
                 </p>
-              </>
+              </div>
             ) : (
-              <p className="font-mono text-[10px] tracking-widest text-foreground-muted uppercase">
-                Ready
-              </p>
+              <>
+                {/* READY — floats in the center of available space */}
+                <div className="flex flex-1 items-center justify-center">
+                  <div className="flex items-center gap-2">
+                    <span className="text-primary text-xs">◈</span>
+                    <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-foreground-muted">
+                      Ready
+                    </p>
+                  </div>
+                </div>
+
+                {/* Tips — flush at bottom, border merges with outer container */}
+                <div className="border-t-2 border-dashed border-border px-4 py-4 flex flex-col gap-3">
+                  <p className="font-mono text-[9px] tracking-[0.2em] uppercase text-foreground-muted">
+                    Getting the best results
+                  </p>
+                  {TIPS.map(({ icon: Icon, title, body }, i) => (
+                    <div key={i} className="flex flex-col gap-2.5">
+                      {i > 0 && <div className="border-t border-border" />}
+                      <div className="flex items-start gap-2.5">
+                        <Icon className="h-3.5 w-3.5 shrink-0 mt-0.5 text-foreground-muted" />
+                        <p className="font-mono text-[10px] leading-relaxed text-foreground-muted">
+                          <span className="font-medium text-foreground">
+                            {title}
+                          </span>{" "}
+                          {body}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         ) : result ? (
@@ -505,7 +553,7 @@ function AnalysisResultsInner({
               )}
             </div>
 
-            {/* Feedback panel — flex-1 min-h-0 so it fills remaining space */}
+            {/* Feedback panel - flex-1 min-h-0 so it fills remaining space */}
             <FeedbackPanel method={method} result={result} compact={compact} />
           </div>
         ) : null}

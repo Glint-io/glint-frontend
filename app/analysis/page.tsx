@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AnalysisInputs } from "@/components/analysis/AnalysisInputs";
 import { AnalysisResults } from "@/components/analysis/AnalysisResults";
 import { JobAdvertisementPreviewModal } from "@/components/ui/JobAdvertisementPreviewModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { Modal } from "@/components/ui/Modal";
 import { useAuth } from "@/components/AuthProvider";
+import { glintToast } from "@/components/ui/toast";
 import {
   AnalysisMethod,
   AnalysisMethodStatus,
@@ -13,7 +15,7 @@ import {
   SavedResume,
 } from "@/types/analysis";
 import type { JobAdvertisement } from "@/types";
-import { getAccessToken, authedGet } from "@/lib/auth";
+import { getAccessToken, authedFetch, authedGet } from "@/lib/auth";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ??
@@ -153,9 +155,11 @@ async function runAnalysisFromMock(
 
 export default function AnalysisPage() {
   const { isLoggedIn } = useAuth();
+  const jobAdNoticeShownRef = useRef(false);
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState("");
   const [jobLabel, setJobLabel] = useState("");
+  const [submittedJobLabel, setSubmittedJobLabel] = useState("");
   const [jobText, setJobText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -180,11 +184,34 @@ export default function AnalysisPage() {
   const [previewJobAd, setPreviewJobAd] = useState<JobAdvertisement | null>(
     null,
   );
-  const [jobAdNotice, setJobAdNotice] = useState<string | null>(null);
+  const [previewResume, setPreviewResume] = useState<{
+    resumeId: string;
+    fileName: string;
+    objectUrl: string;
+  } | null>(null);
   const [jobAdToDelete, setJobAdToDelete] = useState<JobAdvertisement | null>(
     null,
   );
+  const [resumeToDelete, setResumeToDelete] = useState<SavedResume | null>(
+    null,
+  );
   const [deletingJobAdId, setDeletingJobAdId] = useState<string | null>(null);
+  const [deletingResumeId, setDeletingResumeId] = useState<string | null>(null);
+
+  const resetAnalysisState = () => {
+    setResult(null);
+    setError(null);
+    setScoreActive(false);
+    setMethodStatuses({ ai: "idle", keyword: "idle", rules: "idle" });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (previewResume?.objectUrl) {
+        URL.revokeObjectURL(previewResume.objectUrl);
+      }
+    };
+  }, [previewResume]);
 
   // Detect auth + fetch saved resumes
   useEffect(() => {
@@ -194,9 +221,11 @@ export default function AnalysisPage() {
       setSelectedResumeId(null);
       setSelectedJobAdId(null);
       setPreviewJobAd(null);
-      setJobAdNotice(null);
+      setPreviewResume(null);
       setJobAdToDelete(null);
+      setResumeToDelete(null);
       setDeletingJobAdId(null);
+      setDeletingResumeId(null);
       setJobSourceMode("new");
       setUploadMode("new");
       return;
@@ -217,14 +246,6 @@ export default function AnalysisPage() {
       });
   }, [isLoggedIn]);
 
-  useEffect(() => {
-    const storedNotice = sessionStorage.getItem("glint:last-job-ad-notice");
-    if (storedNotice) {
-      setJobAdNotice(storedNotice);
-      sessionStorage.removeItem("glint:last-job-ad-notice");
-    }
-  }, []);
-
   const handleSelectJobAd = (jobAd: JobAdvertisement) => {
     setJobSourceMode("saved");
     setSelectedJobAdId(jobAd.id);
@@ -242,7 +263,11 @@ export default function AnalysisPage() {
         },
       );
       if (!res.ok) {
-        setJobAdNotice("Unable to delete that saved job advertisement.");
+        glintToast.error({
+          message:
+            "Failed to delete saved job advertisement. Please try again.",
+          title: "Error",
+        });
         return;
       }
 
@@ -259,6 +284,69 @@ export default function AnalysisPage() {
     } finally {
       setDeletingJobAdId(null);
       setJobAdToDelete(null);
+    }
+  };
+
+  const handlePreviewResume = async (resume: SavedResume) => {
+    try {
+      const res = await authedFetch(
+        `${API_BASE}/user/resume/${resume.resumeId}`,
+      );
+      if (!res.ok) {
+        glintToast.error({
+          title: "Error",
+          message: "Unable to preview that resume.",
+        });
+        return;
+      }
+
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      setPreviewResume({
+        resumeId: resume.resumeId,
+        fileName: resume.fileName,
+        objectUrl,
+      });
+    } catch {
+      glintToast.error({
+        title: "Error",
+        message: "Unable to preview that resume.",
+      });
+    }
+  };
+
+  const handleDeleteResume = async (id: string) => {
+    setDeletingResumeId(id);
+    try {
+      const res = await authedFetch(`${API_BASE}/user/resume/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        glintToast.error({
+          title: "Error",
+          message: "Failed to delete saved resume. Please try again.",
+        });
+        return;
+      }
+
+      setSavedResumes((prev) => {
+        const remaining = prev.filter((resume) => resume.resumeId !== id);
+        if (selectedResumeId === id) {
+          const nextSelected = remaining[0]?.resumeId ?? null;
+          setSelectedResumeId(nextSelected);
+          setUploadMode(nextSelected ? "saved" : "new");
+          if (!nextSelected) setFile(null);
+        }
+        return remaining;
+      });
+
+      if (previewResume?.resumeId === id) {
+        setPreviewResume(null);
+      }
+    } finally {
+      setDeletingResumeId(null);
+      setResumeToDelete(null);
     }
   };
 
@@ -297,9 +385,11 @@ export default function AnalysisPage() {
     setResult(null);
     setScoreActive(false);
     setError(null);
-    setJobAdNotice(null);
-    sessionStorage.removeItem("glint:last-job-ad-notice");
+    setSubmittedJobLabel(jobLabel);
     setMethodStatuses({ ai: "loading", keyword: "loading", rules: "loading" });
+    jobAdNoticeShownRef.current = false;
+    const shouldRefreshSavedResumes =
+      isLoggedIn === true && uploadMode === "new";
 
     try {
       if (API_BASE) {
@@ -348,9 +438,9 @@ export default function AnalysisPage() {
           },
           onResultUpdate,
           (message) => {
-            setJobAdNotice(message);
-            if (message) {
-              sessionStorage.setItem("glint:last-job-ad-notice", message);
+            if (message && !jobAdNoticeShownRef.current) {
+              jobAdNoticeShownRef.current = true;
+              glintToast.info({ message, title: "Notice" });
             }
           },
         );
@@ -369,9 +459,17 @@ export default function AnalysisPage() {
         }
 
         if (isLoggedIn === true) {
-          const jobAds = await authedGet<JobAdvertisement[]>(
-            "/user/job-advertisement",
-          );
+          const [resumes, jobAds] = await Promise.all([
+            shouldRefreshSavedResumes
+              ? authedGet<SavedResume[]>("/user/resume")
+              : Promise.resolve(null),
+            authedGet<JobAdvertisement[]>("/user/job-advertisement"),
+          ]);
+
+          if (resumes) {
+            setSavedResumes(resumes);
+          }
+
           setSavedJobAds(jobAds);
         }
       } else {
@@ -379,6 +477,7 @@ export default function AnalysisPage() {
         const { result: mockResult, label } =
           await runAnalysisFromMock(jobLabel);
         setResult(mockResult);
+        setSubmittedJobLabel(label);
         setMethodStatuses({ ai: "done", keyword: "done", rules: "done" });
         setScoreActive(true);
         if (!jobLabel) setJobLabel(label);
@@ -390,6 +489,15 @@ export default function AnalysisPage() {
           : "Analysis failed. Please try again.";
       setError(msg);
     } finally {
+      if (shouldRefreshSavedResumes && isLoggedIn === true && API_BASE) {
+        try {
+          const resumes = await authedGet<SavedResume[]>("/user/resume");
+          setSavedResumes(resumes);
+        } catch {
+          // Non-critical: a refresh failure should not block the analysis flow.
+        }
+      }
+
       setLoading(false);
     }
   };
@@ -403,20 +511,8 @@ export default function AnalysisPage() {
     : 0;
 
   return (
-    <div className="flex flex-col gap-8 w-full max-w-7xl mx-auto flex-1 min-h-0 h-full">
-      <div className="h-1/12 lg:col-span-2 space-y-3">
-        {jobAdNotice && (
-          <div className="rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 font-mono text-xs text-foreground">
-            {jobAdNotice}
-          </div>
-        )}
-        <p className="font-mono text-[10px] tracking-[0.2em] uppercase text-foreground-muted">
-          Resumes are limted to 3 entries. Saved job ads are limited to 5
-          entries. Adding a new job ad replaces the oldest saved job ad, manage
-          your saved items at any time.
-        </p>
-      </div>
-      <div className="min-h-11/12 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+    <div className="flex flex-col gap-4 w-full max-w-7xl mx-auto flex-1 min-h-0 h-full">
+      <div className="min-h-full max-h-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
         <AnalysisInputs
           file={file}
           fileError={fileError}
@@ -441,6 +537,9 @@ export default function AnalysisPage() {
             }
           }}
           onResumeSelect={setSelectedResumeId}
+          onResumePreview={handlePreviewResume}
+          onResumeDelete={(resume) => setResumeToDelete(resume)}
+          deletingResumeId={deletingResumeId}
           jobSourceMode={jobSourceMode}
           onJobSourceModeChange={(mode) => {
             setJobSourceMode(mode);
@@ -463,7 +562,7 @@ export default function AnalysisPage() {
           methodStatuses={methodStatuses}
           scoreActive={scoreActive}
           displayScore={displayScore}
-          jobLabel={jobLabel}
+          jobLabel={submittedJobLabel}
         />
 
         <JobAdvertisementPreviewModal
@@ -475,6 +574,47 @@ export default function AnalysisPage() {
           }}
           useLabel="Load into analysis"
         />
+
+        {previewResume && (
+          <Modal
+            onClose={() => setPreviewResume(null)}
+            aria-label="Resume preview"
+            panelClassName="max-w-5xl p-0 overflow-hidden"
+          >
+            <div className="flex h-[80vh] flex-col">
+              <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4">
+                <div>
+                  <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-foreground-muted">
+                    Resume preview
+                  </p>
+                  <p className="mt-1 font-mono text-sm font-medium text-foreground">
+                    {previewResume.fileName}
+                  </p>
+                </div>
+              </div>
+              <iframe
+                src={previewResume.objectUrl}
+                title={`Preview of ${previewResume.fileName}`}
+                className="h-full w-full bg-background-subtle"
+              />
+            </div>
+          </Modal>
+        )}
+
+        {resumeToDelete && (
+          <ConfirmModal
+            title="Delete resume"
+            ariaLabel="Delete resume confirmation"
+            message={`This will permanently remove ${resumeToDelete.fileName} from your saved resumes. This action cannot be undone.`}
+            confirmType="simple"
+            confirmButtonLabel="Delete"
+            cancelButtonLabel="Cancel"
+            onClose={() => setResumeToDelete(null)}
+            onConfirm={async () => {
+              await handleDeleteResume(resumeToDelete.resumeId);
+            }}
+          />
+        )}
 
         {jobAdToDelete && (
           <ConfirmModal
