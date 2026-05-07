@@ -76,7 +76,7 @@ export default function Home() {
       <div className="h-px bg-border" />
 
       {/*  How it works  */}
-      <section className="py-20">
+      <section className="py-10 sm:py-20">
         <div className="mb-12">
           <p className="font-mono text-[10px] tracking-[0.25em] text-foreground-muted uppercase mb-3">
             Simple process
@@ -121,7 +121,7 @@ export default function Home() {
       <div className="h-px bg-border" />
 
       {/*  Analysis methods  */}
-      <section className="py-20 grid lg:grid-cols-[1fr_1fr] gap-16 items-center">
+      <section className="py-10 sm:py-20 grid lg:grid-cols-[1fr_1fr] gap-16 items-center">
         <div>
           <p className="font-mono text-[10px] tracking-[0.25em] text-foreground-muted uppercase mb-4">
             Three analysis methods
@@ -156,7 +156,7 @@ export default function Home() {
       <div className="h-px bg-border" />
 
       {/*  About section with CTA  */}
-      <section className="py-20 grid lg:grid-cols-[1fr_1fr] gap-16 items-center">
+      <section className="py-10 sm:py-20 grid lg:grid-cols-[1fr_1fr] gap-16 items-center">
         <div>
           <p className="font-mono text-[10px] tracking-[0.25em] text-foreground-muted uppercase mb-4">
             About Glint
@@ -230,7 +230,7 @@ export default function Home() {
       <div className="h-px bg-border" />
 
       {/*  Final CTA  */}
-      <section className="my-16 py-16 px-8 rounded-2xl bg-linear-to-r from-primary/5 via-primary/3 to-background border border-primary/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+      <section className="my-8 sm:my-16 py-8 sm:py-16 px-8 rounded-2xl bg-linear-to-r from-primary/5 via-primary/3 to-background border border-primary/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div>
           <h2 className="font-mono text-2xl font-semibold text-foreground">
             Ready to get started?
@@ -239,17 +239,17 @@ export default function Home() {
             See how well your resume aligns with your target role in seconds.
           </p>
         </div>
-        <div className="shrink-0 flex items-center gap-3">
+        <div className="shrink-0 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
           <Link
             href="/analysis"
-            className="inline-flex h-11 items-center rounded-lg px-6 font-mono text-sm font-medium transition-all hover:shadow-lg hover:scale-105 active:scale-95 origin-left"
+            className="inline-flex h-11 w-full items-center justify-center rounded-lg px-6 font-mono text-sm font-medium transition-all hover:shadow-lg hover:scale-105 active:scale-95 origin-left sm:w-auto"
             style={{ background: "var(--primary)", color: "var(--primary-fg)" }}
           >
             Analyze →
           </Link>
           <Link
             href="/auth/register"
-            className="inline-flex h-11 items-center rounded-lg px-6 font-mono text-sm font-medium border border-primary/40 text-foreground transition-all hover:border-primary hover:bg-primary/10"
+            className="inline-flex h-11 w-full items-center justify-center rounded-lg px-6 font-mono text-sm font-medium border border-primary/40 text-foreground transition-all hover:border-primary hover:bg-primary/10 sm:w-auto"
           >
             Create account
           </Link>

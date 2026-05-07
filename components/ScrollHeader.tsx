@@ -35,10 +35,10 @@ export default function ScrollHeader({
     <div className="sticky top-0 z-50">
       <header
         className={cn(
-          "relative h-12.5 md:h-19",
+          "relative h-18 md:h-20",
           "transition-transform duration-300 ease-in-out",
           visible ? "translate-y-0" : "-translate-y-full",
-          className
+          className,
         )}
       >
         {children}
