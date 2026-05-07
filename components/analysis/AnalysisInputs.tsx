@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { SectionLabel } from "@/components/analysis/SectionLabel";
+import { CapacityDots } from "@/components/ui/CapacityDots";
 import { Button } from "@/components/ui/button";
 import { SavedResume } from "@/types/analysis";
 import type { JobAdvertisement } from "@/types";
@@ -37,42 +38,6 @@ interface Props {
   onJobAdPreview: (jobAd: JobAdvertisement) => void;
   onJobAdDelete: (jobAd: JobAdvertisement) => void;
   deletingJobAdId: string | null;
-}
-
-/** Five dots — filled for used slots, hollow for free ones. */
-function CapacityDots({
-  used,
-  max,
-  atCapacityLabel,
-}: {
-  used: number;
-  max: number;
-  atCapacityLabel?: string;
-}) {
-  const atCapacity = used >= max;
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className="inline-flex gap-0.75">
-        {Array.from({ length: max }).map((_, i) => (
-          <span
-            key={i}
-            className={`inline-block h-1.25 w-1.25 rounded-full transition-colors ${
-              i < used ? "bg-primary" : "bg-border"
-            }`}
-          />
-        ))}
-      </span>
-      <span
-        className={`font-mono text-[9px] tracking-wide ${
-          atCapacity ? "text-primary" : "text-foreground-muted"
-        }`}
-      >
-        {atCapacity
-          ? (atCapacityLabel ?? `${used} / ${max} · limit reached`)
-          : `${used} / ${max}`}
-      </span>
-    </span>
-  );
 }
 
 export const AnalysisInputs = ({

@@ -10,6 +10,7 @@ import {
   getAccessToken,
 } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { CapacityDots } from "@/components/ui/CapacityDots";
 import { GradientScorePill } from "@/components/user/GradientScorePill";
 import { AnalysisDetailModal } from "@/components/user/AnalysisDetailModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -606,16 +607,18 @@ export default function UserPage() {
 
       {/* ── Job advertisements ───────────────────────────────────────────── */}
       <section className="py-8">
-        <div className="flex items-end justify-between gap-4 mb-4">
+        <div className="mb-4 flex items-end justify-between gap-4">
           <div>
             <SectionLabel>Job advertisements</SectionLabel>
             <p className="mt-2 font-mono text-xs text-foreground-muted">
               Browse the exact ads saved from prior analyses.
             </p>
           </div>
-          <span className="font-mono text-xs text-foreground-muted">
-            {jobAdvertisements.length} saved
-          </span>
+          <CapacityDots
+            used={jobAdvertisements.length}
+            max={5}
+            atCapacityLabel="5 / 5 · oldest replaced on save"
+          />
         </div>
 
         {jobAdvertisements.length >= 5 && (
@@ -685,7 +688,14 @@ export default function UserPage() {
 
       {/* ── Saved resumes ───────────────────────────────────────────────── */}
       <section className="py-8">
-        <SectionLabel>Saved resumes</SectionLabel>
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <SectionLabel>Saved resumes</SectionLabel>
+          <CapacityDots
+            used={resumes.length}
+            max={MAX_RESUMES}
+            atCapacityLabel="5 / 5 · delete one to upload more"
+          />
+        </div>
         {resumes.length >= MAX_RESUMES && (
           <div className="mb-4 flex items-start justify-between gap-3 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-amber-950 dark:text-amber-100">
             <p className="font-mono text-xs text-foreground-muted dark:text-amber-100/80">
