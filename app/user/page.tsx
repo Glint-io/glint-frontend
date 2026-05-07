@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { GradientScorePill } from "@/components/user/GradientScorePill";
 import { AnalysisDetailModal } from "@/components/user/AnalysisDetailModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import ClearHistoryModal from "@/components/user/ClearHistoryModal";
 import { JobAdvertisementPreviewModal } from "@/components/ui/JobAdvertisementPreviewModal";
 import { openAuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
@@ -20,6 +21,10 @@ import { glintToast } from "@/components/ui/toast";
 import { StatCard } from "@/components/user/StatCard";
 import { SectionLabel } from "@/components/user/SectionLabel";
 import { EmptyState } from "@/components/user/EmptyState";
+import {
+  GlintSelect,
+  type GlintSelectOption,
+} from "@/components/ui/GlintSelect";
 import type {
   Statistics,
   PaginatedHistory,
@@ -41,7 +46,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-const HISTORY_RANGE_OPTIONS: { value: HistoryRange; label: string }[] = [
+const HISTORY_RANGE_OPTIONS: GlintSelectOption<HistoryRange>[] = [
   { value: "All", label: "All time" },
   { value: "Today", label: "Today" },
   { value: "Last7Days", label: "Last 7 days" },
@@ -150,6 +155,7 @@ export default function UserPage() {
   const [jobAdvertisements, setJobAdvertisements] = useState<
     JobAdvertisement[]
   >([]);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   const [page, setPage] = useState(1);
   const [historyRange, setHistoryRange] = useState<HistoryRange>("All");
   const [loading, setLoading] = useState(true);
@@ -165,6 +171,8 @@ export default function UserPage() {
     null,
   );
   const [deletingJobAdId, setDeletingJobAdId] = useState<string | null>(null);
+  const [showClearHistory, setShowClearHistory] = useState(false);
+  const [clearingHistory, setClearingHistory] = useState(false);
   const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
 
@@ -275,7 +283,9 @@ export default function UserPage() {
       });
 
       if (!res.ok) {
-        glintToast.error({ message: "Unable to delete that saved job advertisement." });
+        glintToast.error({
+          message: "Unable to delete that saved job advertisement.",
+        });
         return;
       }
 
@@ -335,9 +345,45 @@ export default function UserPage() {
       } catch {}
       glintToast.error({ message: msg });
     } catch {
-      glintToast.error({ message: "Unable to delete account. Please try again." });
+      glintToast.error({
+        message: "Unable to delete account. Please try again.",
+      });
     } finally {
       setDeletingAccount(false);
+    }
+  };
+
+  const handleClearHistory = async (range?: HistoryRange) => {
+    const r = range ?? historyRange;
+    setClearingHistory(true);
+    try {
+      const res = await authedFetch(`${base}/user/history?range=${r}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        const data = (await res.json()) as { deleted?: number };
+        const count = data.deleted ?? 0;
+        glintToast.success({
+          message:
+            count === 0
+              ? "No analyses found in that range."
+              : `Cleared ${count} ${count === 1 ? "analysis" : "analyses"}.`,
+        });
+        setPage(1);
+        await fetchAll(1, historyRange); // ← use historyRange, not r
+      } else {
+        glintToast.error({
+          message: "Failed to clear history. Please try again.",
+        });
+      }
+    } catch {
+      glintToast.error({
+        message: "Failed to clear history. Please try again.",
+      });
+    } finally {
+      setClearingHistory(false);
+      setShowClearHistory(false);
     }
   };
 
@@ -367,10 +413,7 @@ export default function UserPage() {
           )}
         </div>
         <Button
-          onClick={() => {
-            clearAuth();
-            router.push("/auth/login");
-          }}
+          onClick={() => setShowSignOutConfirm(true)}
           variant="outline"
           size="sm"
           className="font-mono text-xs shrink-0"
@@ -431,22 +474,32 @@ export default function UserPage() {
               Filter the dashboard by the analysis creation date.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {HISTORY_RANGE_OPTIONS.map((option) => (
-              <Button
-                key={option.value}
-                variant={historyRange === option.value ? "default" : "outline"}
-                size="sm"
-                className="font-mono text-xs"
-                onClick={() => {
-                  setHistoryRange(option.value);
-                  setPage(1);
-                  setSelectedItem(null);
-                }}
-              >
-                {option.label}
-              </Button>
-            ))}
+          <div className="flex flex-wrap items-center gap-2">
+            <GlintSelect
+              options={HISTORY_RANGE_OPTIONS}
+              value={historyRange}
+              onChange={(val) => {
+                setHistoryRange(val);
+                setPage(1);
+                setSelectedItem(null);
+              }}
+            />
+            <div
+              className="w-px h-4 bg-border mx-1 hidden sm:block"
+              aria-hidden="true"
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={clearingHistory || !history?.items?.length}
+              onClick={() => setShowClearHistory(true)}
+              className="font-mono text-xs text-foreground-muted hover:text-red-600 hover:bg-red-500/10"
+            >
+              {clearingHistory ? (
+                <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
+              ) : null}
+              Clear
+            </Button>
           </div>
         </div>
         <div className="flex m-h-130 flex-col overflow-hidden rounded-xl border border-border bg-background">
@@ -493,11 +546,6 @@ export default function UserPage() {
                         <p className="font-mono text-xs text-foreground-muted mt-0.5 truncate">
                           {item.resumeFileName}
                         </p>
-                        {item.jobAdSnippet && (
-                          <p className="mt-1 max-h-10 overflow-hidden whitespace-pre-wrap wrap-break-word font-mono text-[10px] leading-relaxed text-foreground-muted">
-                            {item.jobAdSnippet}
-                          </p>
-                        )}
                         <p className="font-mono text-[10px] text-foreground-muted mt-0.5 sm:hidden">
                           {new Date(item.createdAt).toLocaleDateString(
                             undefined,
@@ -603,9 +651,6 @@ export default function UserPage() {
                         month: "short",
                         day: "numeric",
                       })}
-                    </p>
-                    <p className="mt-2 max-h-10 overflow-hidden whitespace-pre-wrap wrap-break-word font-mono text-[10px] leading-relaxed text-foreground-muted">
-                      {jobAd.rawText}
                     </p>
                   </div>
                   <Button
@@ -767,6 +812,33 @@ export default function UserPage() {
         jobAd={jobAdToPreview}
         onClose={() => setJobAdToPreview(null)}
       />
+
+      {showSignOutConfirm && (
+        <ConfirmModal
+          title="Sign out"
+          ariaLabel="Sign out confirmation"
+          message="Are you sure you want to sign out?"
+          confirmType="simple"
+          confirmButtonLabel="Sign out"
+          cancelButtonLabel="Cancel"
+          onClose={() => setShowSignOutConfirm(false)}
+          onConfirm={() => {
+            clearAuth();
+            router.push("/auth/login");
+          }}
+        />
+      )}
+
+      {showClearHistory && (
+        <ClearHistoryModal
+          currentRange={historyRange}
+          loading={clearingHistory}
+          onClose={() => setShowClearHistory(false)}
+          onConfirm={async (range) => {
+            await handleClearHistory(range);
+          }}
+        />
+      )}
 
       {jobAdToDelete && (
         <ConfirmModal

@@ -12,7 +12,12 @@ type Props = {
   panelClassName?: string;
 };
 
-export function Modal({ onClose, children, "aria-label": ariaLabel, panelClassName }: Props) {
+export function Modal({
+  onClose,
+  children,
+  "aria-label": ariaLabel,
+  panelClassName,
+}: Props) {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();

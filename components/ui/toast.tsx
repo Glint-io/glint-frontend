@@ -9,44 +9,69 @@ import {
 import "react-toastify/dist/ReactToastify.css";
 import { CheckCircle, XCircle, AlertTriangle, Info, X } from "lucide-react";
 
-// ── Variant config ──────────────────────────────────────────────────────────
+// ── Config ──────────────────────────────────────────────────────────────────
+
+const AUTO_CLOSE_MS = 7000;
 
 type Variant = "success" | "error" | "warning" | "info";
 
-const VARIANT = {
+// All colors use CSS variables so dark mode is automatic
+const VARIANT: Record<
+  Variant,
+  {
+    icon: typeof CheckCircle;
+    label: string;
+    style: React.CSSProperties;
+    labelStyle: React.CSSProperties;
+    iconStyle: React.CSSProperties;
+    progressStyle: React.CSSProperties;
+  }
+> = {
   success: {
     icon: CheckCircle,
     label: "Success",
-    color: "text-emerald-500 dark:text-emerald-400",
-    bg: "bg-emerald-500/8",
-    border: "border-emerald-500/20",
-    iconFill: "text-emerald-500",
+    style: {
+      background: "color-mix(in srgb, #22c55e 12%, var(--background))",
+      border: "1px solid color-mix(in srgb, #22c55e 30%, transparent)",
+    },
+    labelStyle: { color: "#16a34a" },
+    iconStyle: { color: "#22c55e" },
+    progressStyle: { background: "#22c55e" },
   },
   error: {
     icon: XCircle,
     label: "Error",
-    color: "text-red-500 dark:text-red-400",
-    bg: "bg-red-500/8",
-    border: "border-red-500/20",
-    iconFill: "text-red-500",
+    style: {
+      background: "color-mix(in srgb, #ef4444 12%, var(--background))",
+      border: "1px solid color-mix(in srgb, #ef4444 30%, transparent)",
+    },
+    labelStyle: { color: "#dc2626" },
+    iconStyle: { color: "#ef4444" },
+    progressStyle: { background: "#ef4444" },
   },
   warning: {
     icon: AlertTriangle,
     label: "Warning",
-    color: "text-amber-500",
-    bg: "bg-amber-500/8",
-    border: "border-amber-500/20",
-    iconFill: "text-amber-500",
+    style: {
+      background: "color-mix(in srgb, var(--primary) 12%, var(--background))",
+      border: "1px solid color-mix(in srgb, var(--primary) 30%, transparent)",
+    },
+    labelStyle: { color: "var(--primary)" },
+    iconStyle: { color: "var(--primary)" },
+    progressStyle: { background: "var(--primary)" },
   },
   info: {
     icon: Info,
     label: "Notice",
-    color: "text-foreground-muted",
-    bg: "bg-background-subtle",
-    border: "border-border",
-    iconFill: "text-foreground-muted",
+    style: {
+      background: "var(--background-subtle)",
+      border: "1px solid var(--border)",
+    },
+    labelStyle: { color: "var(--foreground-muted)" },
+    iconStyle: { color: "var(--foreground-muted)" },
+    progressStyle: { background: "var(--foreground-muted)" },
   },
-} as const;
+};
 
 // ── Toast content ───────────────────────────────────────────────────────────
 
@@ -67,52 +92,91 @@ function GlintToastContent({
 
   return (
     <div
-      className={`flex items-start gap-3 w-full p-4 ${cfg.bg} ${cfg.border} border rounded-xl`}
+      style={{
+        position: "relative",
+        display: "flex",
+        alignItems: "flex-start",
+        gap: "12px",
+        padding: "14px 16px 18px",
+        borderRadius: "10px",
+        overflow: "hidden",
+        ...cfg.style,
+      }}
     >
       {/* Icon */}
-      <div className={`shrink-0 mt-0.5 ${cfg.iconFill}`}>
-        <Icon className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+      <div style={{ flexShrink: 0, marginTop: "1px", ...cfg.iconStyle }}>
+        <Icon size={15} strokeWidth={2} aria-hidden="true" />
       </div>
 
       {/* Text */}
-      <div className="flex-1 min-w-0">
+      <div style={{ flex: 1, minWidth: 0 }}>
         <p
-          className={`font-mono text-[9px] font-semibold tracking-[0.2em] uppercase mb-1 ${cfg.color}`}
+          style={{
+            fontFamily: "var(--font-mono), monospace",
+            fontSize: "9px",
+            fontWeight: 700,
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
+            marginBottom: "3px",
+            ...cfg.labelStyle,
+          }}
         >
           {title ?? cfg.label}
         </p>
-        <p className="font-mono text-xs leading-relaxed text-foreground">
+        <p
+          style={{
+            fontFamily: "var(--font-mono), monospace",
+            fontSize: "12px",
+            lineHeight: 1.5,
+            color: "var(--foreground)",
+            margin: 0,
+          }}
+        >
           {message}
         </p>
       </div>
 
-      {/* Close */}
+      {/* Close button */}
       <button
         type="button"
         onClick={closeToast}
         aria-label="Dismiss"
-        className="shrink-0 mt-0.5 text-foreground-muted hover:text-foreground transition-colors"
+        style={{
+          flexShrink: 0,
+          marginTop: "1px",
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          padding: 0,
+          color: "var(--foreground-muted)",
+          display: "flex",
+          alignItems: "center",
+        }}
       >
-        <X className="h-3.5 w-3.5" strokeWidth={2} />
+        <X size={13} strokeWidth={2} />
       </button>
+
+      {/* Progress bar */}
+      <div
+        className="glint-progress-bar"
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          height: "3px",
+          borderRadius: "0 0 0 10px",
+          ...cfg.progressStyle,
+        }}
+      />
     </div>
   );
 }
 
-// ── Styled container ────────────────────────────────────────────────────────
+// ── Provider ────────────────────────────────────────────────────────────────
 
-/**
- * Drop this once anywhere in your layout — it replaces the default
- * ToastContainer and injects the CSS overrides.
- */
 export function GlintToastProvider() {
   return (
     <>
-      {/*
-        Override react-toastify's CSS variables and strip its default chrome.
-        The actual styling lives on GlintToastContent above, which uses
-        Tailwind + Glint CSS variables so dark mode is automatic.
-      */}
       <style>{`
         :root {
           --toastify-z-index: 9999;
@@ -120,10 +184,9 @@ export function GlintToastProvider() {
           --toastify-toast-offset: 16px;
           --toastify-toast-top: max(var(--toastify-toast-offset), env(safe-area-inset-top));
           --toastify-toast-right: max(var(--toastify-toast-offset), env(safe-area-inset-right));
-          --toastify-toast-bottom: max(var(--toastify-toast-offset), env(safe-area-inset-bottom));
         }
 
-        /* Strip the wrapper's default background, padding, border-radius, shadow */
+        /* Strip toastify's default chrome entirely */
         .Toastify__toast {
           background: transparent !important;
           padding: 0 !important;
@@ -132,52 +195,57 @@ export function GlintToastProvider() {
           min-height: 0 !important;
           margin-bottom: 8px !important;
         }
-
-        /* Hide the default progress bar */
-        .Toastify__progress-bar {
-          display: none !important;
-        }
-
-        /* Hide the default close button (we render our own) */
-        .Toastify__close-button {
-          display: none !important;
-        }
-
-        /* Container positioning */
-        .Toastify__toast-container {
+        .Toastify__toast-body {
           padding: 0 !important;
+          margin: 0 !important;
+        }
+        .Toastify__progress-bar { display: none !important; }
+        .Toastify__close-button { display: none !important; }
+        .Toastify__toast-container { padding: 0 !important; }
+
+        /* Progress bar animation */
+        @keyframes glint-progress {
+          from { width: 100%; }
+          to   { width: 0%; }
         }
 
-        /* Slide-in from right */
-        .Toastify__slide-enter--top-right,
-        .Toastify__slide-enter--bottom-right {
+        .glint-progress-bar {
+          animation: glint-progress ${AUTO_CLOSE_MS}ms linear forwards;
+        }
+
+        /* Pause the bar when toastify pauses on hover/focus */
+        .Toastify__toast:is([class*="--paused"]) .glint-progress-bar,
+        .Toastify__toast:hover .glint-progress-bar {
+          animation-play-state: paused;
+        }
+
+        /* Slide-in / out */
+        .Toastify__slide-enter--top-right {
           animation: glint-slide-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
-        .Toastify__slide-exit--top-right,
-        .Toastify__slide-exit--bottom-right {
+        .Toastify__slide-exit--top-right {
           animation: glint-slide-out 0.18s cubic-bezier(0.4, 0, 1, 1) forwards;
         }
-
         @keyframes glint-slide-in {
           from { opacity: 0; transform: translateX(16px) scale(0.97); }
-          to   { opacity: 1; transform: translateX(0)   scale(1); }
+          to   { opacity: 1; transform: translateX(0) scale(1); }
         }
         @keyframes glint-slide-out {
-          from { opacity: 1; transform: translateX(0)   scale(1); }
+          from { opacity: 1; transform: translateX(0) scale(1); }
           to   { opacity: 0; transform: translateX(16px) scale(0.96); }
         }
       `}</style>
 
       <ToastContainer
         position="top-right"
-        autoClose={4500}
+        autoClose={AUTO_CLOSE_MS}
         hideProgressBar
         newestOnTop
         closeOnClick={false}
         closeButton={false}
         draggable={false}
         pauseOnHover
-        pauseOnFocusLoss
+        pauseOnFocusLoss={false}
         icon={false}
       />
     </>
@@ -193,7 +261,7 @@ interface ToastInput {
 }
 
 function show(variant: Variant, { message, title, options }: ToastInput) {
-  return _toast(
+  const toastId = _toast(
     (props: ToastContentProps) => (
       <GlintToastContent
         {...props}
@@ -203,12 +271,18 @@ function show(variant: Variant, { message, title, options }: ToastInput) {
       />
     ),
     {
-      // Remove react-toastify's default icon
       icon: false,
       closeButton: false,
       ...options,
+      autoClose: AUTO_CLOSE_MS,
     },
   );
+
+  window.setTimeout(() => {
+    _toast.dismiss(toastId);
+  }, AUTO_CLOSE_MS);
+
+  return toastId;
 }
 
 /**
@@ -227,5 +301,4 @@ export const glintToast = {
   info: (input: ToastInput) => show("info", input),
 } as const;
 
-// Also export a direct re-export of the underlying toast for advanced use
 export { _toast as rawToast };
