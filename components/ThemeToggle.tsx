@@ -2,8 +2,9 @@
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { theme, setTheme } = useTheme();
 
   const toggleTheme = () => {
@@ -15,7 +16,7 @@ export function ThemeToggle() {
       variant="outline"
       size="sm"
       onClick={toggleTheme}
-      className="flex items-center gap-2"
+      className={cn("flex items-center gap-2", className)}
       aria-label="Toggle theme"
     >
       <Sun className="h-4 w-4 dark:hidden" />
