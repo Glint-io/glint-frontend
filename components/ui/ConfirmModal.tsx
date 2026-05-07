@@ -4,18 +4,22 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 
-type ConfirmType = "simple" | "strict";
+type ConfirmType = "simple" | "strict" | "input";
 
 type Props = {
   message: string;
   confirmType: ConfirmType;
-  onConfirm: () => void | Promise<void>;
+  onConfirm: (value?: string) => void | Promise<void>;
   onClose: () => void;
   confirmText?: string;
   confirmButtonLabel?: string;
   cancelButtonLabel?: string;
   title?: string;
   ariaLabel?: string;
+  // "input" mode props
+  inputLabel?: string;
+  inputType?: string;
+  inputPlaceholder?: string;
 };
 
 export function ConfirmModal({
@@ -28,14 +32,32 @@ export function ConfirmModal({
   cancelButtonLabel = "Cancel",
   title = "Confirm action",
   ariaLabel = "Confirmation dialog",
+  inputLabel,
+  inputType = "text",
+  inputPlaceholder,
 }: Props) {
   const [typedText, setTypedText] = useState("");
+
   const requiredText = useMemo(
     () => (confirmType === "strict" ? (confirmText ?? "") : ""),
     [confirmText, confirmType],
   );
+
   const isStrictConfirmed =
     confirmType === "strict" ? typedText.trim() === requiredText : true;
+
+  const isInputConfirmed =
+    confirmType === "input" ? typedText.trim().length > 0 : true;
+
+  const canConfirm = isStrictConfirmed && isInputConfirmed;
+
+  const handleConfirm = () => {
+    if (confirmType === "input" || confirmType === "strict") {
+      onConfirm(typedText);
+    } else {
+      onConfirm();
+    }
+  };
 
   return (
     <Modal onClose={onClose} aria-label={ariaLabel}>
@@ -67,6 +89,30 @@ export function ConfirmModal({
           </div>
         )}
 
+        {confirmType === "input" && (
+          <div className="space-y-2">
+            {inputLabel && (
+              <label
+                className="font-mono text-[10px] tracking-[0.2em] uppercase text-foreground-muted"
+                htmlFor="confirm-input"
+              >
+                {inputLabel}
+              </label>
+            )}
+            <input
+              id="confirm-input"
+              type={inputType}
+              value={typedText}
+              onChange={(e) => setTypedText(e.target.value)}
+              placeholder={inputPlaceholder ?? ""}
+              autoComplete={
+                inputType === "password" ? "current-password" : undefined
+              }
+              className="w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+        )}
+
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button
             variant="outline"
@@ -77,8 +123,8 @@ export function ConfirmModal({
           </Button>
           <Button
             variant="destructive"
-            onClick={onConfirm}
-            disabled={!isStrictConfirmed}
+            onClick={handleConfirm}
+            disabled={!canConfirm}
             className="font-mono text-xs"
           >
             {confirmButtonLabel}

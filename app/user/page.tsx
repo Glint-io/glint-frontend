@@ -7,6 +7,7 @@ import {
   authedFormFetch,
   clearAuth,
   getStoredAuth,
+  getAccessToken,
 } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { GradientScorePill } from "@/components/user/GradientScorePill";
@@ -15,7 +16,7 @@ import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { JobAdvertisementPreviewModal } from "@/components/ui/JobAdvertisementPreviewModal";
 import { openAuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
-import { toast } from "react-toastify";
+import { glintToast } from "@/components/ui/toast";
 import { StatCard } from "@/components/user/StatCard";
 import { SectionLabel } from "@/components/user/SectionLabel";
 import { EmptyState } from "@/components/user/EmptyState";
@@ -164,6 +165,8 @@ export default function UserPage() {
     null,
   );
   const [deletingJobAdId, setDeletingJobAdId] = useState<string | null>(null);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const PAGE_SIZE = 10;
   const base =
@@ -202,7 +205,6 @@ export default function UserPage() {
           authedGet<JobAdvertisement[]>("/user/job-advertisement"),
         ]);
         setStats(s);
-        console.log("Fetched history:", h);
         setHistory(h);
         setResumes(r);
         setJobAdvertisements(jobAds);
@@ -233,7 +235,7 @@ export default function UserPage() {
           </h1>
           <p className="mt-2 font-mono text-sm text-foreground-muted">
             Your saved resumes and analysis history are only available when
-            you’re logged in.
+            you&apos;re logged in.
           </p>
           <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
@@ -273,7 +275,7 @@ export default function UserPage() {
       });
 
       if (!res.ok) {
-        toast.error("Unable to delete that saved job advertisement.");
+        glintToast.error({ message: "Unable to delete that saved job advertisement." });
         return;
       }
 
@@ -301,6 +303,41 @@ export default function UserPage() {
       setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch {
       setErrorMessage("Unable to open this resume.");
+    }
+  };
+
+  const handleDeleteAccount = async (password: string) => {
+    setDeletingAccount(true);
+    try {
+      const token = getAccessToken();
+      const res = await fetch(`${base}/user/account`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ password }),
+      });
+
+      if (res.ok) {
+        clearAuth();
+        setShowDeleteAccount(false);
+        glintToast.success({ message: "Your account has been deleted." });
+        router.push("/");
+        return;
+      }
+
+      const text = await res.text();
+      let msg = "Unable to delete account. Please try again.";
+      try {
+        msg = (JSON.parse(text) as { error?: string }).error ?? msg;
+      } catch {}
+      glintToast.error({ message: msg });
+    } catch {
+      glintToast.error({ message: "Unable to delete account. Please try again." });
+    } finally {
+      setDeletingAccount(false);
     }
   };
 
@@ -464,11 +501,7 @@ export default function UserPage() {
                         <p className="font-mono text-[10px] text-foreground-muted mt-0.5 sm:hidden">
                           {new Date(item.createdAt).toLocaleDateString(
                             undefined,
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                            },
+                            { year: "numeric", month: "short", day: "numeric" },
                           )}
                         </p>
                       </td>
@@ -689,6 +722,38 @@ export default function UserPage() {
         </div>
       </section>
 
+      {/* ── Account ───────────────────────────────────────────────────────── */}
+      <section>
+        <SectionLabel>Account</SectionLabel>
+        <p className="mt-2 font-mono text-xs text-foreground-muted">
+          Permanent actions that cannot be undone.
+        </p>
+        <div className="mt-4 flex items-center justify-between gap-4 rounded-xl border border-red-500/25 bg-red-500/5 px-5 py-4">
+          <div>
+            <p className="font-mono text-sm font-medium text-foreground">
+              Delete account
+            </p>
+            <p className="mt-0.5 font-mono text-xs text-foreground-muted">
+              Permanently removes your account, all analyses, resumes, and saved
+              job ads.
+            </p>
+          </div>
+          <Button
+            onClick={() => setShowDeleteAccount(true)}
+            disabled={deletingAccount}
+            variant="outline"
+            size="sm"
+            className="shrink-0 font-mono text-xs border-red-500/40 text-red-600 hover:bg-red-500/10 hover:border-red-500/60 hover:text-red-600 dark:text-red-400"
+          >
+            {deletingAccount ? (
+              <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
+            ) : null}
+            Delete account
+          </Button>
+        </div>
+      </section>
+
+      {/* ── Modals ──────────────────────────────────────────────────────── */}
       {selectedItem && (
         <AnalysisDetailModal
           item={selectedItem}
@@ -730,6 +795,24 @@ export default function UserPage() {
           onConfirm={async () => {
             await handleDeleteResume(resumeToDelete.resumeId);
             setResumeToDelete(null);
+          }}
+        />
+      )}
+
+      {showDeleteAccount && (
+        <ConfirmModal
+          title="Delete your account"
+          ariaLabel="Delete account confirmation"
+          message="This will permanently delete your account along with all analyses, resumes, and saved job ads. Enter your password to confirm."
+          confirmType="input"
+          inputLabel="Password"
+          inputType="password"
+          inputPlaceholder="Enter your password"
+          confirmButtonLabel="Delete my account"
+          cancelButtonLabel="Cancel"
+          onClose={() => setShowDeleteAccount(false)}
+          onConfirm={async (password?: string) => {
+            await handleDeleteAccount(password ?? "");
           }}
         />
       )}
