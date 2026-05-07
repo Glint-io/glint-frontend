@@ -8,11 +8,9 @@ import { Modal } from "@/components/ui/Modal";
 import { setAuth } from "@/lib/auth";
 import { Eye, EyeOff } from "lucide-react";
 
-type AuthMode = "login" | "register";
+type AuthMode = "login" | "register" | "forgot";
 
-type OpenAuthModalDetail = {
-  mode?: AuthMode;
-};
+type OpenAuthModalDetail = { mode?: AuthMode };
 
 const base =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ??
@@ -23,6 +21,7 @@ const ep = {
   register: `${base}/auth/register`,
   verifyEmail: `${base}/auth/verify-email`,
   resend: `${base}/auth/resend-verification`,
+  forgotPassword: `${base}/auth/forgot-password`,
 };
 
 type ErrorPayload = {
@@ -38,13 +37,9 @@ function extractMessage(payload: unknown): string | null {
   return p.message ?? p.error ?? p.title ?? p.detail ?? null;
 }
 
-function extractTokens(payload: unknown): {
-  accessToken: string | null;
-  refreshToken: string | null;
-} {
-  if (!payload || typeof payload !== "object") {
+function extractTokens(payload: unknown) {
+  if (!payload || typeof payload !== "object")
     return { accessToken: null, refreshToken: null };
-  }
   const p = payload as Record<string, unknown>;
   const accessToken =
     typeof (p.accessToken ?? p.token ?? p.jwt ?? p.bearerToken) === "string"
@@ -55,15 +50,7 @@ function extractTokens(payload: unknown): {
   return { accessToken, refreshToken };
 }
 
-async function apiPost(
-  url: string,
-  body: object,
-): Promise<{
-  ok: boolean;
-  message: string | null;
-  status: number;
-  data: unknown;
-}> {
+async function apiPost(url: string, body: object) {
   try {
     const res = await fetch(url, {
       method: "POST",
@@ -204,6 +191,11 @@ export default function AuthModal() {
   const [otpError, setOtpError] = useState<string | null>(null);
   const [otpResendMessage, setOtpResendMessage] = useState<string | null>(null);
 
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSubmitting, setForgotSubmitting] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
+  const [forgotSent, setForgotSent] = useState(false);
+
   const [showRegisteredBanner, setShowRegisteredBanner] = useState(false);
   const [showVerifiedBanner, setShowVerifiedBanner] = useState(false);
 
@@ -217,6 +209,8 @@ export default function AuthModal() {
       setIsOpen(true);
       setLoginError(null);
       setRegisterError(null);
+      setForgotError(null);
+      setForgotSent(false);
     };
     window.addEventListener("glint:open-auth-modal", onOpen as EventListener);
     return () =>
@@ -276,15 +270,13 @@ export default function AuthModal() {
 
       if (!res.ok) {
         const msg = extractMessage(payload);
-        if (res.status === 403) {
+        if (res.status === 403)
           setLoginError(
             "Your email is not verified yet. Check your inbox for the verification email.",
           );
-        } else if (res.status === 401) {
+        else if (res.status === 401)
           setLoginError("Incorrect email or password.");
-        } else {
-          setLoginError(msg ?? `Login failed (${res.status}).`);
-        }
+        else setLoginError(msg ?? `Login failed (${res.status}).`);
         return;
       }
 
@@ -309,7 +301,6 @@ export default function AuthModal() {
       setRegisterError("Please accept the privacy policy to continue.");
       return;
     }
-
     if (registerPassword !== registerConfirmPassword) {
       setRegisterError("Passwords do not match.");
       return;
@@ -362,7 +353,6 @@ export default function AuthModal() {
       setOtpError("Enter all 6 digits.");
       return;
     }
-
     setOtpSubmitting(true);
     setOtpError(null);
 
@@ -396,9 +386,7 @@ export default function AuthModal() {
     setOtpResending(true);
     setOtpError(null);
     setOtpResendMessage(null);
-
     const result = await apiPost(ep.resend, { email: registerEmail });
-
     if (result.ok) {
       setOtpResendMessage(`A new code has been sent to ${registerEmail}.`);
       setOtpDigits(Array(6).fill(""));
@@ -407,13 +395,37 @@ export default function AuthModal() {
         result.message ?? "Could not resend the code. Try again later.",
       );
     }
-
     setOtpResending(false);
+  }
+
+  async function handleForgotSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setForgotError(null);
+    setForgotSubmitting(true);
+    const result = await apiPost(ep.forgotPassword, { email: forgotEmail });
+    setForgotSubmitting(false);
+    if (result.ok) {
+      setForgotSent(true);
+    } else {
+      setForgotError(
+        result.message ?? "Something went wrong. Please try again.",
+      );
+    }
   }
 
   function closeModal() {
     setShowOtp(false);
     setIsOpen(false);
+  }
+
+  function switchMode(next: AuthMode) {
+    setMode(next);
+    setShowRegisteredBanner(false);
+    setShowVerifiedBanner(false);
+    setForgotSent(false);
+    setForgotError(null);
+    setLoginError(null);
+    setRegisterError(null);
   }
 
   if (!isOpen) return null;
@@ -430,14 +442,12 @@ export default function AuthModal() {
             <span className="font-medium text-foreground">{registerEmail}</span>
             .
           </p>
-
           <form onSubmit={handleVerifyCode} className="mt-6 space-y-4">
             <OtpInput
               value={otpDigits}
               onChange={setOtpDigits}
               disabled={otpSubmitting}
             />
-
             {otpError && (
               <p className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">
                 {otpError}
@@ -448,7 +458,6 @@ export default function AuthModal() {
                 {otpResendMessage}
               </p>
             )}
-
             <Button
               type="submit"
               disabled={otpSubmitting || otpCode.length < 6}
@@ -457,7 +466,6 @@ export default function AuthModal() {
               {otpSubmitting ? "Verifying..." : "Confirm email"}
             </Button>
           </form>
-
           <p className="mt-4 text-center text-xs text-foreground-muted">
             Did not receive it?{" "}
             <Button
@@ -469,6 +477,79 @@ export default function AuthModal() {
               {otpResending ? "Sending..." : "Resend code"}
             </Button>
           </p>
+        </>
+      ) : mode === "forgot" ? (
+        <>
+          <h2 className="text-xl font-semibold text-foreground">
+            Reset password
+          </h2>
+          {forgotSent ? (
+            <div className="mt-4 space-y-4">
+              <p className="rounded-md border border-green-500/30 bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-300">
+                If that address is registered, a reset code has been sent. Check
+                your inbox.
+              </p>
+              <p className="text-sm text-foreground-muted">
+                Have a code?{" "}
+                <Link
+                  href="/auth/reset-password"
+                  onClick={closeModal}
+                  className="font-medium text-foreground underline"
+                >
+                  Enter it here
+                </Link>
+              </p>
+              <button
+                type="button"
+                className="text-sm font-medium text-foreground underline"
+                onClick={() => switchMode("login")}
+              >
+                Back to sign in
+              </button>
+            </div>
+          ) : (
+            <>
+              <p className="mt-2 text-sm text-foreground-muted">
+                Enter your email and we&apos;ll send a reset code.
+              </p>
+              <form className="mt-6 space-y-4" onSubmit={handleForgotSubmit}>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-foreground-muted">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
+                    placeholder="you@example.com"
+                  />
+                </div>
+                {forgotError && (
+                  <p className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">
+                    {forgotError}
+                  </p>
+                )}
+                <Button
+                  type="submit"
+                  disabled={forgotSubmitting}
+                  className="w-full"
+                >
+                  {forgotSubmitting ? "Sending..." : "Send reset code"}
+                </Button>
+              </form>
+              <p className="mt-4 text-sm text-foreground-muted">
+                <button
+                  type="button"
+                  className="font-medium text-foreground underline"
+                  onClick={() => switchMode("login")}
+                >
+                  Back to sign in
+                </button>
+              </p>
+            </>
+          )}
         </>
       ) : mode === "login" ? (
         <>
@@ -493,7 +574,6 @@ export default function AuthModal() {
               </label>
               <input
                 id="auth-login-email"
-                name="email"
                 type="email"
                 required
                 value={loginEmail}
@@ -505,16 +585,27 @@ export default function AuthModal() {
             </div>
 
             <div>
-              <label
-                htmlFor="auth-login-password"
-                className="mb-1 block text-sm font-medium text-foreground-muted"
-              >
-                Password
-              </label>
+              <div className="mb-1 flex items-center justify-between">
+                <label
+                  htmlFor="auth-login-password"
+                  className="text-sm font-medium text-foreground-muted"
+                >
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForgotEmail(loginEmail);
+                    switchMode("forgot");
+                  }}
+                  className="text-xs text-foreground-muted underline hover:text-foreground"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <div className="relative">
                 <input
                   id="auth-login-password"
-                  name="password"
                   type={showLoginPassword ? "text" : "password"}
                   required
                   value={loginPassword}
@@ -526,7 +617,7 @@ export default function AuthModal() {
                 <button
                   type="button"
                   onClick={() => setShowLoginPassword((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground-muted transition-colors hover:text-foreground"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground"
                   aria-label={
                     showLoginPassword ? "Hide password" : "Show password"
                   }
@@ -545,7 +636,6 @@ export default function AuthModal() {
                 {loginError}
               </p>
             )}
-
             <Button type="submit" disabled={loginSubmitting} className="w-full">
               {loginSubmitting ? "Signing in..." : "Sign in"}
             </Button>
@@ -556,11 +646,7 @@ export default function AuthModal() {
             <button
               type="button"
               className="font-medium text-foreground underline"
-              onClick={() => {
-                setMode("register");
-                setShowRegisteredBanner(false);
-                setShowVerifiedBanner(false);
-              }}
+              onClick={() => switchMode("register")}
             >
               Register
             </button>
@@ -585,7 +671,6 @@ export default function AuthModal() {
               </label>
               <input
                 id="auth-register-email"
-                name="email"
                 type="email"
                 required
                 value={registerEmail}
@@ -606,7 +691,6 @@ export default function AuthModal() {
               <div className="relative">
                 <input
                   id="auth-register-password"
-                  name="password"
                   type={showRegisterPassword ? "text" : "password"}
                   required
                   value={registerPassword}
@@ -618,15 +702,12 @@ export default function AuthModal() {
                 <button
                   type="button"
                   onClick={() => setShowRegisterPassword((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground-muted transition-colors hover:text-foreground"
-                  aria-label={
-                    showRegisterPassword ? "Hide password" : "Show password"
-                  }
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground"
                 >
                   {showRegisterPassword ? (
-                    <EyeOff className="h-4 w-4" aria-hidden="true" />
+                    <EyeOff className="h-4 w-4" />
                   ) : (
-                    <Eye className="h-4 w-4" aria-hidden="true" />
+                    <Eye className="h-4 w-4" />
                   )}
                 </button>
               </div>
@@ -642,55 +723,38 @@ export default function AuthModal() {
               <div className="relative">
                 <input
                   id="auth-register-confirm-password"
-                  name="confirmPassword"
                   type={showRegisterConfirmPassword ? "text" : "password"}
                   required
                   value={registerConfirmPassword}
                   onChange={(e) => setRegisterConfirmPassword(e.target.value)}
                   autoComplete="new-password"
-                  className={`w-full rounded-md border bg-background px-3 py-2 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 ${
-                    registerConfirmPassword &&
-                    registerConfirmPassword !== registerPassword
-                      ? "border-red-400 focus:border-red-400"
-                      : "border-border focus:border-primary"
-                  }`}
+                  className={`w-full rounded-md border bg-background px-3 py-2 pr-10 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 ${registerConfirmPassword && registerConfirmPassword !== registerPassword ? "border-red-400 focus:border-red-400" : "border-border focus:border-primary"}`}
                   placeholder="********"
                 />
                 <button
                   type="button"
                   onClick={() => setShowRegisterConfirmPassword((v) => !v)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground-muted transition-colors hover:text-foreground"
-                  aria-label={
-                    showRegisterConfirmPassword
-                      ? "Hide password"
-                      : "Show password"
-                  }
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-foreground-muted hover:text-foreground"
                 >
                   {showRegisterConfirmPassword ? (
-                    <EyeOff className="h-4 w-4" aria-hidden="true" />
+                    <EyeOff className="h-4 w-4" />
                   ) : (
-                    <Eye className="h-4 w-4" aria-hidden="true" />
+                    <Eye className="h-4 w-4" />
                   )}
                 </button>
               </div>
             </div>
 
-            {/* Privacy policy consent */}
             <label className="flex items-start gap-3 cursor-pointer group">
               <div className="relative mt-0.5 flex-shrink-0">
                 <input
                   type="checkbox"
-                  id="auth-register-privacy"
                   checked={agreedToPrivacy}
                   onChange={(e) => setAgreedToPrivacy(e.target.checked)}
                   className="sr-only"
                 />
                 <div
-                  className={`h-4 w-4 rounded border-2 transition-colors flex items-center justify-center ${
-                    agreedToPrivacy
-                      ? "border-primary bg-primary"
-                      : "border-border bg-background group-hover:border-foreground-muted"
-                  }`}
+                  className={`h-4 w-4 rounded border-2 transition-colors flex items-center justify-center ${agreedToPrivacy ? "border-primary bg-primary" : "border-border bg-background group-hover:border-foreground-muted"}`}
                 >
                   {agreedToPrivacy && (
                     <svg
@@ -719,9 +783,18 @@ export default function AuthModal() {
                   onClick={(e) => e.stopPropagation()}
                 >
                   Privacy Policy
+                </Link>{" "}
+                and{" "}
+                <Link
+                  href="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-foreground underline underline-offset-2 hover:text-primary transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Terms of Service
                 </Link>
-                . I understand that my resume and job advertisement text will be
-                processed to provide analysis results.
+                .
               </span>
             </label>
 
@@ -730,7 +803,6 @@ export default function AuthModal() {
                 {registerError}
               </p>
             )}
-
             <Button
               type="submit"
               disabled={registerSubmitting || !agreedToPrivacy}
@@ -745,11 +817,7 @@ export default function AuthModal() {
             <button
               type="button"
               className="font-medium text-foreground underline"
-              onClick={() => {
-                setMode("login");
-                setShowRegisteredBanner(false);
-                setShowVerifiedBanner(false);
-              }}
+              onClick={() => switchMode("login")}
             >
               Sign in
             </button>
