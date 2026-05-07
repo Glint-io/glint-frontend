@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 import { setAuth } from "@/lib/auth";
@@ -193,6 +194,7 @@ export default function AuthModal() {
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] =
     useState(false);
+  const [agreedToPrivacy, setAgreedToPrivacy] = useState(false);
   const [registerSubmitting, setRegisterSubmitting] = useState(false);
   const [registerError, setRegisterError] = useState<string | null>(null);
 
@@ -302,6 +304,11 @@ export default function AuthModal() {
   async function handleRegisterSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setRegisterError(null);
+
+    if (!agreedToPrivacy) {
+      setRegisterError("Please accept the privacy policy to continue.");
+      return;
+    }
 
     if (registerPassword !== registerConfirmPassword) {
       setRegisterError("Passwords do not match.");
@@ -668,6 +675,56 @@ export default function AuthModal() {
               </div>
             </div>
 
+            {/* Privacy policy consent */}
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <div className="relative mt-0.5 flex-shrink-0">
+                <input
+                  type="checkbox"
+                  id="auth-register-privacy"
+                  checked={agreedToPrivacy}
+                  onChange={(e) => setAgreedToPrivacy(e.target.checked)}
+                  className="sr-only"
+                />
+                <div
+                  className={`h-4 w-4 rounded border-2 transition-colors flex items-center justify-center ${
+                    agreedToPrivacy
+                      ? "border-primary bg-primary"
+                      : "border-border bg-background group-hover:border-foreground-muted"
+                  }`}
+                >
+                  {agreedToPrivacy && (
+                    <svg
+                      className="h-2.5 w-2.5 text-white"
+                      viewBox="0 0 10 8"
+                      fill="none"
+                    >
+                      <path
+                        d="M1 4l3 3 5-6"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <span className="text-xs text-foreground-muted leading-relaxed select-none">
+                I have read and agree to the{" "}
+                <Link
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-foreground underline underline-offset-2 hover:text-primary transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  Privacy Policy
+                </Link>
+                . I understand that my resume and job advertisement text will be
+                processed to provide analysis results.
+              </span>
+            </label>
+
             {registerError && (
               <p className="rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-700 dark:text-red-300">
                 {registerError}
@@ -676,7 +733,7 @@ export default function AuthModal() {
 
             <Button
               type="submit"
-              disabled={registerSubmitting}
+              disabled={registerSubmitting || !agreedToPrivacy}
               className="w-full"
             >
               {registerSubmitting ? "Creating account..." : "Create account"}
