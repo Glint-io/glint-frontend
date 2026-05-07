@@ -131,14 +131,17 @@ export function AnalysisDetailModal({
     >
       <div className="flex max-h-[85vh] flex-col overflow-hidden">
         {/* Header */}
-        <div className="shrink-0 flex items-start justify-between gap-4 border-b border-border px-6 py-5 pr-14">
+        <div className="shrink-0 border-b border-border px-6 py-5 pr-14">
           <div className="min-w-0">
             <p className="font-mono text-[10px] tracking-[0.25em] uppercase text-foreground-muted">
               Analysis detail
             </p>
-            <h2 className="mt-2 truncate font-mono text-lg font-semibold text-foreground leading-snug">
-              {item.jobTitle ?? "—"}
-            </h2>
+            <div className="mt-2 flex items-start justify-between gap-4">
+              <h2 className="min-w-0 truncate font-mono text-lg font-semibold leading-snug text-foreground">
+                {item.jobTitle ?? "—"}
+              </h2>
+              <GradientScorePill results={item.results} />
+            </div>
             <div className="mt-2 grid min-w-0 grid-rows-1 gap-x-4 gap-y-1">
               <span className="min-w-0 font-mono text-xs text-foreground-muted break-all">
                 {item.resumeFileName}
@@ -164,14 +167,6 @@ export function AnalysisDetailModal({
 
         {/* Body — flex column, never scrolls itself */}
         <div className="flex flex-col flex-1 min-h-0 overflow-hidden px-6 py-5 gap-6">
-          {/* Overall pill — pinned, never scrolls */}
-          <div className="shrink-0 flex items-center justify-between rounded-xl border border-border bg-background px-4 py-3">
-            <span className="font-mono text-xs text-foreground-muted uppercase tracking-widest">
-              Overall
-            </span>
-            <GradientScorePill results={item.results} />
-          </div>
-
           <div className="shrink-0 rounded-xl border border-border bg-background-subtle/50 px-4 py-3">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
