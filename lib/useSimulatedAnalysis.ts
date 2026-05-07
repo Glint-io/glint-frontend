@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnalysisResult } from "@/types/analysis";
 
 const SAMPLE_JOBS = [
@@ -90,14 +90,16 @@ function createSimulatedAnalysis() {
   return { result: nextResult, jobLabel: nextJobLabel };
 }
 
-const sharedSimulation = createSimulatedAnalysis();
-
 export function useSimulatedAnalysis() {
-  const [result] = useState<AnalysisResult | null>(sharedSimulation.result);
-  const [jobLabel] = useState(sharedSimulation.jobLabel);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [jobLabel, setJobLabel] = useState("");
 
-  return {
-    result,
-    jobLabel,
-  };
+  useEffect(() => {
+    const sim = createSimulatedAnalysis();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setResult(sim.result);
+    setJobLabel(sim.jobLabel);
+  }, []);
+
+  return { result, jobLabel };
 }

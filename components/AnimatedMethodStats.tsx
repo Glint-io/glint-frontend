@@ -13,7 +13,13 @@ const getScoreColor = (score: number) =>
 export default function AnimatedMethodStats() {
   const rootRef = useRef<HTMLDivElement | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { result } = useSimulatedAnalysis();
+
+  // Ensure the component is mounted before rendering result data
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const methods = [
     { label: "AI Semantic", pct: result?.score ?? 0 },
@@ -41,6 +47,64 @@ export default function AnimatedMethodStats() {
 
     return () => observer.disconnect();
   }, []);
+
+  if (!isMounted) {
+    // Server-side render with placeholder values (all zeros)
+    return (
+      <div ref={rootRef} className="flex flex-col gap-4">
+        {[
+          { label: "AI Semantic", pct: 0 },
+          { label: "Keyword Match", pct: 0 },
+          { label: "Rule-Based", pct: 0 },
+        ].map((m) => (
+          <div key={m.label} className="flex items-center gap-4">
+            <span className="font-mono text-[10px] text-foreground-muted w-28 shrink-0">
+              {m.label}
+            </span>
+            <div className="flex-1 h-1 rounded-full bg-border overflow-hidden">
+              <div
+                className="h-full rounded-full"
+                style={
+                  {
+                    "--fill-percent": `${m.pct}%`,
+                    "--anim-delay": "0s",
+                    background: "rgb(229,231,235)",
+                  } as React.CSSProperties
+                }
+              />
+            </div>
+            <span
+              className="font-mono text-xs font-semibold w-5 text-right"
+              style={{ color: "rgb(229,231,235)" }}
+            >
+              {m.pct}
+            </span>
+          </div>
+        ))}
+
+        <div className="mt-4 pt-4 border-t border-border">
+          <p className="font-mono text-[10px] text-foreground-muted tracking-wide uppercase mb-3">
+            Score over time
+          </p>
+          <div className="flex items-end gap-1 h-10">
+            {[0, 0, 0, 0, 0, 0, 0].map((h, i) => (
+              <div
+                key={i}
+                className="flex-1 rounded-sm transition-all"
+                style={
+                  {
+                    "--bar-height": `${h}%`,
+                    "--anim-delay": "0s",
+                    background: "var(--border)",
+                  } as React.CSSProperties
+                }
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div ref={rootRef} className="flex flex-col gap-4">
