@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, JetBrains_Mono } from "next/font/google";
 import AuthAwareNav from "../components/AuthAwareNav";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { Footer } from "../components/Footer";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import ScrollHeader from "@/components/ScrollHeader";
@@ -66,6 +67,7 @@ export default function RootLayout({
           <main className="mx-auto flex flex-col w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 lg:px-8">
             {children}
           </main>
+          <Footer />
           <AuthModal />
           <div className="fixed bottom-4 right-4 z-50">
             <ThemeToggle />

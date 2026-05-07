@@ -38,6 +38,9 @@ const FEEDBACK_TEMPLATES = {
   ],
 };
 
+// Module-level cache to ensure all components get the same data
+let cachedAnalysis: { result: AnalysisResult; jobLabel: string } | null = null;
+
 function createSimulatedAnalysis() {
   // Generate correlated scores (they tend to be in similar ranges)
   const baseScore = Math.random();
@@ -95,10 +98,12 @@ export function useSimulatedAnalysis() {
   const [jobLabel, setJobLabel] = useState("");
 
   useEffect(() => {
-    const sim = createSimulatedAnalysis();
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setResult(sim.result);
-    setJobLabel(sim.jobLabel);
+    // Use cached analysis if available, otherwise create a new one
+    if (!cachedAnalysis) {
+      cachedAnalysis = createSimulatedAnalysis();
+    }
+    setResult(cachedAnalysis.result);
+    setJobLabel(cachedAnalysis.jobLabel);
   }, []);
 
   return { result, jobLabel };

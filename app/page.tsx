@@ -133,9 +133,12 @@ export default function Home() {
             </span>
           </h2>
           <p className="mt-6 font-mono text-xs leading-[1.9] text-foreground-muted max-w-sm">
-            Semantic AI finds conceptual overlap. Keyword match checks literal
-            coverage. Rule-based criteria flag industry requirements. Together
-            they leave nothing out.
+            <span className="text-foreground">AI Semantic</span> finds
+            conceptual overlap in your experience.{" "}
+            <span className="text-foreground">Keyword Match</span> checks your
+            coverage of specific terms.{" "}
+            <span className="text-foreground">Rule-Based</span> flags hard
+            requirements. Together they leave nothing out.
           </p>
 
           <Link
@@ -149,8 +152,85 @@ export default function Home() {
         <AnimatedMethodStats />
       </section>
 
-      {/*  CTA strip  */}
-      <section className="py-16 px-8 rounded-2xl bg-linear-to-r from-primary/5 via-primary/3 to-background border border-primary/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+      {/*  Divider  */}
+      <div className="h-px bg-border" />
+
+      {/*  About section with CTA  */}
+      <section className="py-20 grid lg:grid-cols-[1fr_1fr] gap-16 items-center">
+        <div>
+          <p className="font-mono text-[10px] tracking-[0.25em] text-foreground-muted uppercase mb-4">
+            About Glint
+          </p>
+          <h2 className="font-mono text-3xl font-semibold leading-tight text-foreground mb-6">
+            Built for job seekers who want{" "}
+            <span className="bg-linear-to-r from-primary to-primary/80 bg-clip-text text-transparent">
+              clarity, not guesswork
+            </span>
+          </h2>
+          <p className="font-mono text-sm leading-[1.9] text-foreground-muted mb-6">
+            We believe you deserve honest feedback about how your resume aligns
+            with a role before you invest hours tailoring your application.
+            Glint was built to be transparent, fast, and truly private.
+          </p>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/about"
+              className="inline-flex h-10 items-center rounded-lg px-5 font-mono text-sm font-medium transition-all hover:shadow-lg hover:scale-105 active:scale-95 origin-left"
+              style={{
+                background: "var(--primary)",
+                color: "var(--primary-fg)",
+              }}
+            >
+              Learn more →
+            </Link>
+            <Link
+              href="/contact"
+              className="inline-flex h-10 items-center rounded-lg border border-border bg-background px-4 font-mono text-sm font-medium text-foreground transition-colors hover:bg-background-subtle"
+            >
+              Contact
+            </Link>
+          </div>
+        </div>
+
+        <div className="grid gap-6">
+          <div className="p-8 rounded-xl border border-border bg-linear-to-br from-background-subtle/30 to-background/30">
+            <p className="font-mono text-[10px] tracking-[0.25em] text-foreground-muted uppercase mb-3 font-semibold">
+              Privacy First
+            </p>
+            <p className="font-mono text-sm leading-[1.8] text-foreground-muted">
+              Your resume never leaves your device. We process everything
+              locally in your browser. No storage without consent.
+            </p>
+          </div>
+
+          <div className="p-8 rounded-xl border border-border bg-linear-to-br from-background-subtle/30 to-background/30">
+            <p className="font-mono text-[10px] tracking-[0.25em] text-foreground-muted uppercase mb-3 font-semibold">
+              Three Angles
+            </p>
+            <p className="font-mono text-sm leading-[1.8] text-foreground-muted">
+              AI semantic analysis, precise keyword matching, and rule-based
+              criteria together reveal the complete picture.
+            </p>
+          </div>
+
+          <div className="p-8 rounded-xl border border-border bg-linear-to-br from-background-subtle/30 to-background/30">
+            <p className="font-mono text-[10px] tracking-[0.25em] text-foreground-muted uppercase mb-3 font-semibold">
+              No Sign Up Friction
+            </p>
+            <p className="font-mono text-sm leading-[1.8] text-foreground-muted">
+              Start analyzing immediately. Create an account whenever
+              you&apos;re ready to track your progress over time.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/*  Divider  */}
+      <div className="h-px bg-border" />
+
+      {/*  Final CTA  */}
+      <section className="my-16 py-16 px-8 rounded-2xl bg-linear-to-r from-primary/5 via-primary/3 to-background border border-primary/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
         <div>
           <h2 className="font-mono text-2xl font-semibold text-foreground">
             Ready to get started?
@@ -172,37 +252,6 @@ export default function Home() {
             className="inline-flex h-11 items-center rounded-lg px-6 font-mono text-sm font-medium border border-primary/40 text-foreground transition-all hover:border-primary hover:bg-primary/10"
           >
             Create account
-          </Link>
-        </div>
-      </section>
-
-      {/*  About + Contact  */}
-      <section id="about" className="py-14 grid sm:grid-cols-2 gap-10">
-        <div>
-          <p className="font-mono text-[10px] tracking-[0.25em] text-foreground-muted uppercase mb-4">
-            About Glint
-          </p>
-          <p className="font-mono text-xs leading-[1.9] text-foreground-muted max-w-xs">
-            Glint builds lightweight tools that help candidates understand how
-            well their profile aligns with role requirements. This MVP focuses
-            on the core loop: upload resume, run analysis, follow your score
-            over time.
-          </p>
-        </div>
-
-        <div id="contact">
-          <p className="font-mono text-[10px] tracking-[0.25em] text-foreground-muted uppercase mb-4">
-            Contact
-          </p>
-          <p className="font-mono text-xs leading-[1.9] text-foreground-muted max-w-xs">
-            Questions, feedback, or partnership inquiries. Use the contact form
-            to get in touch.
-          </p>
-          <Link
-            href="/contact"
-            className="mt-5 inline-flex h-9 items-center rounded-lg border border-border bg-background px-4 font-mono text-sm font-medium text-foreground transition-colors hover:bg-background-subtle"
-          >
-            Open contact form
           </Link>
         </div>
       </section>

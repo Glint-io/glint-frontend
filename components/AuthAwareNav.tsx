@@ -15,10 +15,10 @@ const SHARED_ITEMS: CardNavItem[] = [
     textColor: "var(--foreground)",
     links: [
       { label: "Start", href: "/", ariaLabel: "Go to homepage" },
-      { label: "About", href: "/#about", ariaLabel: "Go to about section" },
+      { label: "About", href: "/about", ariaLabel: "Go to about page" },
       {
         label: "Contact",
-        href: "/#contact",
+        href: "/contact",
         ariaLabel: "Go to contact section",
       },
     ],
@@ -29,6 +29,23 @@ const SHARED_ITEMS: CardNavItem[] = [
     textColor: "var(--foreground)",
     links: [
       { label: "Run analysis", href: "/analysis", ariaLabel: "Run analysis" },
+    ],
+  },
+  {
+    label: "Legal",
+    bgColor: "var(--background-subtle)",
+    textColor: "var(--foreground)",
+    links: [
+      {
+        label: "Privacy Policy",
+        href: "/privacy",
+        ariaLabel: "Go to privacy policy",
+      },
+      {
+        label: "Terms of Service",
+        href: "/terms-of-service",
+        ariaLabel: "Go to terms of service",
+      },
     ],
   },
 ];

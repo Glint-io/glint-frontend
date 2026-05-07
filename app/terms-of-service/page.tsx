@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PRIVACY_POLICY_SECTIONS } from "@/lib/privacy-policy-content";
+import { TERMS_OF_SERVICE_SECTIONS } from "@/lib/terms-of-service-content";
 
 function renderContent(text: string) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -15,7 +15,7 @@ function renderContent(text: string) {
   });
 }
 
-export default function PrivacyPolicyPage() {
+export default function TermsOfServicePage() {
   return (
     <div className="mx-auto w-full max-w-3xl flex flex-col gap-12 py-8">
       {/* Header */}
@@ -27,22 +27,21 @@ export default function PrivacyPolicyPage() {
           </p>
         </div>
         <h1 className="font-mono text-3xl md:text-4xl font-semibold tracking-tight text-foreground leading-tight">
-          Privacy Policy
+          Terms of Service
         </h1>
         <p className="font-mono text-xs text-foreground-muted">
           Last updated: May 2026 · Applies to glint.app and all Glint services.
         </p>
         <p className="font-mono text-sm leading-relaxed text-foreground-muted max-w-prose mt-2">
-          Glint is a resume intelligence tool. We take your privacy seriously —
-          especially because you&apos;re sharing personal documents with us.
-          This policy explains what data we collect, how we use it, and what
-          control you have over it.
+          Welcome to Glint. These terms of service govern your use of our resume
+          analysis platform. By creating an account and using Glint, you agree
+          to these terms in their entirety.
         </p>
       </div>
 
       {/* Sections */}
       <div className="flex flex-col gap-10">
-        {PRIVACY_POLICY_SECTIONS.map((section) => (
+        {TERMS_OF_SERVICE_SECTIONS.map((section) => (
           <section key={section.title} className="flex flex-col gap-4">
             <h2 className="font-mono text-sm font-semibold text-foreground tracking-wide">
               {section.title}
