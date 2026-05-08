@@ -511,8 +511,8 @@ export default function AnalysisPage() {
     : 0;
 
   return (
-    <div className="flex flex-col gap-4 w-full max-w-7xl mx-auto flex-1 min-h-0 h-full">
-      <div className="min-h-full max-h-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+    <div className="flex flex-col gap-4 w-full max-w-7xl mx-auto flex-1 md:min-h-0 md:h-full">
+      <div className="md:min-h-full md:max-h-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
         <AnalysisInputs
           file={file}
           fileError={fileError}

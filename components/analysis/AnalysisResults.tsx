@@ -237,7 +237,7 @@ function FeedbackPanel({
                 </h2>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto px-6 py-5">
+            <div className="flex-1 overflow-y-auto px-2 py-2 sm:px-6 sm:py-5">
               <div className="rounded-2xl border border-border bg-background-subtle/60 p-5">
                 <FeedbackContent method={method} result={result} />
               </div>

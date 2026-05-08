@@ -74,9 +74,9 @@ export const AnalysisInputs = ({
   const jobAdsAtCapacity = savedJobAds.length >= MAX_JOB_ADS;
 
   return (
-    <div className="flex flex-col gap-6 h-full overflow-y-auto">
+    <div className="flex flex-col gap-4 md:gap-6 md:h-full md:overflow-y-auto">
       {/* ── 01 · Resume ─────────────────────────────────────────────── */}
-      <div className="flex flex-col flex-1 gap-3 min-h-0">
+      <div className="flex flex-col gap-2 md:gap-3 md:flex-1 md:min-h-0">
         <div className="flex items-center justify-between gap-3">
           <SectionLabel>01 · Resume</SectionLabel>
           {isLoggedIn && savedResumes.length > 0 && (
@@ -89,7 +89,7 @@ export const AnalysisInputs = ({
         </div>
 
         {isLoggedIn === null ? (
-          <div className="flex flex-col gap-3 rounded-xl border border-border bg-background-subtle/40 px-4 py-4 animate-pulse">
+          <div className="flex flex-col gap-2 rounded-xl border border-border bg-background-subtle/40 px-3 py-3 md:px-4 md:py-4 animate-pulse">
             <div className="h-4 w-32 rounded bg-border/70" />
             <div className="h-10 w-full rounded-lg bg-border/50" />
             <div className="h-28 w-full rounded-xl bg-border/40" />
@@ -130,12 +130,12 @@ export const AnalysisInputs = ({
             {isLoggedIn &&
               savedResumes.length > 0 &&
               uploadMode === "saved" && (
-                <div className="flex flex-col flex-1 min-h-0 rounded-xl border-2 border-dashed border-border p-3 gap-1.5">
-                  <div className="flex flex-col gap-1.5 overflow-y-auto min-h-0">
+                <div className="flex flex-col md:flex-1 md:min-h-0 rounded-xl border-2 border-dashed border-border p-2 md:p-3 gap-1.5">
+                  <div className="flex flex-col gap-1.5 md:overflow-y-auto md:min-h-0">
                     {savedResumes.map((r) => (
                       <div
                         key={r.resumeId}
-                        className={`flex items-center gap-3 w-full rounded-lg border px-3 py-2.5 text-left transition-all ${
+                        className={`flex items-center gap-3 w-full rounded-lg border px-3 py-2 text-left md:py-2.5 transition-all ${
                           selectedResumeId === r.resumeId
                             ? "border-primary bg-primary/5"
                             : "border-border bg-background hover:border-foreground-muted"
@@ -204,7 +204,7 @@ export const AnalysisInputs = ({
                   {/* Upload-another — pinned to bottom of the dashed box */}
                   {resumeSlotsFree > 0 && (
                     <label
-                      className={`mt-auto flex items-center gap-3 w-full rounded-lg border border-border px-3.5 py-2.5 transition-all ${
+                      className={`mt-auto flex items-center gap-3 w-full rounded-lg border border-border px-3 py-2 md:px-3.5 md:py-2.5 transition-all ${
                         loading
                           ? "cursor-not-allowed opacity-50"
                           : "cursor-pointer hover:border-primary hover:bg-primary/3 group"
@@ -239,7 +239,7 @@ export const AnalysisInputs = ({
             {/* New file drop zone */}
             {uploadMode === "new" && (
               <label
-                className={`flex-1 relative flex flex-col items-center justify-center gap-2.5 rounded-xl border-2 border-dashed border-border bg-background px-6 py-8 transition-colors group ${
+                className={`relative flex flex-col items-center justify-center gap-2.5 rounded-xl border-2 border-dashed border-border bg-background px-4 py-6 md:px-6 md:py-8 md:flex-1 transition-colors group ${
                   loading
                     ? "cursor-not-allowed opacity-60"
                     : "cursor-pointer hover:border-primary hover:bg-primary/2"
@@ -273,7 +273,7 @@ export const AnalysisInputs = ({
       </div>
 
       {/* ── 02 · Job ─────────────────────────────────────────────────── */}
-      <div className="flex flex-col flex-1 gap-3 min-h-0">
+      <div className="flex flex-col gap-2 md:gap-3 md:flex-1 md:min-h-0">
         <div className="flex items-center justify-between gap-3">
           <SectionLabel>02 · Job</SectionLabel>
           {isLoggedIn && savedJobAds.length > 0 && (
@@ -315,13 +315,13 @@ export const AnalysisInputs = ({
           </div>
         )}
 
-        <div className="flex flex-col flex-1 min-h-0 gap-2">
+        <div className="flex flex-col md:flex-1 md:min-h-0 gap-2">
           {/* Saved job ads list — dashed border fills remaining height */}
           {isLoggedIn &&
             savedJobAds.length > 0 &&
             jobSourceMode === "saved" && (
-              <div className="flex flex-col flex-1 min-h-0 rounded-xl border-2 border-dashed border-border p-3 gap-1.5">
-                <div className="flex flex-col gap-1.5 overflow-y-auto min-h-0">
+              <div className="flex flex-col md:flex-1 md:min-h-0 rounded-xl border-2 border-dashed border-border p-2 md:p-3 gap-1.5">
+                <div className="flex flex-col gap-1.5 md:overflow-y-auto md:min-h-0">
                   {savedJobAds.map((jobAd) => {
                     const isSelected = selectedJobAdId === jobAd.id;
                     const isDeleting = deletingJobAdId === jobAd.id;
@@ -329,7 +329,7 @@ export const AnalysisInputs = ({
                     return (
                       <div
                         key={jobAd.id}
-                        className={`flex items-center gap-2 w-full rounded-lg border px-3 py-2.5 transition-all ${
+                        className={`flex items-center gap-2 w-full rounded-lg border px-3 py-2 md:py-2.5 transition-all ${
                           isSelected
                             ? "border-primary bg-primary/5"
                             : "border-border bg-background hover:border-foreground-muted"
@@ -428,7 +428,7 @@ export const AnalysisInputs = ({
 
           {/* New job description inputs */}
           {jobSourceMode === "new" && (
-            <div className="flex flex-col gap-4 flex-1">
+            <div className="flex flex-col gap-3 md:gap-4 md:flex-1">
               <div className="flex flex-col gap-1.5">
                 <label className="font-mono text-[10px] tracking-[0.15em] text-foreground-muted uppercase">
                   Position title
@@ -439,11 +439,11 @@ export const AnalysisInputs = ({
                   disabled={loading}
                   onChange={(e) => onLabelChange(e.target.value)}
                   placeholder="e.g. Senior Frontend Engineer"
-                  className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 font-mono text-sm outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 md:px-3.5 md:py-2.5 font-mono text-sm outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
                 />
               </div>
 
-              <div className="flex flex-col gap-1.5 flex-1">
+              <div className="flex flex-col gap-1.5 md:flex-1">
                 <label className="font-mono text-[10px] tracking-[0.15em] text-foreground-muted uppercase flex items-center justify-between">
                   <span>Job description</span>
                   {jobText.length > 0 && (
@@ -463,7 +463,7 @@ export const AnalysisInputs = ({
                   disabled={loading}
                   onChange={(e) => onTextChange(e.target.value)}
                   placeholder="Paste the full job description here…"
-                  className="w-full flex-1 min-h-50 max-h-50 resize-none rounded-lg border border-border bg-background px-3.5 py-2.5 font-mono text-sm outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full min-h-50 max-h-50 md:flex-1 md:max-h-none resize-none rounded-lg border border-border bg-background px-3 py-2 md:px-3.5 md:py-2.5 font-mono text-sm outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
                 />
                 {jobText.length > 0 && jobText.length < 20 && (
                   <p className="font-mono text-[10px] text-destructive">
