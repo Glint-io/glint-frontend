@@ -27,8 +27,8 @@ const METHODS: {
   desc: string;
 }[] = [
   { id: "ai", icon: Bot, label: "AI", desc: "Semantic understanding" },
-  { id: "keyword", icon: ScanText, label: "Keyword", desc: "Term overlap" },
   { id: "rules", icon: ListChecks, label: "Rules", desc: "Industry criteria" },
+  { id: "keyword", icon: ScanText, label: "Keyword", desc: "Term overlap" },
 ];
 
 const getScoreAccent = (score: number) =>

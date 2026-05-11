@@ -6,6 +6,7 @@ import { AnalysisResults } from "@/components/analysis/AnalysisResults";
 import { JobAdvertisementPreviewModal } from "@/components/ui/JobAdvertisementPreviewModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { Modal } from "@/components/ui/Modal";
+import { ServiceDownBanner } from "@/components/ui/ServiceDownBanner";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { glintToast } from "@/components/ui/toast";
 import {
@@ -111,7 +112,10 @@ async function runAnalysisOnBackend(
         }
       }
     }
-  } catch {
+  } catch (err) {
+    // Rethrow network-level errors so the caller can surface the service down state
+    if (err instanceof TypeError) throw err;
+
     onStatusUpdate("ai", "error");
     onStatusUpdate("keyword", "error");
     onStatusUpdate("rules", "error");
@@ -124,7 +128,9 @@ async function runAnalysisOnBackend(
 
 export default function AnalysisPage() {
   const { isLoggedIn } = useAuth();
+  const [loadingData, setLoadingData] = useState(true);
   const jobAdNoticeShownRef = useRef(false);
+  const [serviceDown, setServiceDown] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState("");
   const [jobLabel, setJobLabel] = useState("");
@@ -174,8 +180,35 @@ export default function AnalysisPage() {
     };
   }, [previewResume]);
 
+  const fetchSaved = async () => {
+    setLoadingData(true);
+    try {
+      const [resumes, jobAds] = await Promise.all([
+        authedGet<SavedResume[]>("/user/resume"),
+        authedGet<JobAdvertisement[]>("/user/job-advertisement"),
+      ]);
+      setSavedResumes(resumes);
+      setSavedJobAds(jobAds);
+      if (resumes.length > 0) setUploadMode("saved");
+      if (jobAds.length > 0) setJobSourceMode("saved");
+    } catch (err) {
+      if (err instanceof TypeError) {
+        setServiceDown(true);
+      } else {
+        glintToast.error({
+          title: "Error",
+          message: "Failed to load saved resumes and job advertisements.",
+        });
+      }
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
   useEffect(() => {
-    if (isLoggedIn !== true) {
+    if (isLoggedIn === null) return;
+
+    if (isLoggedIn === false) {
       setSavedResumes([]);
       setSavedJobAds([]);
       setSelectedResumeId(null);
@@ -191,22 +224,8 @@ export default function AnalysisPage() {
       return;
     }
 
-    Promise.all([
-      authedGet<SavedResume[]>("/user/resume"),
-      authedGet<JobAdvertisement[]>("/user/job-advertisement"),
-    ])
-      .then(([resumes, jobAds]) => {
-        setSavedResumes(resumes);
-        setSavedJobAds(jobAds);
-        if (resumes.length > 0) setUploadMode("saved");
-        if (jobAds.length > 0) setJobSourceMode("saved");
-      })
-      .catch(() => {
-        glintToast.error({
-          title: "Error",
-          message: "Failed to load saved resumes and job advertisements.",
-        });
-      });
+    fetchSaved();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn]);
 
   const handleSelectJobAd = (jobAd: JobAdvertisement) => {
@@ -222,9 +241,7 @@ export default function AnalysisPage() {
       const jobAd = savedJobAds.find((item) => item.id === id);
       const res = await authedFetch(
         `${API_BASE}/user/job-advertisement/${id}`,
-        {
-          method: "DELETE",
-        },
+        { method: "DELETE" },
       );
       if (!res.ok) {
         glintToast.error({
@@ -242,9 +259,7 @@ export default function AnalysisPage() {
         setJobLabel("");
         setJobText("");
       }
-      if (previewJobAd?.id === id) {
-        setPreviewJobAd(null);
-      }
+      if (previewJobAd?.id === id) setPreviewJobAd(null);
 
       glintToast.success({
         title: "Deleted",
@@ -273,7 +288,6 @@ export default function AnalysisPage() {
         });
         return;
       }
-
       const blob = await res.blob();
       const objectUrl = URL.createObjectURL(blob);
       setPreviewResume({
@@ -316,9 +330,7 @@ export default function AnalysisPage() {
         return remaining;
       });
 
-      if (previewResume?.resumeId === id) {
-        setPreviewResume(null);
-      }
+      if (previewResume?.resumeId === id) setPreviewResume(null);
 
       glintToast.success({
         title: "Deleted",
@@ -449,21 +461,24 @@ export default function AnalysisPage() {
             authedGet<JobAdvertisement[]>("/user/job-advertisement"),
           ]);
 
-          if (resumes) {
-            setSavedResumes(resumes);
-          }
-
+          if (resumes) setSavedResumes(resumes);
           setSavedJobAds(jobAds);
         }
       } else {
         setError("Analysis backend is not configured.");
       }
     } catch (err) {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : "Analysis failed. Please try again.";
-      setError(msg);
+      if (err instanceof TypeError) {
+        // Network-level failure — show the service down state
+        setServiceDown(true);
+        setMethodStatuses({ ai: "error", keyword: "error", rules: "error" });
+      } else {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Analysis failed. Please try again.",
+        );
+      }
     } finally {
       if (shouldRefreshSavedResumes && isLoggedIn === true && API_BASE) {
         try {
@@ -489,6 +504,19 @@ export default function AnalysisPage() {
         : result.rulesScore
     : 0;
 
+  if (serviceDown) {
+    return (
+      <div className="flex w-full flex-1 items-center justify-center">
+        <ServiceDownBanner
+          onRetry={() => {
+            setServiceDown(false);
+            if (isLoggedIn === true) fetchSaved();
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4 w-full max-w-7xl mx-auto flex-1 md:min-h-0 md:h-full">
       <div className="md:min-h-full md:max-h-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
@@ -498,6 +526,7 @@ export default function AnalysisPage() {
           jobLabel={jobLabel}
           jobText={jobText}
           loading={loading}
+          loadingData={loadingData}
           canRun={canRun()}
           onFileChange={handleFile}
           onLabelChange={handleLabelChange}
@@ -522,9 +551,7 @@ export default function AnalysisPage() {
           jobSourceMode={jobSourceMode}
           onJobSourceModeChange={(mode) => {
             setJobSourceMode(mode);
-            if (mode === "new") {
-              setSelectedJobAdId(null);
-            }
+            if (mode === "new") setSelectedJobAdId(null);
           }}
           selectedJobAdId={selectedJobAdId}
           onJobAdSelect={handleSelectJobAd}

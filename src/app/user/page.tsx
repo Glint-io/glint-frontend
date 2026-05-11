@@ -16,6 +16,7 @@ import { AnalysisDetailModal } from "@/components/user/AnalysisDetailModal";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import ClearHistoryModal from "@/components/user/ClearHistoryModal";
 import { JobAdvertisementPreviewModal } from "@/components/ui/JobAdvertisementPreviewModal";
+import { ServiceDownBanner } from "@/components/ui/ServiceDownBanner";
 import { openAuthModal } from "@/components/auth/AuthModal";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { glintToast } from "@/components/ui/toast";
@@ -170,6 +171,7 @@ export default function UserPage() {
   const router = useRouter();
   const { isLoggedIn } = useAuth();
   const [isHydrated, setIsHydrated] = useState(false);
+  const [serviceDown, setServiceDown] = useState(false);
   const [stats, setStats] = useState<Statistics | null>(null);
   const [history, setHistory] = useState<PaginatedHistory | null>(null);
   const [resumes, setResumes] = useState<Resume[]>([]);
@@ -228,6 +230,7 @@ export default function UserPage() {
     async (p: number, range: HistoryRange) => {
       if (isLoggedIn !== true) return;
       setLoading(true);
+
       try {
         const [s, h, r, jobAds] = await Promise.all([
           authedGet<Statistics>(`/user/statistics?range=${range}`),
@@ -242,8 +245,15 @@ export default function UserPage() {
         setResumes(r);
         setJobAdvertisements(jobAds);
       } catch (err: unknown) {
-        if (err instanceof Error && err.message.includes("401")) {
+        if (err instanceof TypeError) {
+          // Network-level failure — show the service down state
+          setServiceDown(true);
+        } else if (err instanceof Error && err.message.includes("401")) {
           openAuthModal("login");
+        } else {
+          glintToast.error({
+            message: "Failed to load dashboard data. Please try again.",
+          });
         }
       } finally {
         setLoading(false);
@@ -256,22 +266,30 @@ export default function UserPage() {
     if (isLoggedIn === true) fetchAll(page, historyRange);
   }, [page, fetchAll, historyRange, isLoggedIn]);
 
+  // Hold the spinner until hydration and auth are both resolved
   if (!isHydrated || isLoggedIn === null) {
     return (
       <div
-        className="flex w-full flex-1 flex-col space-y-6"
+        className="flex w-full flex-1 items-center justify-center"
         suppressHydrationWarning
       >
-        <div className="h-20 animate-pulse rounded-xl border border-border bg-background" />
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {[...Array(3)].map((_, i) => (
-            <div
-              key={i}
-              className="h-28 animate-pulse rounded-xl border border-border bg-background"
-            />
-          ))}
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-5 w-5 animate-spin text-foreground-muted" />
+          <p className="font-mono text-xs text-foreground-muted">Loading…</p>
         </div>
-        <div className="h-64 animate-pulse rounded-xl border border-border bg-background" />
+      </div>
+    );
+  }
+
+  if (serviceDown) {
+    return (
+      <div className="flex w-full flex-1 items-center justify-center">
+        <ServiceDownBanner
+          onRetry={() => {
+            setServiceDown(false);
+            fetchAll(page, historyRange);
+          }}
+        />
       </div>
     );
   }
@@ -321,21 +339,15 @@ export default function UserPage() {
       });
 
       if (!res.ok) {
-        glintToast.error({
-          message: "Unable to delete that resume.",
-        });
+        glintToast.error({ message: "Unable to delete that resume." });
         return;
       }
 
       setResumes((prev) => prev.filter((resume) => resume.resumeId !== id));
       const fileName = resume?.fileName ?? "Resume";
-      glintToast.success({
-        message: `${fileName} has been deleted.`,
-      });
+      glintToast.success({ message: `${fileName} has been deleted.` });
     } catch {
-      glintToast.error({
-        message: "Unable to delete that resume.",
-      });
+      glintToast.error({ message: "Unable to delete that resume." });
     } finally {
       setDeletingId(null);
     }
@@ -357,14 +369,10 @@ export default function UserPage() {
       }
 
       setJobAdvertisements((prev) => prev.filter((jobAd) => jobAd.id !== id));
-      if (jobAdToPreview?.id === id) {
-        setJobAdToPreview(null);
-      }
+      if (jobAdToPreview?.id === id) setJobAdToPreview(null);
 
       const title = jobAd?.title ?? "Job advertisement";
-      glintToast.success({
-        message: `${title} has been deleted.`,
-      });
+      glintToast.success({ message: `${title} has been deleted.` });
     } catch {
       glintToast.error({
         message: "Unable to delete that saved job advertisement.",
@@ -790,7 +798,6 @@ export default function UserPage() {
               ) {
                 return prev;
               }
-
               return [uploadedResume, ...prev].sort(
                 (a, b) =>
                   new Date(b.uploadedAt).getTime() -

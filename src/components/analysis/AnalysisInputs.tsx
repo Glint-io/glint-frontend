@@ -6,9 +6,104 @@ import { Button } from "@/components/ui/Button";
 import { SavedResume } from "@/types/analysis";
 import type { JobAdvertisement } from "@/types";
 import { Loader2, Plus, Trash2, Upload, Eye } from "lucide-react";
+import type { CSSProperties } from "react";
 
 const MAX_RESUMES = 5;
 const MAX_JOB_ADS = 5;
+
+const SHIMMER_CSS = `@keyframes sk-shimmer {
+  0%   { transform: translateX(-200%); }
+  100% { transform: translateX(200%); }
+}`;
+
+const Skel = ({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: CSSProperties;
+}) => (
+  <div
+    className={`relative overflow-hidden rounded bg-border/50 ${className ?? ""}`}
+    style={style}
+  >
+    <div
+      className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/[0.05] to-transparent"
+      style={{ animation: "sk-shimmer 1.8s ease-in-out infinite" }}
+    />
+  </div>
+);
+
+const ResumeSkeleton = () => (
+  <div className="h-full flex flex-col gap-2 rounded-xl border border-border bg-background-subtle/40 px-3 py-3 md:px-4 md:py-4">
+    <div className="flex gap-1 p-0.5 rounded-lg bg-background-subtle border border-border w-fit">
+      <Skel className="h-7 w-[4.5rem] rounded-md" />
+      <Skel className="h-7 w-[4.5rem] rounded-md" />
+    </div>
+
+    <div className="flex flex-col gap-1.5 rounded-xl border-2 border-dashed border-border p-2 md:p-3">
+      {([62, 46] as const).map((pct, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2.5"
+        >
+          <Skel className="h-3.5 w-3.5 shrink-0 rounded-full" />
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <Skel className="h-3.5 rounded" style={{ width: `${pct}%` }} />
+            <Skel className="h-2.5 w-24 rounded" />
+          </div>
+          <Skel className="h-7 w-7 shrink-0 rounded-md" />
+          <Skel className="h-7 w-7 shrink-0 rounded-md" />
+        </div>
+      ))}
+
+      <div className="mt-0.5 flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
+        <Skel className="h-3.5 w-3.5 shrink-0 rounded" />
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+          <Skel className="h-3 w-36 rounded" />
+          <Skel className="h-2.5 w-48 rounded" />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const JobSkeleton = () => (
+  <div className="h-full flex flex-col">
+    <div className="flex-1 flex flex-col gap-2 rounded-xl border border-border bg-background-subtle/40 px-3 py-3 md:px-4 md:py-4">
+      <div className="flex gap-1 p-0.5 rounded-lg bg-background-subtle border border-border w-fit">
+        <Skel className="h-7 w-[4.5rem] rounded-md" />
+        <Skel className="h-7 w-[4.5rem] rounded-md" />
+      </div>
+
+      <div className="flex flex-col gap-1.5 rounded-xl border-2 border-dashed border-border p-2 md:p-3">
+        {([55, 40] as const).map((pct, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2.5"
+          >
+            <Skel className="h-3.5 w-3.5 shrink-0 rounded-full" />
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+              <Skel className="h-3.5 rounded" style={{ width: `${pct}%` }} />
+              <Skel className="h-2.5 w-20 rounded" />
+            </div>
+            <Skel className="h-7 w-7 shrink-0 rounded-md" />
+            <Skel className="h-7 w-7 shrink-0 rounded-md" />
+          </div>
+        ))}
+
+        <div className="mt-0.5 flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2.5">
+          <Skel className="h-3.5 w-3.5 shrink-0 rounded" />
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <Skel className="h-3 w-44 rounded" />
+            <Skel className="h-2.5 w-52 rounded" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <Skel className="h-12 mt-4 w-full rounded-md self-end" />
+  </div>
+);
 
 interface Props {
   file: File | null;
@@ -16,6 +111,7 @@ interface Props {
   jobLabel: string;
   jobText: string;
   loading: boolean;
+  loadingData: boolean;
   canRun: boolean;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onLabelChange: (val: string) => void;
@@ -46,6 +142,7 @@ export const AnalysisInputs = ({
   jobLabel,
   jobText,
   loading,
+  loadingData,
   canRun,
   onFileChange,
   onLabelChange,
@@ -75,6 +172,8 @@ export const AnalysisInputs = ({
 
   return (
     <div className="flex flex-col gap-4 md:gap-6 lg:h-full overflow-auto">
+      <style>{SHIMMER_CSS}</style>
+
       <div className="flex flex-col gap-2 md:gap-3 h-1/2 lg:flex-1 lg:min-h-0">
         <div className="flex items-center justify-between gap-3">
           <SectionLabel>01 · Resume</SectionLabel>
@@ -87,12 +186,8 @@ export const AnalysisInputs = ({
           )}
         </div>
 
-        {isLoggedIn === null ? (
-          <div className="flex flex-col gap-2 rounded-xl border border-border bg-background-subtle/40 px-3 py-3 md:px-4 md:py-4 animate-pulse">
-            <div className="h-4 w-32 rounded bg-border/70" />
-            <div className="h-10 w-full rounded-lg bg-border/50" />
-            <div className="h-28 w-full rounded-xl bg-border/40" />
-          </div>
+        {isLoggedIn === null || loadingData ? (
+          <ResumeSkeleton />
         ) : (
           <>
             {isLoggedIn && savedResumes.length > 0 && (
@@ -279,206 +374,210 @@ export const AnalysisInputs = ({
           )}
         </div>
 
-        {isLoggedIn && savedJobAds.length > 0 && (
-          <div className="flex gap-1 rounded-lg border border-border bg-background-subtle p-0.5 w-fit">
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => onJobSourceModeChange("saved")}
-              className={`px-3 py-1.5 rounded-md font-mono text-[11px] tracking-wide uppercase transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
-                jobSourceMode === "saved"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-foreground-muted hover:text-foreground"
-              }`}
-            >
-              Saved ads
-            </button>
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => onJobSourceModeChange("new")}
-              className={`px-3 py-1.5 rounded-md font-mono text-[11px] tracking-wide uppercase transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
-                jobSourceMode === "new"
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-foreground-muted hover:text-foreground"
-              }`}
-            >
-              New input
-            </button>
-          </div>
-        )}
+        {isLoggedIn === null || loadingData ? (
+          <JobSkeleton />
+        ) : (
+          <div className="flex flex-col lg:flex-1 lg:min-h-0 gap-2">
+            {isLoggedIn && savedJobAds.length > 0 && (
+              <div className="flex gap-1 rounded-lg border border-border bg-background-subtle p-0.5 w-fit">
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => onJobSourceModeChange("saved")}
+                  className={`px-3 py-1.5 rounded-md font-mono text-[11px] tracking-wide uppercase transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+                    jobSourceMode === "saved"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-foreground-muted hover:text-foreground"
+                  }`}
+                >
+                  Saved ads
+                </button>
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={() => onJobSourceModeChange("new")}
+                  className={`px-3 py-1.5 rounded-md font-mono text-[11px] tracking-wide uppercase transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+                    jobSourceMode === "new"
+                      ? "bg-background text-foreground shadow-sm"
+                      : "text-foreground-muted hover:text-foreground"
+                  }`}
+                >
+                  New input
+                </button>
+              </div>
+            )}
 
-        <div className="flex flex-col lg:flex-1 lg:min-h-0 gap-2">
-          {isLoggedIn &&
-            savedJobAds.length > 0 &&
-            jobSourceMode === "saved" && (
-              <div className="flex flex-col lg:flex-1 lg:min-h-0 rounded-xl border-2 border-dashed border-border p-2 md:p-3 gap-1.5">
-                <div className="flex flex-col gap-1.5 overflow-y-auto lg:min-h-0">
-                  {savedJobAds.map((jobAd) => {
-                    const isSelected = selectedJobAdId === jobAd.id;
-                    const isDeleting = deletingJobAdId === jobAd.id;
+            {isLoggedIn &&
+              savedJobAds.length > 0 &&
+              jobSourceMode === "saved" && (
+                <div className="flex flex-col lg:flex-1 lg:min-h-0 rounded-xl border-2 border-dashed border-border p-2 md:p-3 gap-1.5">
+                  <div className="flex flex-col gap-1.5 overflow-y-auto lg:min-h-0">
+                    {savedJobAds.map((jobAd) => {
+                      const isSelected = selectedJobAdId === jobAd.id;
+                      const isDeleting = deletingJobAdId === jobAd.id;
 
-                    return (
-                      <div
-                        key={jobAd.id}
-                        className={`flex items-center gap-2 w-full rounded-lg border px-3 py-2 md:py-2.5 transition-all ${
-                          isSelected
-                            ? "border-primary bg-primary/5"
-                            : "border-border bg-background hover:border-foreground-muted"
-                        }`}
-                      >
-                        <button
-                          type="button"
-                          disabled={loading}
-                          onClick={() => onJobAdSelect(jobAd)}
-                          className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:cursor-not-allowed"
+                      return (
+                        <div
+                          key={jobAd.id}
+                          className={`flex items-center gap-2 w-full rounded-lg border px-3 py-2 md:py-2.5 transition-all ${
+                            isSelected
+                              ? "border-primary bg-primary/5"
+                              : "border-border bg-background hover:border-foreground-muted"
+                          }`}
                         >
-                          <span
-                            className={`flex h-3.5 w-3.5 shrink-0 rounded-full border-2 transition-colors ${
-                              isSelected
-                                ? "border-primary bg-primary"
-                                : "border-border"
-                            }`}
-                          />
-                          <div className="min-w-0 flex-1">
-                            <p className="font-mono text-sm font-medium truncate text-foreground">
-                              {jobAd.title ?? "Untitled job advertisement"}
-                            </p>
-                            <p className="font-mono text-[10px] text-foreground-muted">
-                              {new Date(jobAd.createdAt).toLocaleDateString(
-                                undefined,
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                },
-                              )}
-                            </p>
-                          </div>
-                        </button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          disabled={loading}
-                          onClick={() => onJobAdPreview(jobAd)}
-                          className="h-8 w-8 font-mono text-[10px] disabled:cursor-not-allowed"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          disabled={loading || isDeleting}
-                          onClick={() => onJobAdDelete(jobAd)}
-                          className="h-8 w-8 text-foreground-muted hover:text-red-600 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
-                          aria-label="Delete saved job advertisement"
-                        >
-                          {isDeleting ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
+                          <button
+                            type="button"
+                            disabled={loading}
+                            onClick={() => onJobAdSelect(jobAd)}
+                            className="flex min-w-0 flex-1 items-center gap-3 text-left disabled:cursor-not-allowed"
+                          >
+                            <span
+                              className={`flex h-3.5 w-3.5 shrink-0 rounded-full border-2 transition-colors ${
+                                isSelected
+                                  ? "border-primary bg-primary"
+                                  : "border-border"
+                              }`}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="font-mono text-sm font-medium truncate text-foreground">
+                                {jobAd.title ?? "Untitled job advertisement"}
+                              </p>
+                              <p className="font-mono text-[10px] text-foreground-muted">
+                                {new Date(jobAd.createdAt).toLocaleDateString(
+                                  undefined,
+                                  {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  },
+                                )}
+                              </p>
+                            </div>
+                          </button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            disabled={loading}
+                            onClick={() => onJobAdPreview(jobAd)}
+                            className="h-8 w-8 font-mono text-[10px] disabled:cursor-not-allowed"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            disabled={loading || isDeleting}
+                            onClick={() => onJobAdDelete(jobAd)}
+                            className="h-8 w-8 text-foreground-muted hover:text-red-600 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-50"
+                            aria-label="Delete saved job advertisement"
+                          >
+                            {isDeleting ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {!jobAdsAtCapacity ? (
+                    <button
+                      type="button"
+                      disabled={loading}
+                      onClick={() => onJobSourceModeChange("new")}
+                      className={`mt-auto flex items-center gap-3 w-full rounded-lg border border-border px-3.5 py-2.5 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+                        !loading
+                          ? "hover:border-primary hover:bg-primary/3 group"
+                          : ""
+                      }`}
+                    >
+                      <Plus className="h-3.5 w-3.5 shrink-0 text-foreground-muted group-hover:text-primary transition-colors" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-mono text-sm text-foreground-muted group-hover:text-foreground transition-colors">
+                          Enter a new job description
+                        </p>
+                        <p className="font-mono text-[10px] text-foreground-muted">
+                          {jobSlotsFree} slot{jobSlotsFree !== 1 ? "s" : ""}{" "}
+                          remaining · saved automatically on run
+                        </p>
                       </div>
-                    );
-                  })}
+                    </button>
+                  ) : (
+                    <p className="mt-auto font-mono text-[9px] text-foreground-muted px-1">
+                      Limit reached. Running a new job ad will save it and
+                      remove the oldest one above.
+                    </p>
+                  )}
+                </div>
+              )}
+
+            {jobSourceMode === "new" && (
+              <div className="flex flex-col gap-3 md:gap-4 lg:flex-1">
+                <div className="flex flex-col gap-1.5">
+                  <label className="font-mono text-[10px] tracking-[0.15em] text-foreground-muted uppercase">
+                    Position title
+                  </label>
+                  <input
+                    type="text"
+                    value={jobLabel}
+                    disabled={loading}
+                    onChange={(e) => onLabelChange(e.target.value)}
+                    placeholder="e.g. Senior Frontend Engineer"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 md:px-3.5 md:py-2.5 font-mono text-sm outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                  />
                 </div>
 
-                {!jobAdsAtCapacity ? (
-                  <button
-                    type="button"
+                <div className="flex flex-col gap-1.5 lg:flex-1">
+                  <label className="font-mono text-[10px] tracking-[0.15em] text-foreground-muted uppercase flex items-center justify-between">
+                    <span>Job description</span>
+                    {jobText.length > 0 && (
+                      <span
+                        className={
+                          jobText.length < 20
+                            ? "text-destructive"
+                            : "text-foreground-muted"
+                        }
+                      >
+                        {jobText.length} / 10 000
+                      </span>
+                    )}
+                  </label>
+                  <textarea
+                    value={jobText}
                     disabled={loading}
-                    onClick={() => onJobSourceModeChange("new")}
-                    className={`mt-auto flex items-center gap-3 w-full rounded-lg border border-border px-3.5 py-2.5 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
-                      !loading
-                        ? "hover:border-primary hover:bg-primary/3 group"
-                        : ""
-                    }`}
-                  >
-                    <Plus className="h-3.5 w-3.5 shrink-0 text-foreground-muted group-hover:text-primary transition-colors" />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-mono text-sm text-foreground-muted group-hover:text-foreground transition-colors">
-                        Enter a new job description
-                      </p>
-                      <p className="font-mono text-[10px] text-foreground-muted">
-                        {jobSlotsFree} slot{jobSlotsFree !== 1 ? "s" : ""}{" "}
-                        remaining · saved automatically on run
-                      </p>
-                    </div>
-                  </button>
-                ) : (
-                  <p className="mt-auto font-mono text-[9px] text-foreground-muted px-1">
-                    Limit reached. Running a new job ad will save it and remove
-                    the oldest one above.
-                  </p>
-                )}
-              </div>
-            )}
-
-          {jobSourceMode === "new" && (
-            <div className="flex flex-col gap-3 md:gap-4 lg:flex-1">
-              <div className="flex flex-col gap-1.5">
-                <label className="font-mono text-[10px] tracking-[0.15em] text-foreground-muted uppercase">
-                  Position title
-                </label>
-                <input
-                  type="text"
-                  value={jobLabel}
-                  disabled={loading}
-                  onChange={(e) => onLabelChange(e.target.value)}
-                  placeholder="e.g. Senior Frontend Engineer"
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 md:px-3.5 md:py-2.5 font-mono text-sm outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
-                />
-              </div>
-
-              <div className="flex flex-col gap-1.5 lg:flex-1">
-                <label className="font-mono text-[10px] tracking-[0.15em] text-foreground-muted uppercase flex items-center justify-between">
-                  <span>Job description</span>
-                  {jobText.length > 0 && (
-                    <span
-                      className={
-                        jobText.length < 20
-                          ? "text-destructive"
-                          : "text-foreground-muted"
-                      }
-                    >
-                      {jobText.length} / 10 000
-                    </span>
+                    onChange={(e) => onTextChange(e.target.value)}
+                    placeholder="Paste the full job description here…"
+                    className="w-full md:flex-1 md:max-h-none resize-none rounded-lg border border-border bg-background px-3 py-2 md:px-3.5 md:py-2.5 font-mono text-sm outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+                  {jobText.length > 0 && jobText.length < 20 && (
+                    <p className="font-mono text-[10px] text-destructive">
+                      At least 20 characters required.
+                    </p>
                   )}
-                </label>
-                <textarea
-                  value={jobText}
-                  disabled={loading}
-                  onChange={(e) => onTextChange(e.target.value)}
-                  placeholder="Paste the full job description here…"
-                  className="w-full md:flex-1 md:max-h-none resize-none rounded-lg border border-border bg-background px-3 py-2 md:px-3.5 md:py-2.5 font-mono text-sm outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
-                />
-                {jobText.length > 0 && jobText.length < 20 && (
-                  <p className="font-mono text-[10px] text-destructive">
-                    At least 20 characters required.
-                  </p>
-                )}
+                </div>
               </div>
-            </div>
-          )}
-
-          <Button
-            onClick={onRun}
-            disabled={loading || !canRun}
-            className="w-full h-11 disabled:cursor-not-allowed shrink-0"
-          >
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <span className="h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                Analysing…
-              </span>
-            ) : (
-              "Run Analysis →"
             )}
-          </Button>
-        </div>
+
+            <Button
+              onClick={onRun}
+              disabled={loading || !canRun}
+              className="w-full h-11 disabled:cursor-not-allowed shrink-0"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-3.5 w-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                  Analysing…
+                </span>
+              ) : (
+                "Run Analysis →"
+              )}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
