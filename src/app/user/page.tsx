@@ -6,8 +6,8 @@ import {
   authedFetch,
   authedFormFetch,
   clearAuth,
-  getStoredAuth,
   getAccessToken,
+  getStoredUserEmail,
 } from "@/lib/auth";
 import { Button } from "@/components/ui/Button";
 import { CapacityDots } from "@/components/ui/CapacityDots";
@@ -210,19 +210,14 @@ export default function UserPage() {
 
   useEffect(() => {
     if (isLoggedIn === false) {
+      setUserEmail(null);
       openAuthModal("login");
       setLoading(false);
       return;
     }
 
     if (isLoggedIn === true) {
-      const auth = getStoredAuth();
-      const email =
-        auth?.payload && typeof auth.payload === "object"
-          ? (((auth.payload as Record<string, unknown>).email as string) ??
-            null)
-          : null;
-      setUserEmail(email);
+      setUserEmail(getStoredUserEmail());
     }
   }, [isLoggedIn]);
 

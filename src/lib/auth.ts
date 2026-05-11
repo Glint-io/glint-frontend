@@ -10,6 +10,71 @@ export type StoredAuth = {
   loggedInAt: string;
 };
 
+const base64UrlDecode = (input: string): string | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const normalized = input.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(
+      normalized.length + ((4 - (normalized.length % 4)) % 4),
+      "=",
+    );
+    return window.atob(padded);
+  } catch {
+    return null;
+  }
+};
+
+const extractEmail = (value: unknown): string | null => {
+  if (!value || typeof value !== "object") return null;
+
+  const record = value as Record<string, unknown>;
+  const candidates = [
+    record.email,
+    record.userEmail,
+    record.username,
+    record.preferred_username,
+    record.upn,
+    record.unique_name,
+    record.name,
+  ];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.includes("@")) {
+      return candidate;
+    }
+  }
+
+  const nestedSources = [record.user, record.profile, record.data];
+  for (const nestedSource of nestedSources) {
+    const nestedEmail = extractEmail(nestedSource);
+    if (nestedEmail) return nestedEmail;
+  }
+
+  return null;
+};
+
+const extractEmailFromAccessToken = (accessToken: string | null): string | null => {
+  if (!accessToken) return null;
+  const [, payloadSegment] = accessToken.split(".");
+  if (!payloadSegment) return null;
+  const decoded = base64UrlDecode(payloadSegment);
+  if (!decoded) return null;
+
+  try {
+    return extractEmail(JSON.parse(decoded));
+  } catch {
+    return null;
+  }
+};
+
+export const getStoredUserEmail = (): string | null => {
+  const auth = getStoredAuth();
+  const payloadEmail = extractEmail(auth?.payload);
+  if (payloadEmail) return payloadEmail;
+
+  return extractEmailFromAccessToken(auth?.accessToken ?? null);
+};
+
 export function getStoredAuth(): StoredAuth | null {
   if (typeof window === "undefined") return null;
   try {
