@@ -243,6 +243,60 @@ export function GlintToastProvider() {
           align-items: flex-end !important;
         }
 
+        /* ── Mobile: full-width, pinned to bottom ── */
+        @media (max-width: 480px) {
+          :root {
+            --toastify-toast-width: 100vw;
+          }
+
+          /* Re-anchor the container to the bottom, full width */
+          .Toastify__toast-container--top-right {
+            top: auto !important;
+            bottom: 0 !important;
+            right: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 0 !important;
+            align-items: stretch !important;
+          }
+
+          /* Each toast card spans the full width */
+          .Toastify__toast {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+            margin-bottom: 0 !important;
+            border-radius: 0 !important;
+          }
+
+          /* Only the topmost toast gets a rounded top edge */
+          .Toastify__toast:first-child {
+            border-top-left-radius: 14px !important;
+            border-top-right-radius: 14px !important;
+          }
+
+          /* Pull inner card border-radius to match */
+          .Toastify__toast:first-child > .Toastify__toast-body > div > div:first-child {
+            border-top-left-radius: 14px;
+            border-top-right-radius: 14px;
+          }
+
+          /* Safe-area padding at the bottom of the last card */
+          .Toastify__toast:last-child {
+            padding-bottom: env(safe-area-inset-bottom) !important;
+          }
+
+          /* Swap slide direction: come up from the bottom */
+          .Toastify__slide-enter--top-right {
+            animation: glint-slide-up-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+          }
+          .Toastify__slide-exit--top-right {
+            animation: glint-slide-up-out 0.18s cubic-bezier(0.4, 0, 1, 1) forwards !important;
+          }
+        }
+
         /* Progress bar animation */
         @keyframes glint-progress {
           from { width: 100%; }
@@ -259,7 +313,7 @@ export function GlintToastProvider() {
           animation-play-state: paused;
         }
 
-        /* Slide-in / out */
+        /* Desktop: slide in from the right */
         .Toastify__slide-enter--top-right {
           animation: glint-slide-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
@@ -273,6 +327,16 @@ export function GlintToastProvider() {
         @keyframes glint-slide-out {
           from { opacity: 1; transform: translateX(0) scale(1); }
           to   { opacity: 0; transform: translateX(16px) scale(0.96); }
+        }
+
+        /* Mobile: slide up from the bottom */
+        @keyframes glint-slide-up-in {
+          from { opacity: 0; transform: translateY(100%); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes glint-slide-up-out {
+          from { opacity: 1; transform: translateY(0); }
+          to   { opacity: 0; transform: translateY(100%); }
         }
       `}</style>
 

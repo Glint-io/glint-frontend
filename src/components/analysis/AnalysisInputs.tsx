@@ -74,7 +74,7 @@ export const AnalysisInputs = ({
   const jobAdsAtCapacity = savedJobAds.length >= MAX_JOB_ADS;
 
   return (
-    <div className="flex flex-col gap-4 md:gap-6 lg:h-full">
+    <div className="flex flex-col gap-4 md:gap-6 lg:h-full overflow-auto">
       <div className="flex flex-col gap-2 md:gap-3 h-1/2 lg:flex-1 lg:min-h-0">
         <div className="flex items-center justify-between gap-3">
           <SectionLabel>01 · Resume</SectionLabel>
@@ -128,7 +128,7 @@ export const AnalysisInputs = ({
               savedResumes.length > 0 &&
               uploadMode === "saved" && (
                 <div className="flex flex-col lg:flex-1 lg:min-h-0 rounded-xl border-2 border-dashed border-border p-2 md:p-3 gap-1.5">
-                  <div className="flex flex-col gap-1.5 lg:overflow-y-auto lg:min-h-0">
+                  <div className="flex flex-col gap-1.5 overflow-y-auto lg:min-h-0">
                     {savedResumes.map((r) => (
                       <div
                         key={r.resumeId}
@@ -313,7 +313,7 @@ export const AnalysisInputs = ({
             savedJobAds.length > 0 &&
             jobSourceMode === "saved" && (
               <div className="flex flex-col lg:flex-1 lg:min-h-0 rounded-xl border-2 border-dashed border-border p-2 md:p-3 gap-1.5">
-                <div className="flex flex-col gap-1.5 lg:overflow-y-auto lg:min-h-0">
+                <div className="flex flex-col gap-1.5 overflow-y-auto lg:min-h-0">
                   {savedJobAds.map((jobAd) => {
                     const isSelected = selectedJobAdId === jobAd.id;
                     const isDeleting = deletingJobAdId === jobAd.id;
@@ -453,7 +453,7 @@ export const AnalysisInputs = ({
                   disabled={loading}
                   onChange={(e) => onTextChange(e.target.value)}
                   placeholder="Paste the full job description here…"
-                  className="w-full max-h-50 lg:flex-1 lg:max-h-none resize-none rounded-lg border border-border bg-background px-3 py-2 md:px-3.5 md:py-2.5 font-mono text-sm outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full md:flex-1 md:max-h-none resize-none rounded-lg border border-border bg-background px-3 py-2 md:px-3.5 md:py-2.5 font-mono text-sm outline-none transition-colors focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
                 />
                 {jobText.length > 0 && jobText.length < 20 && (
                   <p className="font-mono text-[10px] text-destructive">
