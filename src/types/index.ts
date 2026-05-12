@@ -1,0 +1,59 @@
+export type Statistics = {
+  totalAnalyses: number;
+  byMethod: {
+    method: string;
+    averageScore: number;
+    count: number;
+  }[];
+  scoreOverTime: {
+    date: string;
+    score: number;
+    method: string;
+  }[];
+};
+
+export type HistoryRange =
+  | "All"
+  | "Today"
+  | "Last7Days"
+  | "Last30Days"
+  | "Last365Days";
+
+export type AnalysisResult = {
+  id: string;
+  method: string;
+  score: number | null;
+  feedback: string | null;
+  completedAt: string | null;
+};
+
+export type HistoryItem = {
+  id: string;
+  jobTitle: string | null;
+  createdAt: string;
+  status: string;
+  resumeFileName: string;
+  jobAdSnippet: string;
+  results: AnalysisResult[];
+};
+
+export type PaginatedHistory = {
+  items: HistoryItem[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+};
+
+export type Resume = {
+  resumeId: string;
+  fileName: string;
+  uploadedAt: string;
+  sizeBytes?: number;
+};
+
+export type JobAdvertisement = {
+  id: string;
+  title: string | null;
+  rawText: string;
+  createdAt: string;
+};
