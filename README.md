@@ -1,53 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# glint-frontend
 
-## Getting Started
+Next.js frontend for [Glint](../README.md).
 
-First, run the development server:
+## Setup
 
 ```bash
+npm install
+cp .env.example .env.local
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-## API endpoint configuration
-
-This MVP can call a future C# .NET backend, but it falls back to mock data if the endpoint is missing or unavailable.
-
-1. Copy `.env.example` to `.env.local`
-2. Set `NEXT_PUBLIC_API_BASE_URL` to your backend host URL, for example:
+### Environment variables
 
 ```bash
+# .env.local
 NEXT_PUBLIC_API_BASE_URL=https://localhost:7248
 ```
 
-Current frontend expectations:
+If the variable is missing or the backend is unreachable, the app falls back to mock data on the analysis demo and shows a service-down banner on authenticated pages.
 
-- `POST /auth/login` accepts `{ email, password }`
-- `GET /dashboard?userId=<uuid>` returns dashboard payload
-- `POST /analysis/compare` accepts `{ cvText, jobText, method }`
+## Scripts
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Command | Description |
+|---|---|
+| `npm run dev` | Start dev server |
+| `npm run build` | Production build |
+| `npm run start` | Serve production build |
+| `npm run lint` | ESLint |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Key routes
 
-## Learn More
+| Route | Description |
+|---|---|
+| `/` | Landing page with live analysis demo |
+| `/analysis` | Full analysis tool |
+| `/user` | Dashboard — history, resumes, job ads, stats |
+| `/about` | How Glint works |
+| `/contact` | Contact form |
+| `/privacy` | Privacy policy |
+| `/terms-of-service` | Terms of service |
+| `/auth/verify-email` | Email verification (OTC or link) |
+| `/auth/reset-password` | Password reset |
 
-To learn more about Next.js, take a look at the following resources:
+Auth modals (`login`, `register`, `forgot password`) open as overlays from any page via `openAuthModal()`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Structure
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/                  # Next.js App Router pages
+├── components/
+│   ├── analysis/         # Score ring, results panel, inputs
+│   ├── auth/             # Auth modal, provider, CTA
+│   ├── home/             # Landing page components
+│   ├── layout/           # Nav, footer, scroll header
+│   ├── ui/               # Shared primitives (Button, Modal, Toast, etc.)
+│   └── user/             # Dashboard components
+└── lib/
+    ├── auth.ts           # Token storage, refresh logic, authedFetch
+    └── useSimulatedAnalysis.ts  # Mock data for the landing demo
+```
 
-## Deploy on Vercel
+## Authentication
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Access tokens are stored in `localStorage` under `glint.auth`. The `authedFetch` wrapper automatically retries with a refreshed token on 401 responses. Auth state is broadcast via a `glint:auth-change` custom event so all tabs and components stay in sync.
