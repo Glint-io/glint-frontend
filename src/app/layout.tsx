@@ -26,8 +26,43 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Glint MVP",
-  description: "MVP frontend for CV and job ad analysis",
+  title: {
+    default: "Glint - Resume Intelligence",
+    template: "%s | Glint",
+  },
+  description:
+    "Upload your resume, paste a job ad, and get an instant match score from three analysis engines: AI semantic, keyword matching, and rule-based criteria. No account required.",
+  keywords: [
+    "resume analyzer",
+    "CV analysis",
+    "job application",
+    "ATS optimization",
+    "resume score",
+    "keyword matching",
+    "career tools",
+  ],
+  authors: [{ name: "Glint" }],
+  creator: "Glint",
+  metadataBase: new URL("https://glint.app"),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://glint.app",
+    siteName: "Glint",
+    title: "Glint - Resume Intelligence",
+    description:
+      "See exactly how your resume matches a job before you apply. Three analysis engines, instant results.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Glint - Resume Intelligence",
+    description:
+      "See exactly how your resume matches a job before you apply. Three analysis engines, instant results.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
