@@ -8,6 +8,8 @@ type AnalysisResult = {
   completedAt: string | null;
 };
 
+type Orientation = "row" | "col";
+
 const METHOD_ORDER: Record<string, number> = {
   AI: 0,
   RuleBased: 1,
@@ -16,8 +18,10 @@ const METHOD_ORDER: Record<string, number> = {
 
 export const GradientScorePill = ({
   results,
+  orientation,
 }: {
   results: AnalysisResult[];
+  orientation?: Orientation;
 }) => {
   const scoredResults = results
     .filter((r) => r.score != null)
@@ -65,7 +69,13 @@ export const GradientScorePill = ({
 
   return (
     <div
-      className="inline-flex flex-col sm:flex-row items-center gap-2.5 rounded-xl sm:rounded-full px-2 py-2 sm:px-3 sm:py-1"
+      className={`inline-flex items-center gap-2.5 rounded-xl sm:rounded-full px-2 py-2 sm:px-3 sm:py-1 ${
+        orientation === "row"
+          ? "flex-row"
+          : orientation === "col"
+            ? "flex-col"
+            : "flex-col sm:flex-row"
+      }`}
       style={{
         background:
           scores.length === 1
