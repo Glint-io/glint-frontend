@@ -22,6 +22,39 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "") ??
   "https://localhost:7248";
 
+const ACTIVE_ANALYSIS_LOCK_KEY = "glint:analysis-active-until";
+const RATE_LIMIT_COOLDOWN_KEY = "glint:analysis-rate-limit-until";
+const ANALYSIS_LOCK_DURATION_MS = 5 * 60 * 1000;
+const RATE_LIMIT_COOLDOWN_MS = 3 * 60 * 1000;
+
+function readStoredTimestamp(key: string): number | null {
+  if (typeof window === "undefined") return null;
+
+  const value = Number(window.localStorage.getItem(key));
+  return Number.isFinite(value) && value > Date.now() ? value : null;
+}
+
+function storeTimestamp(key: string, until: number) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(key, String(until));
+}
+
+function clearStoredTimestamp(key: string) {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(key);
+}
+
+async function readResponseMessage(res: Response): Promise<string | null> {
+  try {
+    const data = (await res.json()) as { error?: string };
+    return typeof data?.error === "string" && data.error.trim().length > 0
+      ? data.error
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 async function runAnalysisOnBackend(
   file: File | null,
   resumeId: string | null,
@@ -47,11 +80,11 @@ async function runAnalysisOnBackend(
   const headers: HeadersInit = { accept: "text/event-stream" };
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
+  const failedMethods: AnalysisMethod[] = [];
+
   onStatusUpdate("ai", "loading");
   onStatusUpdate("keyword", "loading");
   onStatusUpdate("rules", "loading");
-
-  const failedMethods: AnalysisMethod[] = [];
 
   try {
     const res = await fetch(`${API_BASE}/analyze/stream`, {
@@ -65,12 +98,23 @@ async function runAnalysisOnBackend(
       onStatusUpdate("keyword", "error");
       onStatusUpdate("rules", "error");
       onJobAdNotice(null);
-      return ["ai", "keyword", "rules"];
+      const statusCode = res.status;
+      const responseMessage = await readResponseMessage(res);
+      const errorMessage =
+        responseMessage ??
+        (statusCode === 429
+          ? "Too many requests. Please wait a moment before trying again."
+          : `Analysis request failed: ${statusCode}`);
+      throw {
+        message: errorMessage,
+        status: statusCode,
+      };
     }
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
+    const completedMethods = new Set<AnalysisMethod>();
 
     while (true) {
       const { done, value } = await reader.read();
@@ -87,9 +131,38 @@ async function runAnalysisOnBackend(
 
         try {
           const evt = JSON.parse(payload) as {
-            result: { method: string; score: number; feedback: string };
+            eventType?: string;
+            error?: string;
+            result?: { method: string; score: number; feedback: string };
             jobAdvertisementNotice?: string | null;
           };
+
+          // Check if this is an error event from the server
+          if (evt.eventType === "error" && evt.error) {
+            // Preserve the failure reason on the methods that never completed so
+            // their panels can still show why they failed.
+            const remainingMethods: AnalysisMethod[] = [
+              "ai",
+              "keyword",
+              "rules",
+            ];
+
+            for (const method of remainingMethods) {
+              if (completedMethods.has(method)) continue;
+
+              onResultUpdate(method, {
+                score: 0,
+                feedback: evt.error,
+              });
+              onStatusUpdate(method, "error");
+              failedMethods.push(method);
+            }
+
+            break;
+          }
+
+          // Skip non-result events
+          if (!evt.result) continue;
 
           if (evt.jobAdvertisementNotice) {
             onJobAdNotice(evt.jobAdvertisementNotice);
@@ -99,22 +172,41 @@ async function runAnalysisOnBackend(
           const mapped: AnalysisMethod =
             methodKey === ("rulebased" as string) ? "rules" : methodKey;
 
+          completedMethods.add(mapped);
           onResultUpdate(mapped, {
             score: evt.result.score ?? 0,
             feedback: evt.result.feedback ?? "",
           });
           onStatusUpdate(mapped, "done");
-        } catch {
-          glintToast.error({
-            title: "Error",
-            message: "Received malformed analysis result from server.",
-          });
+        } catch (parseErr) {
+          // Only show malformed error for actual JSON/parse errors, not service errors
+          if (parseErr instanceof SyntaxError) {
+            glintToast.error({
+              title: "Error",
+              message: "Received malformed analysis result from server.",
+            });
+          } else if (parseErr instanceof Error) {
+            throw parseErr;
+          }
         }
       }
     }
   } catch (err) {
     // Rethrow network-level errors so the caller can surface the service down state
     if (err instanceof TypeError) throw err;
+
+    // Rethrow 429 or other structured errors to the outer handler
+    if (typeof err === "object" && err !== null && "status" in err) {
+      throw err;
+    }
+
+    // Preserve error details for the outer catch block
+    if (err instanceof Error) {
+      throw {
+        message: err.message,
+        status: err.message.includes("rate limiting") ? 429 : 500,
+      };
+    }
 
     onStatusUpdate("ai", "error");
     onStatusUpdate("keyword", "error");
@@ -141,6 +233,10 @@ export default function AnalysisPage() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [method, setMethod] = useState<AnalysisMethod>("ai");
   const [scoreActive, setScoreActive] = useState(false);
+  const [analysisLockedUntil, setAnalysisLockedUntil] = useState<number | null>(
+    null,
+  );
+  const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
   const [methodStatuses, setMethodStatuses] = useState<
     Record<AnalysisMethod, AnalysisMethodStatus>
   >({
@@ -179,6 +275,39 @@ export default function AnalysisPage() {
       }
     };
   }, [previewResume]);
+
+  useEffect(() => {
+    setAnalysisLockedUntil(readStoredTimestamp(ACTIVE_ANALYSIS_LOCK_KEY));
+    setRateLimitedUntil(readStoredTimestamp(RATE_LIMIT_COOLDOWN_KEY));
+  }, []);
+
+  useEffect(() => {
+    if (!analysisLockedUntil) return;
+
+    const timeout = window.setTimeout(
+      () => {
+        setAnalysisLockedUntil(null);
+        clearStoredTimestamp(ACTIVE_ANALYSIS_LOCK_KEY);
+      },
+      Math.max(0, analysisLockedUntil - Date.now()),
+    );
+
+    return () => window.clearTimeout(timeout);
+  }, [analysisLockedUntil]);
+
+  useEffect(() => {
+    if (!rateLimitedUntil) return;
+
+    const timeout = window.setTimeout(
+      () => {
+        setRateLimitedUntil(null);
+        clearStoredTimestamp(RATE_LIMIT_COOLDOWN_KEY);
+      },
+      Math.max(0, rateLimitedUntil - Date.now()),
+    );
+
+    return () => window.clearTimeout(timeout);
+  }, [rateLimitedUntil]);
 
   const fetchSaved = async () => {
     setLoadingData(true);
@@ -221,11 +350,11 @@ export default function AnalysisPage() {
       setDeletingResumeId(null);
       setJobSourceMode("new");
       setUploadMode("new");
+      setLoadingData(false);
       return;
     }
 
     fetchSaved();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn]);
 
   const handleSelectJobAd = (jobAd: JobAdvertisement) => {
@@ -370,6 +499,8 @@ export default function AnalysisPage() {
   };
 
   const canRun = () => {
+    if (analysisLockedUntil && analysisLockedUntil > Date.now()) return false;
+    if (rateLimitedUntil && rateLimitedUntil > Date.now()) return false;
     if (jobSourceMode === "saved" && !selectedJobAdId) return false;
     if (!jobText.trim() || jobText.trim().length < 20) return false;
     if (uploadMode === "new") return file !== null;
@@ -378,6 +509,12 @@ export default function AnalysisPage() {
   };
 
   const handleRun = async () => {
+    if (loading) return;
+
+    const lockUntil = Date.now() + ANALYSIS_LOCK_DURATION_MS;
+    setAnalysisLockedUntil(lockUntil);
+    storeTimestamp(ACTIVE_ANALYSIS_LOCK_KEY, lockUntil);
+
     setLoading(true);
     setResult(null);
     setScoreActive(false);
@@ -472,12 +609,47 @@ export default function AnalysisPage() {
         // Network-level failure — show the service down state
         setServiceDown(true);
         setMethodStatuses({ ai: "error", keyword: "error", rules: "error" });
+      } else if (
+        typeof err === "object" &&
+        err !== null &&
+        "status" in err &&
+        (err as Record<string, unknown>).status === 429
+      ) {
+        const message =
+          "Too many requests. Please wait a moment before trying again.";
+        setError(message);
+        setMethodStatuses({ ai: "error", keyword: "error", rules: "error" });
+        const cooldownUntil = Date.now() + RATE_LIMIT_COOLDOWN_MS;
+        setRateLimitedUntil(cooldownUntil);
+        storeTimestamp(RATE_LIMIT_COOLDOWN_KEY, cooldownUntil);
+        glintToast.error({
+          title: "Rate Limited",
+          message,
+        });
+      } else if (
+        typeof err === "object" &&
+        err !== null &&
+        "status" in err &&
+        (err as Record<string, unknown>).status === 409
+      ) {
+        const message =
+          (err as { message?: string }).message ??
+          "An analysis is already running. Please wait for it to finish before starting another one.";
+        setError(message);
+        glintToast.error({
+          title: "Analysis In Progress",
+          message,
+        });
       } else {
-        setError(
+        const errorMsg =
           err instanceof Error
             ? err.message
-            : "Analysis failed. Please try again.",
-        );
+            : "Analysis failed. Please try again.";
+        setError(errorMsg);
+        glintToast.error({
+          title: "Error",
+          message: errorMsg,
+        });
       }
     } finally {
       if (shouldRefreshSavedResumes && isLoggedIn === true && API_BASE) {
@@ -492,9 +664,18 @@ export default function AnalysisPage() {
         }
       }
 
+      clearStoredTimestamp(ACTIVE_ANALYSIS_LOCK_KEY);
+      setAnalysisLockedUntil(null);
       setLoading(false);
     }
   };
+
+  const blockedMessage =
+    rateLimitedUntil && rateLimitedUntil > Date.now()
+      ? "You've been rate limited. Please wait a few minutes before trying again."
+      : analysisLockedUntil && analysisLockedUntil > Date.now()
+        ? "An analysis is already running from this browser. Please wait for it to finish before starting another one."
+        : null;
 
   const displayScore = result
     ? method === "ai"
@@ -528,6 +709,7 @@ export default function AnalysisPage() {
           loading={loading}
           loadingData={loadingData}
           canRun={canRun()}
+          runBlockedMessage={blockedMessage}
           onFileChange={handleFile}
           onLabelChange={handleLabelChange}
           onTextChange={handleTextChange}
