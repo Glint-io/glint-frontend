@@ -28,7 +28,7 @@ const Skel = ({
     style={style}
   >
     <div
-      className="absolute inset-0 bg-gradient-to-r from-transparent via-foreground/[0.05] to-transparent"
+      className="absolute inset-0 bg-linear-to-r from-transparent via-foreground/5 to-transparent"
       style={{ animation: "sk-shimmer 1.8s ease-in-out infinite" }}
     />
   </div>
@@ -37,8 +37,8 @@ const Skel = ({
 const ResumeSkeleton = () => (
   <div className="h-full flex flex-col gap-2 rounded-xl border border-border bg-background-subtle/40 px-3 py-3 md:px-4 md:py-4">
     <div className="flex gap-1 p-0.5 rounded-lg bg-background-subtle border border-border w-fit">
-      <Skel className="h-7 w-[4.5rem] rounded-md" />
-      <Skel className="h-7 w-[4.5rem] rounded-md" />
+      <Skel className="h-7 w-18 rounded-md" />
+      <Skel className="h-7 w-18 rounded-md" />
     </div>
 
     <div className="flex flex-col gap-1.5 rounded-xl border-2 border-dashed border-border p-2 md:p-3">
@@ -72,8 +72,8 @@ const JobSkeleton = () => (
   <div className="h-full flex flex-col">
     <div className="flex-1 flex flex-col gap-2 rounded-xl border border-border bg-background-subtle/40 px-3 py-3 md:px-4 md:py-4">
       <div className="flex gap-1 p-0.5 rounded-lg bg-background-subtle border border-border w-fit">
-        <Skel className="h-7 w-[4.5rem] rounded-md" />
-        <Skel className="h-7 w-[4.5rem] rounded-md" />
+        <Skel className="h-7 w-18 rounded-md" />
+        <Skel className="h-7 w-18 rounded-md" />
       </div>
 
       <div className="flex flex-col gap-1.5 rounded-xl border-2 border-dashed border-border p-2 md:p-3">
@@ -113,6 +113,7 @@ interface Props {
   loading: boolean;
   loadingData: boolean;
   canRun: boolean;
+  runBlockedMessage?: string | null;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onLabelChange: (val: string) => void;
   onTextChange: (val: string) => void;
@@ -144,6 +145,7 @@ export const AnalysisInputs = ({
   loading,
   loadingData,
   canRun,
+  runBlockedMessage,
   onFileChange,
   onLabelChange,
   onTextChange,
@@ -576,6 +578,12 @@ export const AnalysisInputs = ({
                 "Run Analysis →"
               )}
             </Button>
+
+            {runBlockedMessage && (
+              <p className="px-1 font-mono text-[10px] leading-relaxed text-foreground-muted">
+                {runBlockedMessage}
+              </p>
+            )}
           </div>
         )}
       </div>
