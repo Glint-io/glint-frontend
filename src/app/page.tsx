@@ -256,15 +256,6 @@ export default function Home() {
           </Link>
         </div>
       </section>
-
-      <div className="border-t border-border py-6 flex items-center justify-between">
-        <span className="font-mono text-[10px] tracking-[0.2em] text-foreground-muted uppercase">
-          Glint MVP · {new Date().getFullYear()}
-        </span>
-        <span className="font-mono text-[10px] text-foreground-muted">
-          Resume Intelligence
-        </span>
-      </div>
     </div>
   );
 }
